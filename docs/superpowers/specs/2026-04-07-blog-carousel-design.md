@@ -11,6 +11,7 @@ This creates unstable button behavior and animation stalls because the visible l
 - Advance one card per click.
 - Stop at the first and last available positions.
 - Keep previous/next buttons disabled when the carousel is already at an edge.
+- Make next/previous interactions feel immediate, smooth, and responsive on repeated clicks.
 - Preserve the responsive layout:
   - 1 card on small screens
   - 2 cards on medium screens
@@ -37,12 +38,12 @@ The component will remove:
 
 On next:
 
-- increment `displayIndex` by 1
+- increment `displayIndex` by 1 immediately on click
 - clamp to `maxIndex`
 
 On previous:
 
-- decrement `displayIndex` by 1
+- decrement `displayIndex` by 1 immediately on click
 - clamp to `0`
 
 On resize:
@@ -50,10 +51,19 @@ On resize:
 - recompute `slidesPerView`
 - clamp `displayIndex` so the current position remains valid
 
+Buttons should react without waiting for timeout-driven state transitions.
+The next visual position must be derived directly from the current index so the UI stays responsive even during quick sequential navigation.
+
 ## Animation Model
 
 The track will always exist in the DOM and will animate through CSS `transition` on `transform`.
 This keeps the motion path deterministic and removes the need to rebuild layout structure while the animation is running.
+
+To improve perceived smoothness:
+
+- use a shorter, direct transform transition tuned for quick interaction
+- keep animation on compositor-friendly properties only
+- avoid any extra staging DOM or delayed commit step between click and motion start
 
 For users with reduced motion preferences, the transition should be disabled.
 
