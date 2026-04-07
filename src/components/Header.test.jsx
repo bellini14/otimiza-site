@@ -21,7 +21,8 @@ describe('Header', () => {
   it('renders the redesigned navigation structure and opens the mobile menu', () => {
     renderHeader()
 
-    expect(screen.getByRole('link', { name: 'Otimiza' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Otimiza home' })).toBeInTheDocument()
+    expect(screen.getByAltText('Otimiza')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Institucional' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Soluções' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Cases' })).toBeInTheDocument()
