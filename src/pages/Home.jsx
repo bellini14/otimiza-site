@@ -3,6 +3,7 @@ import heroBwImage from '../assets/hero-bw.jpg'
 import iconeOtimizaFundo from '../assets/icone-otimiza-fundo.svg'
 import FeaturesSection from '../components/FeaturesSection'
 import TechnologySection from '../components/TechnologySection'
+import { BlogHighlights } from '../components/ui/blog-highlights'
 import { StaggerTestimonials } from '../components/ui/stagger-testimonials'
 
 
@@ -39,7 +40,7 @@ function preventHeroSubmit(event) {
 function Home() {
   const [brandsRef, brandsVisible] = useScrollReveal(0.1)
   return (
-    <div className="pb-6" data-testid="home-page">
+    <div data-testid="home-page">
       <section className="home-hero">
         <div className="home-hero__split" data-testid="hero-stage">
           {/* Left Side — Text Content */}
@@ -87,7 +88,7 @@ function Home() {
         </div>
       </section>
 
-      <div className="relative z-10 space-y-12" data-testid="home-content">
+      <div className="relative z-10" data-testid="home-content">
         <section ref={brandsRef} className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden py-16 sm:py-24 bg-[#EFEFF4]">
           <div className="mx-auto w-full max-w-[1380px] px-4 sm:px-6 lg:px-8">
             <div className="mb-16 text-center">
@@ -191,6 +192,7 @@ function Home() {
         <FeaturesSection />
         <TechnologySection />
         <StaggerTestimonials />
+        <BlogHighlights />
       </div>
     </div>
   )

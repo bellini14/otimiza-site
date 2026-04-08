@@ -11,13 +11,13 @@
 :root {
   --brand-red: #e02020;
   --brand-red-strong: #c91616;
-  --brand-ink: #434b54;
-  --brand-ink-strong: #364048;
+  --brand-ink: #5a6572;
+  --brand-ink-strong: #5a6572;
   --page-background:
     radial-gradient(circle at 12% 0%, rgb(255 255 255 / 0.94), transparent 36%),
     radial-gradient(circle at 88% 12%, rgb(210 222 232 / 0.48), transparent 34%),
     linear-gradient(180deg, #fbfdff 0%, #f1f5f9 100%);
-  --page-foreground: #0f172a;
+  --page-foreground: #5a6572;
   --surface-primary: #ffffff;
   --surface-secondary: #f8fafc;
   --surface-tertiary: #edf2f7;
@@ -25,14 +25,14 @@
   --surface-inverse-hover: #1f2937;
   --border-soft: #e5e7eb;
   --border-strong: #cbd5e1;
-  --text-primary: #111827;
-  --text-secondary: #374151;
+  --text-primary: #5a6572;
+  --text-secondary: #5a6572;
   --text-muted: #64748b;
   --overlay-soft: rgb(10 15 28 / 24%);
   --theme-toggle-shell: rgb(255 255 255 / 82%);
   --theme-toggle-shell-hover: #ffffff;
   --theme-toggle-border: rgb(67 75 84 / 14%);
-  --theme-toggle-ink: #434b54;
+  --theme-toggle-ink: #5a6572;
 }
 
 html.dark {
@@ -199,7 +199,7 @@ html.dark {
     margin: 1.8rem 0 0;
     font-size: clamp(1rem, 1.2vw, 1.125rem);
     line-height: 1.75;
-    color: rgb(67 75 84 / 0.85);
+    color: rgb(90 101 114 / 0.85);
     text-wrap: balance;
     animation: text-reveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
   }
@@ -685,6 +685,31 @@ html.dark {
   .home-hero {
     margin-top: -9rem;
   }
+}
+
+.text-slate-900,
+.text-neutral-900,
+.hover\:text-neutral-900:hover,
+.hover\:text-slate-900:hover {
+  color: #5a6572 !important;
+}
+
+.text-slate-700,
+.text-slate-600,
+.text-neutral-700,
+.text-neutral-600,
+.hover\:text-slate-700:hover,
+.hover\:text-slate-600:hover,
+.hover\:text-neutral-700:hover,
+.hover\:text-neutral-600:hover {
+  color: #5a6572 !important;
+}
+
+.group:hover .group-hover\:text-neutral-900,
+.group:hover .group-hover\:text-slate-900,
+.group:hover .group-hover\:text-neutral-700,
+.group:hover .group-hover\:text-slate-700 {
+  color: #5a6572 !important;
 }
 
 

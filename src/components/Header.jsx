@@ -50,7 +50,7 @@ function ThemeToggle({ theme, onToggle }) {
       aria-pressed={isDarkTheme}
       data-theme-icon={isDarkTheme ? 'sun' : 'moon'}
       onClick={onToggle}
-      className="hidden lg:inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#efeff4]/90 backdrop-blur-md dark:bg-white/10 text-[#434b54] dark:text-white/90 transition-all hover:bg-[#e2e2e8] dark:hover:bg-white/20 dark:hover:text-white ring-1 ring-[#434b54]/5 dark:ring-white/10 drop-shadow-sm"
+      className="hidden lg:inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#efeff4]/90 backdrop-blur-md dark:bg-white/10 text-[#5a6572] dark:text-white/90 transition-all hover:bg-[#e2e2e8] dark:hover:bg-white/20 dark:hover:text-white ring-1 ring-[#434b54]/5 dark:ring-white/10 drop-shadow-sm"
     >
       <span key={theme} className="theme-toggle__icon" aria-hidden="true">
         {isDarkTheme ? (
@@ -100,7 +100,7 @@ function ThemeToggle({ theme, onToggle }) {
 function LanguageSelector() {
   return (
     <button
-      className="hidden lg:inline-flex h-11 items-center gap-2.5 rounded-[1.15rem] bg-[#efeff4]/90 backdrop-blur-md dark:bg-white/10 px-4 text-[14.5px] font-medium text-[#434b54] dark:text-white/90 transition-all hover:bg-[#e2e2e8] dark:hover:bg-white/20 dark:hover:text-white ring-1 ring-[#434b54]/5 dark:ring-white/10 drop-shadow-sm"
+      className="hidden lg:inline-flex h-11 items-center gap-2.5 rounded-[1.15rem] bg-[#efeff4]/90 backdrop-blur-md dark:bg-white/10 px-4 text-[14.5px] font-medium text-[#5a6572] dark:text-white/90 transition-all hover:bg-[#e2e2e8] dark:hover:bg-white/20 dark:hover:text-white ring-1 ring-[#434b54]/5 dark:ring-white/10 drop-shadow-sm"
       aria-label="Selecionar idioma"
     >
       <span className="text-base leading-none drop-shadow-sm">🇧🇷</span>
@@ -220,8 +220,8 @@ function Header() {
                       type="button"
                       className={`flex items-center gap-1.5 rounded-full px-4 py-2.5 text-[15px] transition-all duration-200 drop-shadow-sm ${
                         isGroupActive(group.items)
-                          ? 'font-semibold text-[#434b54] dark:text-white'
-                          : 'font-medium text-[#434b54] dark:text-white/90 hover:text-[#111] dark:hover:text-white hover:drop-shadow-md'
+                          ? 'font-semibold text-[#5a6572] dark:text-white'
+                          : 'font-medium text-[#5a6572] dark:text-white/90 hover:text-[#5a6572] dark:hover:text-white hover:drop-shadow-md'
                       }`}
                       aria-expanded={openDropdown === group.label}
                       aria-controls={`dropdown-${group.id}`}
@@ -264,7 +264,7 @@ function Header() {
                             className={`block rounded-[1rem] px-4 py-3 text-[14.5px] transition-all duration-200 ${
                               isActive(item.path)
                                 ? 'bg-[#434b54] font-semibold text-white dark:bg-white/10 dark:text-white'
-                                : 'font-medium text-[#434b54] dark:text-white/70 hover:bg-[#434b54]/5 hover:text-[#111] dark:hover:bg-white/10 dark:hover:text-white'
+                                : 'font-medium text-[#5a6572] dark:text-white/70 hover:bg-[#434b54]/5 hover:text-[#5a6572] dark:hover:bg-white/10 dark:hover:text-white'
                             }`}
                           >
                             {item.label}
@@ -281,8 +281,8 @@ function Header() {
                     to={item.path}
                     className={`rounded-full px-4 py-2.5 text-[15px] no-underline transition-all duration-200 drop-shadow-sm ${
                       isActive(item.path)
-                        ? 'font-semibold text-[#434b54] dark:text-white'
-                        : 'font-medium text-[#434b54] dark:text-white/90 hover:text-[#111] dark:hover:text-white hover:drop-shadow-md'
+                        ? 'font-semibold text-[#5a6572] dark:text-white'
+                        : 'font-medium text-[#5a6572] dark:text-white/90 hover:text-[#5a6572] dark:hover:text-white hover:drop-shadow-md'
                     }`}
                   >
                     {item.label}
@@ -297,7 +297,7 @@ function Header() {
 
               <Link
                 to="/contato"
-                className="hidden lg:flex h-11 items-center justify-center rounded-[1.15rem] bg-[#efeff4]/90 backdrop-blur-md dark:bg-white/10 px-5 text-[15px] font-medium text-[#434b54] dark:text-white/90 transition-all hover:bg-[#e2e2e8] dark:hover:bg-white/20 dark:hover:text-white ring-1 ring-[#434b54]/5 dark:ring-white/10 drop-shadow-sm"
+                className="hidden lg:flex h-11 items-center justify-center rounded-[1.15rem] bg-[#efeff4]/90 backdrop-blur-md dark:bg-white/10 px-5 text-[15px] font-medium text-[#5a6572] dark:text-white/90 transition-all hover:bg-[#e2e2e8] dark:hover:bg-white/20 dark:hover:text-white ring-1 ring-[#434b54]/5 dark:ring-white/10 drop-shadow-sm"
               >
                 Fale com a Otimiza
               </Link>
@@ -370,8 +370,8 @@ function Header() {
         }`}
       >
         <div className="mb-4 border-b border-[#434b54]/10 dark:border-white/10 pb-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#434b54]/52 dark:text-white/40">Navegacao</p>
-          <p className="mt-2 text-sm text-[#434b54]/74 dark:text-white/60">Acesse as principais areas da Otimiza.</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#5a6572]/52 dark:text-white/40">Navegacao</p>
+          <p className="mt-2 text-sm text-[#5a6572]/74 dark:text-white/60">Acesse as principais areas da Otimiza.</p>
         </div>
 
         <nav className="flex flex-col gap-1" aria-label="Mobile navigation">
@@ -383,7 +383,7 @@ function Header() {
               className={`rounded-[1rem] px-4 py-3 text-[14.5px] transition-all duration-200 ${
                 isActive(item.path)
                   ? 'bg-[#434b54] font-semibold text-white dark:bg-white/10'
-                  : 'font-medium text-[#434b54] dark:text-white/70 hover:bg-[#434b54]/5 hover:text-[#111] dark:hover:bg-white/10 dark:hover:text-white'
+                  : 'font-medium text-[#5a6572] dark:text-white/70 hover:bg-[#434b54]/5 hover:text-[#5a6572] dark:hover:bg-white/10 dark:hover:text-white'
               }`}
             >
               {item.label}

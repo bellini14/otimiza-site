@@ -48,7 +48,9 @@ describe('Home', () => {
       </MemoryRouter>,
     )
 
+    expect(screen.getByTestId('home-page')).not.toHaveClass('pb-6')
     expect(screen.getByTestId('home-page')).not.toHaveClass('space-y-12')
+    expect(screen.getByTestId('home-content')).not.toHaveClass('space-y-12')
     expect(screen.getByTestId('home-content')).not.toHaveClass('-mt-10')
   })
 
