@@ -4,5 +4,6 @@ export default defineCliConfig({
   api: {
     projectId: 'igy822g7',
     dataset: 'production'
-  }
+  },
+  studioHost: 'otimiza-site'
 })
