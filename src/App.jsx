@@ -8,6 +8,7 @@ import InsightsBlog from './pages/InsightsBlog'
 import OQueFazemos from './pages/OQueFazemos'
 import QuemSomos from './pages/QuemSomos'
 import Tecnologia from './pages/Tecnologia'
+import PostDetail from './pages/PostDetail'
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
           <Route path="/tecnologia" element={<Tecnologia />} />
           <Route path="/academia-otimiza" element={<AcademiaOtimiza />} />
           <Route path="/insights-e-blog" element={<InsightsBlog />} />
+          <Route path="/insights-e-blog/:slug" element={<PostDetail />} />
           <Route path="/contato" element={<Contato />} />
         </Route>
       </Routes>

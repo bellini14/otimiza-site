@@ -69,4 +69,21 @@ describe('Header', () => {
     expect(screen.getByRole('button', { name: 'Ativar tema claro' })).toHaveAttribute('data-theme-icon', 'sun')
     expect(document.documentElement).toHaveClass('dark')
   })
+
+  it('anchors the mobile menu animation below the docked header', () => {
+    renderHeader()
+
+    Object.defineProperty(window, 'scrollY', {
+      configurable: true,
+      value: 120,
+    })
+    fireEvent.scroll(window)
+
+    fireEvent.click(screen.getByRole('button', { name: /open menu/i }))
+
+    const mobileMenu = screen.getByRole('dialog', { name: 'Menu principal' })
+
+    expect(mobileMenu).toHaveClass('top-[7rem]', 'sm:top-[7.35rem]', 'origin-top')
+    expect(mobileMenu).toHaveClass('translate-y-0', 'opacity-100', 'scale-100')
+  })
 })

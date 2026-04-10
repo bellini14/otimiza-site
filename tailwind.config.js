@@ -26,8 +26,8 @@ export default {
         },
       },
       animation: {
-        marquee: 'marquee 120s linear infinite',
-        marqueeReverse: 'marqueeReverse 120s linear infinite',
+        marquee: 'marquee 60s linear infinite',
+        marqueeReverse: 'marqueeReverse 60s linear infinite',
         marqueeVertical: 'marqueeVertical 80s linear infinite',
         marqueeVerticalReverse: 'marqueeVerticalReverse 80s linear infinite',
       },

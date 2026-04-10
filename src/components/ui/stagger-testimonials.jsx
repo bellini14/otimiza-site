@@ -1,7 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+
+const CARD_TRANSITION_MS = 600;
+const CARD_TRANSITION_FALLBACK_MS = CARD_TRANSITION_MS + 120;
+const CARD_TRANSITION = `transform ${CARD_TRANSITION_MS}ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow ${CARD_TRANSITION_MS}ms ease`;
+const LOOP_COPIES = 3;
+const LOOP_MIDDLE_COPY = 1;
 
 const testimonials = [
   {
@@ -66,13 +72,31 @@ const testimonials = [
   }
 ];
 
-function TestimonialCard({ position, testimonial, handleMove, cardSize }) {
+const middleWindowIndex = Math.floor(testimonials.length / 2);
+const MIN_WINDOW_POSITION = -middleWindowIndex;
+const MAX_WINDOW_POSITION = testimonials.length - middleWindowIndex - 1;
+
+function getLoopedIndex(index) {
+  return ((index % testimonials.length) + testimonials.length) % testimonials.length;
+}
+
+const initialActiveIndex = middleWindowIndex;
+const initialVirtualIndex = testimonials.length * LOOP_MIDDLE_COPY + initialActiveIndex;
+const virtualTestimonials = Array.from({ length: testimonials.length * LOOP_COPIES }, (_, virtualIndex) => ({
+  virtualIndex,
+  testimonial: testimonials[getLoopedIndex(virtualIndex)],
+}));
+
+function TestimonialCard({ position, testimonial, handleMove, cardSize, transitionEnabled }) {
   const isCenter = position === 0;
-  const zIndex = 20 - Math.abs(position);
+  const isInCarouselWindow = position >= MIN_WINDOW_POSITION && position <= MAX_WINDOW_POSITION;
+  const zIndex = Math.max(0, 20 - Math.abs(position));
 
   return (
     <div
       onClick={() => handleMove(position)}
+      data-carousel-position={position}
+      aria-hidden={!isInCarouselWindow}
       className={cn(
         "absolute left-1/2 top-1/2 cursor-pointer rounded-2xl p-8 bg-white border border-slate-200/60 antialiased",
         isCenter ? "shadow-2xl shadow-slate-900/10" : "shadow-sm"
@@ -83,7 +107,8 @@ function TestimonialCard({ position, testimonial, handleMove, cardSize }) {
         zIndex,
         backfaceVisibility: 'hidden',
         WebkitFontSmoothing: 'antialiased',
-        transition: 'transform 600ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 600ms ease',
+        pointerEvents: isInCarouselWindow ? 'auto' : 'none',
+        transition: transitionEnabled ? CARD_TRANSITION : 'none',
         transform: `
           translate(-50%, -50%) 
           translateX(${(cardSize / 1.5) * position}px)
@@ -128,15 +153,57 @@ function TestimonialCard({ position, testimonial, handleMove, cardSize }) {
 
 export function StaggerTestimonials() {
   const [cardSize, setCardSize] = useState(365);
-  const [activeIndex, setActiveIndex] = useState(Math.floor(testimonials.length / 2));
+  const [activeVirtualIndex, setActiveVirtualIndex] = useState(initialVirtualIndex);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [isNormalizing, setIsNormalizing] = useState(false);
   const [sectionRef, isVisible] = useScrollReveal(0.1);
 
-  const handleMove = (steps) => {
-    setActiveIndex((currentIndex) => {
-      const nextIndex = currentIndex + steps;
-      return ((nextIndex % testimonials.length) + testimonials.length) % testimonials.length;
+  const finishAnimation = useCallback(() => {
+    if (!isAnimating) return;
+
+    setIsAnimating(false);
+    setActiveVirtualIndex((currentIndex) => {
+      const normalizedIndex = testimonials.length * LOOP_MIDDLE_COPY + getLoopedIndex(currentIndex);
+
+      if (normalizedIndex !== currentIndex) {
+        setIsNormalizing(true);
+      }
+
+      return normalizedIndex;
     });
+  }, [isAnimating]);
+
+  const handleMove = (steps) => {
+    if (steps === 0 || isAnimating || isNormalizing) return;
+
+    setIsAnimating(true);
+    setActiveVirtualIndex((currentIndex) => currentIndex + steps);
   };
+
+  const handleCarouselTransitionEnd = (event) => {
+    if (event.propertyName !== 'transform') return;
+    finishAnimation();
+  };
+
+  useEffect(() => {
+    if (!isAnimating) return undefined;
+
+    const timeoutId = window.setTimeout(() => {
+      finishAnimation();
+    }, CARD_TRANSITION_FALLBACK_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [isAnimating, finishAnimation]);
+
+  useEffect(() => {
+    if (!isNormalizing) return undefined;
+
+    const frameId = window.requestAnimationFrame(() => {
+      setIsNormalizing(false);
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [isNormalizing]);
 
   useEffect(() => {
     const updateSize = () => {
@@ -188,6 +255,7 @@ export function StaggerTestimonials() {
           '[animation-delay:450ms]'
         )}
         style={{ height: 500 }}
+        onTransitionEnd={handleCarouselTransitionEnd}
       >
         {/* Left gradient fade */}
         <div
@@ -206,16 +274,16 @@ export function StaggerTestimonials() {
           }}
         />
 
-        {testimonials.map((testimonial, index) => {
-          const middleIndex = Math.floor(testimonials.length / 2);
-          const position = ((index - activeIndex + testimonials.length + middleIndex) % testimonials.length) - middleIndex;
+        {virtualTestimonials.map(({ virtualIndex, testimonial }) => {
+          const position = virtualIndex - activeVirtualIndex;
           return (
             <TestimonialCard
-              key={testimonial.id}
+              key={virtualIndex}
               testimonial={testimonial}
               handleMove={handleMove}
               position={position}
               cardSize={cardSize}
+              transitionEnabled={!isNormalizing}
             />
           );
         })}

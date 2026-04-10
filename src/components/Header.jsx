@@ -137,6 +137,7 @@ function Header() {
 
   const isActive = (path) => location.pathname === path
   const isGroupActive = (items) => items.some((item) => isActive(item.path))
+  const mobileMenuPosition = isTop ? 'top-[5.9rem] sm:top-[6.25rem]' : 'top-[7rem] sm:top-[7.35rem]'
 
   const closeAll = () => {
     setMenuOpen(false)
@@ -365,8 +366,8 @@ function Header() {
         aria-modal="true"
         aria-label="Menu principal"
         aria-hidden={!menuOpen}
-        className={`fixed inset-x-4 top-[5.9rem] z-40 rounded-[1.75rem] border border-[#434b54]/12 dark:border-white/10 bg-white/95 dark:bg-[#131b24]/95 p-4 shadow-[0_28px_80px_rgba(67,75,84,0.12)] dark:shadow-[0_28px_80px_rgba(0,0,0,0.6)] backdrop-blur-2xl transition-all duration-300 sm:inset-x-6 sm:top-[6.25rem] lg:hidden ${
-          menuOpen ? 'pointer-events-auto translate-y-0 opacity-100 scale-100' : 'pointer-events-none -translate-y-2 opacity-0 scale-95 origin-top'
+        className={`fixed inset-x-4 z-40 origin-top rounded-[1.75rem] border border-[#434b54]/12 dark:border-white/10 bg-white/95 dark:bg-[#131b24]/95 p-4 shadow-[0_28px_80px_rgba(67,75,84,0.12)] dark:shadow-[0_28px_80px_rgba(0,0,0,0.6)] backdrop-blur-2xl transition-all duration-300 sm:inset-x-6 lg:hidden ${mobileMenuPosition} ${
+          menuOpen ? 'pointer-events-auto translate-y-0 opacity-100 scale-100' : 'pointer-events-none -translate-y-2 opacity-0 scale-95'
         }`}
       >
         <div className="mb-4 border-b border-[#434b54]/10 dark:border-white/10 pb-4">

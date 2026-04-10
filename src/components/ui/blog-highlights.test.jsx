@@ -4,6 +4,9 @@ import { act } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { BlogHighlights } from './blog-highlights'
 import { ProjectCard } from './project-card'
+import { staticBlogPosts } from '../../data/blogPosts'
+
+const STAGE_GAP_PX = 24
 
 beforeEach(() => {
   vi.useFakeTimers()
@@ -56,28 +59,25 @@ describe('BlogHighlights', () => {
     const nextButton = screen.getByRole('button', { name: /proximo post/i })
     const track = screen.getByTestId('blog-slider-track')
 
-    expect(screen.getAllByTestId('blog-slide')).toHaveLength(10)
+    expect(screen.getAllByTestId('blog-slide')).toHaveLength(staticBlogPosts.length)
     expect(screen.getByTestId('blog-slider-stage')).toHaveAttribute('data-phase', 'idle')
     expect(screen.getByTestId('blog-slider-stage')).toHaveAttribute('data-current-index', '0')
     expect(track).toHaveAttribute('data-animating', 'false')
     expect(previousButton).toBeDisabled()
     expect(nextButton).not.toBeDisabled()
 
-    expect(getVisibleSlideTitles()).toContain('Como transformar gargalos operacionais em vantagem competitiva')
-    expect(getVisibleSlideTitles()).not.toContain('Playbooks enxutos para times comerciais mais previsiveis')
+    expect(getVisibleSlideTitles()).toEqual(staticBlogPosts.slice(0, 3).map((post) => post.title))
+    expect(getVisibleSlideTitles()).not.toContain(staticBlogPosts.at(-1).title)
 
     fireEvent.click(nextButton)
 
+    expect(track.style.transform).toBe(`translate3d(calc(-${(1 / 3) * 100}% - ${STAGE_GAP_PX / 3}px), 0, 0)`)
     expect(screen.getByTestId('blog-slider-stage')).toHaveAttribute('data-phase', 'animating')
     expect(screen.getByTestId('blog-slider-stage')).toHaveAttribute('data-current-index', '1')
     expect(track).toHaveAttribute('data-animating', 'true')
     expect(previousButton).toBeDisabled()
     expect(nextButton).toBeDisabled()
-    expect(getVisibleSlideTitles()).toEqual([
-      'Governanca orientada por dados para times que precisam escalar',
-      'Automacao com impacto real: onde investir primeiro',
-      'Rituais de gestao que reduzem ruido e aceleram resposta',
-    ])
+    expect(getVisibleSlideTitles()).toEqual(staticBlogPosts.slice(1, 4).map((post) => post.title))
 
     fireEvent.click(nextButton)
     expect(screen.getByTestId('blog-slider-stage')).toHaveAttribute('data-current-index', '1')
@@ -89,12 +89,14 @@ describe('BlogHighlights', () => {
     expect(previousButton).not.toBeDisabled()
     expect(nextButton).not.toBeDisabled()
 
-    for (let step = 0; step < 6; step += 1) {
+    const maxDesktopIndex = staticBlogPosts.length - 3
+
+    for (let step = 0; step < maxDesktopIndex - 1; step += 1) {
       fireEvent.click(nextButton)
       fireEvent.transitionEnd(track, { propertyName: 'transform' })
     }
 
-    expect(getVisibleSlideTitles()).toContain('Playbooks enxutos para times comerciais mais previsiveis')
+    expect(getVisibleSlideTitles()).toContain(staticBlogPosts.at(-1).title)
     expect(nextButton).toBeDisabled()
 
     fireEvent.click(previousButton)
@@ -104,7 +106,7 @@ describe('BlogHighlights', () => {
     expect(nextButton).toBeDisabled()
 
     fireEvent.transitionEnd(track, { propertyName: 'transform' })
-    expect(getVisibleSlideTitles()).toContain('Onde a automacao falha quando o processo ainda esta errado')
+    expect(getVisibleSlideTitles()).toContain(staticBlogPosts.at(-2).title)
     expect(nextButton).not.toBeDisabled()
   })
 

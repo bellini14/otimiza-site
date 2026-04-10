@@ -1,12 +1,95 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import heroBwImage from '../assets/hero-bw.jpg'
 import iconeOtimizaFundo from '../assets/icone-otimiza-fundo.svg'
 import FeaturesSection from '../components/FeaturesSection'
 import TechnologySection from '../components/TechnologySection'
 import { BlogHighlights } from '../components/ui/blog-highlights'
 import { StaggerTestimonials } from '../components/ui/stagger-testimonials'
+import { ScrollVelocity } from '../components/ui/ScrollVelocity'
+import { client } from '../lib/sanity'
 
 
+const homeClientLogoQuery = `*[_type == "clientLogo" && isVisible != false && showOnHome == true && defined(logo.asset)] | order(coalesce(sortOrder, 9999) asc, name asc) {
+  _id,
+  name,
+  logoAlt,
+  website,
+  "logoUrl": logo.asset->url
+}`
+
+const HOME_CLIENT_LOGO_FALLBACKS = [
+  {
+    _id: 'fallback-banco-moneo',
+    name: 'Banco Moneo',
+    logoAlt: 'Moneo',
+    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/14ada562c98ddb5d2c60222e9288035ac02e1a03-2270x635.png',
+  },
+  {
+    _id: 'fallback-cinex',
+    name: 'Cinex',
+    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/8c12d0700da0b40cdf73dcea8d4f489ef3859176-1609x608.png',
+  },
+  {
+    _id: 'fallback-fruki',
+    name: 'Fruki',
+    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/79c4f8a6b0fad8e2514ca15d4a8f2ff1d2a49345-329x315.jpg',
+  },
+  {
+    _id: 'fallback-lojas-colombo',
+    name: 'Lojas Colombo',
+    logoAlt: 'Lojas Colombo',
+    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/9f1b13dbd4e018c6e2837784b2bbfbd43aca25fc-850x261.png',
+  },
+  {
+    _id: 'fallback-marcopolo',
+    name: 'Marcopolo',
+    logoAlt: 'Marcopolo',
+    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/dd2091b629f7bbec58fff53f6ba2e2da23401338-1628x297.svg',
+  },
+  {
+    _id: 'fallback-masterpower-turbo',
+    name: 'Masterpower Turbo',
+    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/68ee44abb22c64e0592de20a325451ba01208b1b-317x143.svg',
+  },
+  {
+    _id: 'fallback-postos-sim',
+    name: 'Postos SIM',
+    logoAlt: 'Postos SIM',
+    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/1cc404eacdd8f4ee3ab08e27d9acb3bcd612b69e-1612x1103.png',
+  },
+  {
+    _id: 'fallback-randon',
+    name: 'Randon',
+    logoAlt: 'Randon',
+    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/288a1b5f9372c157732913225bb28a38b15d278a-1471x365.jpg',
+  },
+  {
+    _id: 'fallback-sicredi',
+    name: 'Sicredi',
+    logoAlt: 'Sicredi',
+    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/d40d71f5cef53f1c4d008d82cb7d2006bcd1773a-3500x823.png',
+  },
+  {
+    _id: 'fallback-unimed-nacional',
+    name: 'Unimed Nacional',
+    logoAlt: 'Unimed',
+    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/a10f978d72a9d3b41ba68ae9f4d865921ab763ab-1184x422.png',
+  },
+  {
+    _id: 'fallback-universidade-feevale',
+    name: 'Universidade Feevale',
+    logoAlt: 'Feevale',
+    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/7a0583270438adefccdf6943e478c606855d1c87-960x240.png',
+  },
+  {
+    _id: 'fallback-universidade-de-caxias-do-sul',
+    name: 'Universidade de Caxias do Sul',
+    logoAlt: 'UCS',
+    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/1fe23ac3f948001964c133103f7470b985d0865f-2500x1264.png',
+  },
+]
+
+const MIN_HOME_LOGOS_PER_ROW = 6
 
 function useScrollReveal(threshold = 0.15) {
   const [isVisible, setIsVisible] = useState(false)
@@ -37,8 +120,99 @@ function preventHeroSubmit(event) {
   event.preventDefault()
 }
 
+function buildHomeLogoRows(logos) {
+  if (logos.length === 0) {
+    return []
+  }
+
+  const rows = [
+    logos.filter((_, index) => index % 2 === 0),
+    logos.filter((_, index) => index % 2 === 1),
+  ].map((row) => (row.length > 0 ? row : logos))
+  const logosPerRow = Math.max(MIN_HOME_LOGOS_PER_ROW, ...rows.map((row) => row.length))
+
+  const accessibleLogoKeys = new Set()
+
+  return rows.map((row) =>
+    repeatHomeLogosForMarquee(row, logosPerRow).map((logo, index) => {
+      const logoKey = logo._id || logo.name
+      const isDecorative = accessibleLogoKeys.has(logoKey)
+
+      accessibleLogoKeys.add(logoKey)
+
+      return {
+        instanceKey: `${logoKey}-${index}`,
+        isDecorative,
+        logo,
+      }
+    }),
+  )
+}
+
+function repeatHomeLogosForMarquee(logos, targetCount = MIN_HOME_LOGOS_PER_ROW) {
+  if (logos.length >= targetCount) {
+    return logos
+  }
+
+  return Array.from({ length: targetCount }, (_, index) => logos[index % logos.length])
+}
+
+function HomeClientLogo({ logo, isDecorative = false }) {
+  const logoImage = (
+    <img
+      src={logo.logoUrl}
+      alt={isDecorative ? '' : logo.logoAlt || logo.name}
+      className="max-h-9 w-auto max-w-[8.5rem] object-contain grayscale transition duration-300 group-hover/logo:grayscale-0"
+      loading="eager"
+      decoding="async"
+    />
+  )
+
+  return (
+    <div
+      className="home-client-logo-card group/logo flex h-16 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-8 transition hover:border-slate-300"
+      aria-hidden={isDecorative ? 'true' : undefined}
+    >
+      {logo.website ? (
+        <a href={logo.website} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center">
+          {logoImage}
+        </a>
+      ) : (
+        logoImage
+      )}
+    </div>
+  )
+}
+
 function Home() {
   const [brandsRef, brandsVisible] = useScrollReveal(0.1)
+  const [homeClientLogos, setHomeClientLogos] = useState([])
+  const homeLogoRows = buildHomeLogoRows(homeClientLogos)
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function fetchHomeClientLogos() {
+      try {
+        const logos = await client.fetch(homeClientLogoQuery)
+        if (isMounted && Array.isArray(logos)) {
+          setHomeClientLogos(logos)
+        }
+      } catch (error) {
+        console.error('Error fetching home client logos from Sanity:', error)
+        if (isMounted) {
+          setHomeClientLogos(HOME_CLIENT_LOGO_FALLBACKS)
+        }
+      }
+    }
+
+    fetchHomeClientLogos()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
   return (
     <div data-testid="home-page">
       <section className="home-hero">
@@ -103,89 +277,24 @@ function Home() {
               </p>
             </div>
             
-            <div className={`relative ${brandsVisible ? 'animate-enter' : 'opacity-0'} [animation-delay:450ms]`}>
-              <div className="space-y-6 [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
-                {/* Linha 1: Move para a esquerda */}
-                <div className="group flex overflow-hidden gap-6">
-                  <div className="flex shrink-0 animate-marquee gap-6">
-                    {[...Array(4)].map((_, i) => (
-                      <div key={i} className="flex gap-6">
-                        <div className="flex h-16 min-w-44 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-8 font-display text-xl font-medium text-slate-400 transition hover:border-slate-300 hover:text-slate-600">
-                          Boltshift
-                        </div>
-                        <div className="flex h-16 min-w-44 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-8 font-display text-xl font-medium text-slate-400 transition hover:border-slate-300 hover:text-slate-600">
-                          Lightbox
-                        </div>
-                        <div className="flex h-16 min-w-44 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-8 font-display text-xl font-medium text-slate-400 transition hover:border-slate-300 hover:text-slate-600">
-                          Feather Dev
-                        </div>
-                        <div className="flex h-16 min-w-44 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-8 font-display text-xl font-medium text-slate-400 transition hover:border-slate-300 hover:text-slate-600">
-                          Spherule
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex shrink-0 animate-marquee gap-6" aria-hidden="true">
-                    {[...Array(4)].map((_, i) => (
-                      <div key={`d-${i}`} className="flex gap-6">
-                        <div className="flex h-16 min-w-44 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-8 font-display text-xl font-medium text-slate-400 transition hover:border-slate-300 hover:text-slate-600">
-                          Boltshift
-                        </div>
-                        <div className="flex h-16 min-w-44 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-8 font-display text-xl font-medium text-slate-400 transition hover:border-slate-300 hover:text-slate-600">
-                          Lightbox
-                        </div>
-                        <div className="flex h-16 min-w-44 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-8 font-display text-xl font-medium text-slate-400 transition hover:border-slate-300 hover:text-slate-600">
-                          Feather Dev
-                        </div>
-                        <div className="flex h-16 min-w-44 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-8 font-display text-xl font-medium text-slate-400 transition hover:border-slate-300 hover:text-slate-600">
-                          Spherule
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Linha 2: Move para a direita (reverse) */}
-                <div className="group flex overflow-hidden gap-6">
-                  <div className="flex shrink-0 animate-marqueeReverse gap-6">
-                    {[...Array(4)].map((_, i) => (
-                      <div key={i} className="flex gap-6">
-                        <div className="flex h-16 min-w-44 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-8 font-display text-xl font-medium text-slate-400 transition hover:border-slate-300 hover:text-slate-600">
-                          Global Bank
-                        </div>
-                        <div className="flex h-16 min-w-44 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-8 font-display text-xl font-medium text-slate-400 transition hover:border-slate-300 hover:text-slate-600">
-                          Nietzsche
-                        </div>
-                        <div className="flex h-16 min-w-44 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-8 font-display text-xl font-medium text-slate-400 transition hover:border-slate-300 hover:text-slate-600">
-                          Hourglass
-                        </div>
-                        <div className="flex h-16 min-w-44 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-8 font-display text-xl font-medium text-slate-400 transition hover:border-slate-300 hover:text-slate-600">
-                          Catalog
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex shrink-0 animate-marqueeReverse gap-6" aria-hidden="true">
-                    {[...Array(4)].map((_, i) => (
-                      <div key={`d-${i}`} className="flex gap-6">
-                        <div className="flex h-16 min-w-44 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-8 font-display text-xl font-medium text-slate-400 transition hover:border-slate-300 hover:text-slate-600">
-                          Global Bank
-                        </div>
-                        <div className="flex h-16 min-w-44 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-8 font-display text-xl font-medium text-slate-400 transition hover:border-slate-300 hover:text-slate-600">
-                          Nietzsche
-                        </div>
-                        <div className="flex h-16 min-w-44 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-8 font-display text-xl font-medium text-slate-400 transition hover:border-slate-300 hover:text-slate-600">
-                          Hourglass
-                        </div>
-                        <div className="flex h-16 min-w-44 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-8 font-display text-xl font-medium text-slate-400 transition hover:border-slate-300 hover:text-slate-600">
-                          Catalog
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+            {homeLogoRows.length > 0 && (
+              <div
+                className={`relative w-full overflow-hidden ${brandsVisible ? 'animate-enter' : 'opacity-0'} [animation-delay:450ms]`}
+                data-testid="home-client-logo-carousel"
+              >
+                <ScrollVelocity
+                  velocity={40}
+                  className="flex"
+                  texts={homeLogoRows.map((logos) => (
+                    <div className="flex gap-6 pr-6">
+                      {logos.map(({ instanceKey, isDecorative, logo }) => (
+                        <HomeClientLogo key={instanceKey} logo={logo} isDecorative={isDecorative} />
+                      ))}
+                    </div>
+                  ))}
+                />
               </div>
-            </div>
+            )}
           </div>
         </section>
 
