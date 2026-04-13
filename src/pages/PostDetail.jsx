@@ -18,7 +18,7 @@ function PostDetail() {
       mainImage,
       content
     }`
-    
+
     client.fetch(query, { slug }).then((data) => {
       setPost(data)
       setLoading(false)
@@ -36,8 +36,8 @@ function PostDetail() {
   if (!post) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-24 text-center">
-        <h1 className="text-3xl font-bold text-slate-900">Post não encontrado</h1>
-        <p className="mt-4 text-slate-600">O artigo que você está procurando não existe ou foi removido.</p>
+        <h1 className="text-3xl font-bold text-slate-900">Post nÃ£o encontrado</h1>
+        <p className="mt-4 text-slate-600">O artigo que vocÃª estÃ¡ procurando nÃ£o existe ou foi removido.</p>
         <Link to="/insights-e-blog" className="mt-8 inline-flex items-center gap-2 text-brand-red hover:underline">
           <ArrowLeft className="h-4 w-4" /> Voltar para o blog
         </Link>
@@ -45,10 +45,37 @@ function PostDetail() {
     )
   }
 
+  const portableTextComponents = {
+    types: {
+      image: ({ value }) => {
+        if (!value?.asset) {
+          return null
+        }
+
+        return (
+          <figure className="my-10 overflow-hidden rounded-2xl">
+            <img
+              src={urlFor(value).width(1200).url()}
+              alt={value.alt || post.title}
+              className="w-full rounded-2xl object-cover"
+              loading="lazy"
+              decoding="async"
+            />
+            {value.caption && (
+              <figcaption className="mt-3 text-sm leading-6 text-slate-500">
+                {value.caption}
+              </figcaption>
+            )}
+          </figure>
+        )
+      },
+    },
+  }
+
   return (
     <article className="mx-auto max-w-[900px] px-4 py-16 sm:px-6 lg:py-24">
-      <Link 
-        to="/insights-e-blog" 
+      <Link
+        to="/insights-e-blog"
         className="mb-12 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
       >
         <ArrowLeft className="h-4 w-4" /> Voltar para Insights e Blog
@@ -67,16 +94,16 @@ function PostDetail() {
               {new Date(post.publishedAt).toLocaleDateString('pt-BR', {
                 day: '2-digit',
                 month: 'long',
-                year: 'numeric'
+                year: 'numeric',
               })}
             </span>
           )}
         </div>
-        
+
         <h1 className="font-display text-4xl font-bold text-slate-900 sm:text-5xl lg:text-6xl leading-[1.1]">
           {post.title}
         </h1>
-        
+
         {post.description && (
           <p className="mt-8 text-xl leading-relaxed text-slate-600 italic border-l-4 border-brand-red pl-6">
             {post.description}
@@ -86,20 +113,22 @@ function PostDetail() {
 
       {post.mainImage && (
         <div className="mb-16 overflow-hidden rounded-2xl shadow-xl">
-          <img 
-            src={urlFor(post.mainImage).width(1200).url()} 
+          <img
+            src={urlFor(post.mainImage).width(1200).url()}
             alt={post.title}
             className="w-full object-cover"
           />
         </div>
       )}
 
-      <div className="prose prose-slate prose-lg max-w-none 
+      <div
+        className="prose prose-slate prose-lg max-w-none
         prose-headings:font-display prose-headings:text-slate-900
         prose-p:leading-relaxed prose-p:text-slate-700
         prose-strong:text-slate-900
-        prose-li:text-slate-700">
-        <PortableText value={post.content} />
+        prose-li:text-slate-700"
+      >
+        <PortableText value={post.content} components={portableTextComponents} />
       </div>
 
       <footer className="mt-20 border-t border-slate-200 pt-10">
@@ -109,8 +138,8 @@ function PostDetail() {
             <button className="rounded-full bg-slate-100 px-6 py-2.5 text-sm font-semibold text-slate-900 transition-colors hover:bg-slate-200">
               Compartilhar
             </button>
-            <Link 
-              to="/contato" 
+            <Link
+              to="/contato"
               className="rounded-full bg-brand-red px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700"
             >
               Falar com um especialista

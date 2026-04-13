@@ -284,9 +284,8 @@ function Home() {
               >
                 <ScrollVelocity
                   velocity={40}
-                  className="flex"
-                  texts={homeLogoRows.map((logos) => (
-                    <div className="flex gap-6 pr-6">
+                  texts={homeLogoRows.map((logos, rowIndex) => (
+                    <div key={rowIndex} className="flex items-center gap-6 pr-6">
                       {logos.map(({ instanceKey, isDecorative, logo }) => (
                         <HomeClientLogo key={instanceKey} logo={logo} isDecorative={isDecorative} />
                       ))}

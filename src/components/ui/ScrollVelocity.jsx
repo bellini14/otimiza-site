@@ -1,4 +1,4 @@
-import React, { useRef, useLayoutEffect, useState } from 'react';
+import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import {
   motion,
   useScroll,
@@ -15,7 +15,7 @@ function useElementWidth(ref) {
   useLayoutEffect(() => {
     function updateWidth() {
       if (ref.current) {
-        setWidth(ref.current.offsetWidth);
+        setWidth(ref.current.scrollWidth);
       }
     }
     updateWidth();
@@ -23,10 +23,31 @@ function useElementWidth(ref) {
     return () => window.removeEventListener('resize', updateWidth);
   }, [ref]);
 
+  // Re-measure when images load (important for logo carousels)
+  useEffect(() => {
+    if (!ref.current) return;
+
+    function handleLoad() {
+      if (ref.current) {
+        setWidth(ref.current.scrollWidth);
+      }
+    }
+
+    const images = ref.current.querySelectorAll('img');
+    const unloadedImages = Array.from(images).filter((img) => !img.complete);
+
+    if (unloadedImages.length === 0) return;
+
+    unloadedImages.forEach((img) => img.addEventListener('load', handleLoad));
+    return () => {
+      unloadedImages.forEach((img) => img.removeEventListener('load', handleLoad));
+    };
+  }, [ref]);
+
   return width;
 }
 
-export function VelocityText({
+export function VelocityRow({
     children,
     baseVelocity = 100,
     scrollContainerRef,
@@ -77,6 +98,8 @@ export function VelocityText({
 
     const directionFactor = useRef(1);
     useAnimationFrame((t, delta) => {
+      if (copyWidthRef.current === 0) return; // Skip until measured
+
       let moveBy = directionFactor.current * baseVelocity * (delta / 1000);
 
       if (velocityFactor.get() < 0) {
@@ -89,22 +112,22 @@ export function VelocityText({
       baseX.set(baseX.get() + moveBy);
     });
 
-    const spans = [];
+    const copies = [];
     for (let i = 0; i < (numCopies ?? 6); i++) {
-      spans.push(
-        <span className={`flex-shrink-0 ${className}`} key={i} ref={i === 0 ? copyRef : null}>
+      copies.push(
+        <div className={`shrink-0 ${className}`} key={i} ref={i === 0 ? copyRef : null}>
           {children}
-        </span>
+        </div>
       );
     }
 
     return (
       <div className={`${parallaxClassName} relative overflow-hidden`} style={parallaxStyle}>
         <motion.div
-          className={`${scrollerClassName} flex whitespace-nowrap`}
+          className={`${scrollerClassName} flex`}
           style={{ x, ...scrollerStyle }}
         >
-          {spans}
+          {copies}
         </motion.div>
       </div>
     );
@@ -126,8 +149,8 @@ export function ScrollVelocity({
 }) {
   return (
     <div className="space-y-6 [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
-      {texts.map((text, index) => (
-        <VelocityText
+      {texts.map((content, index) => (
+        <VelocityRow
           key={index}
           className={className}
           baseVelocity={index % 2 !== 0 ? -velocity : velocity}
@@ -141,8 +164,8 @@ export function ScrollVelocity({
           parallaxStyle={parallaxStyle}
           scrollerStyle={scrollerStyle}
         >
-          {text}
-        </VelocityText>
+          {content}
+        </VelocityRow>
       ))}
     </div>
   );

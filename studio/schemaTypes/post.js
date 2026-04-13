@@ -1,4 +1,4 @@
-import { defineField, defineType } from 'sanity'
+import { defineArrayMember, defineField, defineType } from 'sanity'
 
 export const postType = defineType({
   name: 'post',
@@ -7,7 +7,7 @@ export const postType = defineType({
   fields: [
     defineField({
       name: 'title',
-      title: 'Título',
+      title: 'TÃ­tulo',
       type: 'string',
       validation: (Rule) => Rule.required(),
     }),
@@ -25,11 +25,11 @@ export const postType = defineType({
       name: 'eyebrow',
       title: 'Categoria (Eyebrow)',
       type: 'string',
-      description: 'Ex: Tecnologia, Estratégia, Gestão',
+      description: 'Ex: Tecnologia, EstratÃ©gia, GestÃ£o',
     }),
     defineField({
       name: 'description',
-      title: 'Resumo / Descrição',
+      title: 'Resumo / DescriÃ§Ã£o',
       type: 'text',
       rows: 3,
     }),
@@ -43,14 +43,34 @@ export const postType = defineType({
     }),
     defineField({
       name: 'publishedAt',
-      title: 'Data de Publicação',
+      title: 'Data de PublicaÃ§Ã£o',
       type: 'datetime',
     }),
     defineField({
       name: 'content',
-      title: 'Conteúdo',
+      title: 'ConteÃºdo',
       type: 'array',
-      of: [{ type: 'block' }],
+      of: [
+        defineArrayMember({ type: 'block' }),
+        defineArrayMember({
+          type: 'image',
+          options: {
+            hotspot: true,
+          },
+          fields: [
+            defineField({
+              name: 'alt',
+              title: 'Texto alternativo',
+              type: 'string',
+            }),
+            defineField({
+              name: 'caption',
+              title: 'Legenda',
+              type: 'string',
+            }),
+          ],
+        }),
+      ],
     }),
   ],
 })
