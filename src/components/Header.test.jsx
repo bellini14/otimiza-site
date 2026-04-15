@@ -26,7 +26,7 @@ describe('Header', () => {
     expect(screen.getByRole('button', { name: 'Institucional' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Soluções' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Cases' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Insights e Blog' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Inspire' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Fale com a Otimiza' })).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /open menu/i }))

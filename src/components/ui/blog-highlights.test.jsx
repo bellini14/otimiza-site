@@ -34,15 +34,15 @@ describe('BlogHighlights', () => {
       </MemoryRouter>,
     )
 
-    const heading = screen.getByRole('heading', { name: /insights para quem opera no longo prazo/i })
+    const heading = screen.getByRole('heading', { name: /inspire para quem opera no longo prazo/i })
     const section = heading.closest('section')
 
     expect(heading).toBeInTheDocument()
     expect(section?.className).toMatch(/bg-\[#EFEFF4\]/)
     expect(screen.getByRole('button', { name: /post anterior/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /proximo post/i })).toBeInTheDocument()
-    expect(screen.getAllByRole('link', { name: /ler artigo|ver todos os artigos/i }).length).toBeGreaterThanOrEqual(4)
-    expect(screen.getByRole('link', { name: /ver todos os artigos/i })).toHaveAttribute('href', '/insights-e-blog')
+    expect(screen.getAllByRole('link', { name: /ler artigo|explorar inspire/i }).length).toBeGreaterThanOrEqual(4)
+    expect(screen.getByRole('link', { name: /explorar inspire/i })).toHaveAttribute('href', '/inspire')
     expect(screen.getByTestId('blog-slider-stage').className).toMatch(/overflow-y-visible/)
   })
 
@@ -139,7 +139,7 @@ describe('BlogHighlights', () => {
           title="Teste"
           description="Descricao"
           imgSrc="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80"
-          link="/insights-e-blog"
+          link="/inspire"
           linkText="Ler artigo"
         />
       </MemoryRouter>,

@@ -16,12 +16,12 @@ export function normalizeCategory(eyebrow) {
 }
 
 /**
- * Derive unique month/year options from post dates, newest first.
- * Each option is { key: 'YYYY-MM', label: 'Abr 2026' }.
+ * Derive unique year options from post dates, newest first.
+ * Each option is { key: 'YYYY', label: '2026' }.
  * @param {Array} posts
  * @returns {Array<{ key: string, label: string }>}
  */
-export function deriveMonthOptions(posts) {
+export function deriveYearOptions(posts) {
   const seen = new Map()
 
   for (const post of posts) {
@@ -30,16 +30,10 @@ export function deriveMonthOptions(posts) {
     if (Number.isNaN(d.getTime())) continue
 
     const year = d.getUTCFullYear()
-    const month = d.getUTCMonth() // 0-based
-    const key = `${year}-${String(month + 1).padStart(2, '0')}`
+    const key = `${year}`
 
     if (!seen.has(key)) {
-      const label = d
-        .toLocaleDateString('pt-BR', { month: 'short', year: 'numeric', timeZone: 'UTC' })
-        .replace('.', '')
-        // Capitalise first letter
-        .replace(/^./, (c) => c.toUpperCase())
-      seen.set(key, { key, label, _sort: year * 100 + month })
+      seen.set(key, { key, label: `${year}`, _sort: year })
     }
   }
 
@@ -91,22 +85,22 @@ export function sortByDate(posts) {
 }
 
 /**
- * Filter posts by active month key and active categories.
+ * Filter posts by active year key and active categories.
  *
  * @param {Array} posts – full sorted list
- * @param {string|null} activeMonth – 'YYYY-MM' or null for all
+ * @param {string|null} activeYear – 'YYYY' or null for all
  * @param {Set<string>} activeCategories – set of normalised category strings
  * @returns {Array}
  */
-export function filterPosts(posts, activeMonth, activeCategories) {
+export function filterPosts(posts, activeYear, activeCategories) {
   return posts.filter((post) => {
-    // Month filter
-    if (activeMonth) {
+    // Year filter
+    if (activeYear) {
       if (!post.publishedAt) return false
       const d = new Date(post.publishedAt)
       if (Number.isNaN(d.getTime())) return false
-      const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
-      if (key !== activeMonth) return false
+      const key = `${d.getUTCFullYear()}`
+      if (key !== activeYear) return false
     }
 
     // Category filter (OR when multiple are selected)

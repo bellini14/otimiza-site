@@ -28,7 +28,7 @@ export function BlogHighlights() {
           title,
           description,
           "imgSrc": mainImage.asset->url,
-          "link": "/insights-e-blog/" + slug.current,
+          "link": "/inspire/" + slug.current,
           eyebrow,
           "linkText": "Ler artigo"
         }`
@@ -117,7 +117,7 @@ export function BlogHighlights() {
                 isVisible ? 'animate-enter' : 'opacity-0',
               )}
             >
-              Insights e Blog
+              Inspire
             </p>
             <h2
               className={cn(
@@ -126,7 +126,7 @@ export function BlogHighlights() {
                 '[animation-delay:150ms]',
               )}
             >
-              Insights para quem opera no longo prazo
+              Inspire para quem opera no longo prazo
             </h2>
           </div>
 
@@ -215,10 +215,10 @@ export function BlogHighlights() {
             {String(blogPosts.length).padStart(2, '0')}
           </p>
           <Link
-            to="/insights-e-blog"
+            to="/inspire"
             className="group inline-flex items-center gap-2 rounded-full border border-slate-200 px-5 py-3 text-sm font-medium text-slate-900 transition-all duration-300 hover:border-slate-300 hover:bg-slate-50"
           >
-            Ver todos os artigos
+            Explorar Inspire
             <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
           </Link>
         </div>

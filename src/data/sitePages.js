@@ -94,8 +94,8 @@ export const sitePages = {
       },
     ],
   },
-  'insights-e-blog': {
-    title: 'Insights e Blog',
+  inspire: {
+    title: 'Inspire',
     intro:
       'Publicacoes com aprendizados de campo, tendencias e guias praticos para quem busca evoluir resultados.',
     sections: [
@@ -139,6 +139,6 @@ export const siteNav = [
   { path: '/cases', label: 'Cases' },
   { path: '/tecnologia', label: 'Tecnologia' },
   { path: '/academia-otimiza', label: 'Academia Otimiza' },
-  { path: '/insights-e-blog', label: 'Insights e Blog' },
+  { path: '/inspire', label: 'Inspire' },
   { path: '/contato', label: 'Contato' },
 ]

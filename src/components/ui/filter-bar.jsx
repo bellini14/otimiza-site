@@ -2,9 +2,9 @@ import { ChevronDown, X } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
 /**
- * Compact month/year dropdown select.
+ * Compact year dropdown select.
  */
-function MonthSelect({ options, value, onChange }) {
+function YearSelect({ options, value, onChange }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
 
@@ -21,7 +21,7 @@ function MonthSelect({ options, value, onChange }) {
 
   const selectedLabel = value
     ? options.find((o) => o.key === value)?.label ?? value
-    : 'Todos os períodos'
+    : 'Todos os anos'
 
   return (
     <div className="filter-bar__month" ref={ref}>
@@ -52,7 +52,7 @@ function MonthSelect({ options, value, onChange }) {
                 setOpen(false)
               }}
             >
-              Todos os períodos
+              Todos os anos
             </button>
           </li>
           {options.map((opt) => (
@@ -115,23 +115,23 @@ function CategoryChips({ options, active, onToggle }) {
  *  - onClearFilters: () => void
  */
 export function FilterBar({
-  monthOptions,
+  yearOptions,
   categoryOptions,
-  activeMonth,
+  activeYear,
   activeCategories,
-  onMonthChange,
+  onYearChange,
   onCategoryToggle,
   onClearFilters,
 }) {
-  const hasFilters = activeMonth !== null || activeCategories.size > 0
+  const hasFilters = activeYear !== null || activeCategories.size > 0
 
   return (
     <div className="filter-bar">
       <div className="filter-bar__controls">
-        <MonthSelect
-          options={monthOptions}
-          value={activeMonth}
-          onChange={onMonthChange}
+        <YearSelect
+          options={yearOptions}
+          value={activeYear}
+          onChange={onYearChange}
         />
 
         {categoryOptions.length > 0 && (

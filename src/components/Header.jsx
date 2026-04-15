@@ -26,7 +26,7 @@ const dropdownGroups = [
 
 const directLinks = [
   { path: '/cases', label: 'Cases' },
-  { path: '/insights-e-blog', label: 'Insights e Blog' },
+  { path: '/inspire', label: 'Inspire' },
 ]
 
 const mobileLinks = [{ path: '/', label: 'Home' }, ...siteNav]
