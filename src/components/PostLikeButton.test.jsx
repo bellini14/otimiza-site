@@ -34,10 +34,14 @@ describe('PostLikeButton', () => {
     const { container } = render(<PostLikeButton slug="post-com-imagem-inline" />)
 
     const button = await screen.findByRole('button', { name: /7 curtidas/i })
+    const count = container.querySelector('.post-like-button__count')
 
     expect(button).toBeInTheDocument()
-    expect(button).toHaveTextContent('7')
+    expect(button).not.toHaveTextContent('7')
     expect(container.querySelector('.post-like-button__icon-shell')).not.toBeNull()
+    expect(count).not.toBeNull()
+    expect(count?.textContent).toBe('7')
+    expect(button.contains(count)).toBe(false)
     expect(fetchMock).toHaveBeenCalledWith('/api/posts/post-com-imagem-inline/likes', { method: 'GET' })
   })
 

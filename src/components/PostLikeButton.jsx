@@ -86,39 +86,49 @@ function PostLikeButton({ slug, className = '', variant = 'detail' }) {
     }
   }
 
-  const buttonClassName = [
-    'post-like-button',
-    `post-like-button--${variant}`,
-    liked ? 'post-like-button--liked' : '',
+  const groupClassName = [
+    'post-like-button-group',
+    `post-like-button-group--${variant}`,
+    liked ? 'post-like-button-group--liked' : '',
     className,
   ]
     .filter(Boolean)
     .join(' ')
 
+  const buttonClassName = [
+    'post-like-button',
+    `post-like-button--${variant}`,
+    liked ? 'post-like-button--liked' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return (
-    <button
-      type="button"
-      aria-label={getButtonAriaLabel({ likeCount, liked })}
-      aria-pressed={liked}
-      disabled={liked || isSubmitting}
-      onClick={handleClick}
-      className={buttonClassName}
-    >
-      <span className="post-like-button__icon-shell" aria-hidden="true">
-        <span
-          className={`post-like-button__icon ${
-            liked ? 'post-like-button__icon--liked' : ''
-          } ${isAnimating ? 'post-like-button__icon--popping' : ''}`.trim()}
-        >
-          <Heart size={16} strokeWidth={1.8} fill={liked ? 'currentColor' : 'none'} />
+    <span className={groupClassName}>
+      <button
+        type="button"
+        aria-label={getButtonAriaLabel({ likeCount, liked })}
+        aria-pressed={liked}
+        disabled={liked || isSubmitting}
+        onClick={handleClick}
+        className={buttonClassName}
+      >
+        <span className="post-like-button__icon-shell" aria-hidden="true">
+          <span
+            className={`post-like-button__icon ${
+              liked ? 'post-like-button__icon--liked' : ''
+            } ${isAnimating ? 'post-like-button__icon--popping' : ''}`.trim()}
+          >
+            <Heart size={16} strokeWidth={1.8} fill={liked ? 'currentColor' : 'none'} />
+          </span>
         </span>
-      </span>
+      </button>
       {typeof likeCount === 'number' && (
         <span className="post-like-button__count" aria-hidden="true">
           {likeCount}
         </span>
       )}
-    </button>
+    </span>
   )
 }
 

@@ -95,7 +95,7 @@ describe('PostDetail', () => {
   it('renders inline body images, captions, and the fetched global like count', async () => {
     fetchMock.mockResolvedValueOnce(createJsonResponse({ slug: 'post-com-imagem-inline', count: 7 }))
 
-    renderPostDetail()
+    const { container } = renderPostDetail()
 
     expect(await screen.findByRole('heading', { name: 'Post com imagem inline' })).toBeInTheDocument()
     expect(screen.getByText('Paragrafo de abertura.')).toBeInTheDocument()
@@ -106,7 +106,11 @@ describe('PostDetail', () => {
     expect(screen.getByText('Workshop com o time do cliente.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /voltar para inspire/i })).toHaveAttribute('href', '/inspire')
     expect(screen.getByText('Obrigado por ler na Inspire.')).toBeInTheDocument()
-    expect(await screen.findByRole('button', { name: /7 curtidas/i })).toHaveTextContent('7')
+    const likeButton = await screen.findByRole('button', { name: /7 curtidas/i })
+    const count = container.querySelector('.post-like-button__count')
+    expect(likeButton).not.toHaveTextContent('7')
+    expect(count?.textContent).toBe('7')
+    expect(likeButton.contains(count)).toBe(false)
     expect(fetchMock).toHaveBeenCalledWith('/api/posts/post-com-imagem-inline/likes', { method: 'GET' })
   })
 

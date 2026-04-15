@@ -171,7 +171,10 @@ describe('Inspire', () => {
 
     expect(within(firstStory).getByText(/min de leitura/i)).toBeInTheDocument()
     const likeButton = await within(firstStory).findByRole('button', { name: /1 curtida/i })
-    expect(likeButton).toHaveTextContent('1')
+    const count = firstStory.querySelector('.post-like-button__count')
+    expect(likeButton).not.toHaveTextContent('1')
+    expect(count?.textContent).toBe('1')
+    expect(likeButton.contains(count)).toBe(false)
     expect(within(firstStory).queryByText(/^Curtir$/i)).not.toBeInTheDocument()
     expect(within(firstStory).getByRole('button', { name: 'Compartilhar' })).toBeInTheDocument()
     expect(within(firstStory).queryByText(/notes/i)).not.toBeInTheDocument()
