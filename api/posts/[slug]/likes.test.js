@@ -2,11 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const getCount = vi.fn()
 const incrementCount = vi.fn()
+const decrementCount = vi.fn()
 
 vi.mock('../../_lib/postLikesStore.js', () => ({
   getPostLikesStore: () => ({
     getCount,
     incrementCount,
+    decrementCount,
   }),
   normalizePostSlug: (value) => (typeof value === 'string' ? value.trim() : ''),
 }))
@@ -41,6 +43,7 @@ function createResponse() {
 beforeEach(() => {
   getCount.mockReset()
   incrementCount.mockReset()
+  decrementCount.mockReset()
 })
 
 describe('post likes api route', () => {
@@ -90,11 +93,12 @@ describe('post likes api route', () => {
 
     expect(getCount).not.toHaveBeenCalled()
     expect(incrementCount).not.toHaveBeenCalled()
+    expect(decrementCount).not.toHaveBeenCalled()
     expect(res.statusCode).toBe(400)
     expect(res.jsonBody).toEqual({ error: 'Invalid post slug.' })
   })
 
-  it('returns method not allowed for unsupported verbs', async () => {
+  it('decrements likes on delete requests and returns the updated count', async () => {
     const { default: handler } = await import('./likes.js')
     const req = {
       method: 'DELETE',
@@ -102,9 +106,26 @@ describe('post likes api route', () => {
     }
     const res = createResponse()
 
+    decrementCount.mockResolvedValue(7)
+
     await handler(req, res)
 
-    expect(res.headers.Allow).toEqual(['GET', 'POST'])
+    expect(decrementCount).toHaveBeenCalledWith('meu-post')
+    expect(res.statusCode).toBe(200)
+    expect(res.jsonBody).toEqual({ slug: 'meu-post', count: 7, liked: false })
+  })
+
+  it('returns method not allowed for unsupported verbs', async () => {
+    const { default: handler } = await import('./likes.js')
+    const req = {
+      method: 'PATCH',
+      query: { slug: 'meu-post' },
+    }
+    const res = createResponse()
+
+    await handler(req, res)
+
+    expect(res.headers.Allow).toEqual(['GET', 'POST', 'DELETE'])
     expect(res.statusCode).toBe(405)
     expect(res.jsonBody).toEqual({ error: 'Method not allowed.' })
   })

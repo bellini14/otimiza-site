@@ -34,6 +34,8 @@
   --theme-toggle-shell-hover: #ffffff;
   --theme-toggle-border: rgb(67 75 84 / 14%);
   --theme-toggle-ink: #5a6572;
+  --page-transition-surface: rgb(248 250 252 / 0.98);
+  --page-transition-edge: rgb(203 213 225 / 0.8);
 }
 
 html.dark {
@@ -57,6 +59,8 @@ html.dark {
   --theme-toggle-shell-hover: rgb(15 23 42 / 92%);
   --theme-toggle-border: rgb(148 163 184 / 18%);
   --theme-toggle-ink: #e2e8f0;
+  --page-transition-surface: rgb(15 23 42 / 0.98);
+  --page-transition-edge: rgb(51 65 85 / 0.82);
 }
 
 @layer base {
@@ -68,6 +72,7 @@ html.dark {
 
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
     overflow-x: hidden;
   }
 
@@ -83,6 +88,34 @@ html.dark {
       background-image 180ms ease;
   }
 
+}
+
+/* ── Page Curtain Transition (Motto-style parallax) ── */
+.page-curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  overflow: hidden;
+  background: #ffffff;
+  will-change: transform;
+}
+
+html.dark .page-curtain {
+  background: #111827;
+}
+
+.page-curtain__inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform;
+}
+
+.page-curtain__svg {
+  width: 7rem;
+  height: auto;
 }
 
 @layer components {
@@ -123,112 +156,67 @@ html.dark {
   .post-like-button-group {
     display: inline-flex;
     align-items: center;
-    gap: 0.48rem;
+    gap: 0.5rem;
     vertical-align: middle;
   }
 
   .post-like-button {
-    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0;
-    min-height: 2.35rem;
-    border: 1px solid rgb(167 178 189 / 48%);
+    width: 2.3rem;
+    height: 2.3rem;
+    padding: 0;
+    border: 1px solid rgb(166 174 184 / 70%);
     border-radius: 999px;
-    background: linear-gradient(180deg, rgb(255 255 255 / 96%), rgb(243 246 249 / 96%));
-    box-shadow:
-      0 12px 26px rgb(99 115 129 / 12%),
-      inset 0 1px 0 rgb(255 255 255 / 92%);
-    color: #4d5e6f;
+    background: transparent;
+    box-shadow: none;
+    color: #798694;
     font: inherit;
-    font-weight: 600;
     line-height: 1;
     cursor: pointer;
-    overflow: hidden;
-    isolation: isolate;
-    backdrop-filter: blur(12px);
     transition:
       border-color 180ms ease,
       background-color 180ms ease,
-      box-shadow 180ms ease,
-      color 180ms ease,
-      transform 180ms ease;
-  }
-
-  .post-like-button::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(circle at left center, rgb(255 215 215 / 36%), transparent 42%),
-      linear-gradient(120deg, rgb(255 255 255 / 26%), transparent 58%);
-    opacity: 0.72;
-    transition: opacity 180ms ease;
-    pointer-events: none;
+      color 180ms ease;
   }
 
   .post-like-button:hover {
-    border-color: rgb(140 153 166 / 60%);
-    background: linear-gradient(180deg, #ffffff, #eef3f7);
-    box-shadow:
-      0 16px 34px rgb(99 115 129 / 16%),
-      inset 0 1px 0 rgb(255 255 255 / 96%);
-    color: #425364;
-    transform: translateY(-1px) scale(1.01);
-  }
-
-  .post-like-button:hover::before {
-    opacity: 1;
+    border-color: #a7b0b9;
+    background: rgb(90 101 114 / 0.04);
+    color: #5a6572;
   }
 
   .post-like-button:focus-visible {
     outline: none;
-    border-color: rgb(197 72 72 / 58%);
-    box-shadow:
-      0 0 0 4px rgb(224 32 32 / 12%),
-      0 16px 34px rgb(99 115 129 / 16%),
-      inset 0 1px 0 rgb(255 255 255 / 96%);
+    border-color: rgb(201 83 83 / 72%);
+    box-shadow: 0 0 0 3px rgb(224 32 32 / 10%);
   }
 
-  .post-like-button:active {
-    transform: scale(0.98);
-  }
-
-  .post-like-button:disabled {
-    cursor: default;
-  }
-
-  .post-like-button:disabled:not(.post-like-button--liked) {
-    opacity: 0.78;
+  .post-like-button[aria-disabled='true'] {
+    opacity: 0.72;
   }
 
   .post-like-button--liked {
-    border-color: rgb(222 143 143 / 72%);
-    background: linear-gradient(180deg, #fff7f7, #ffe7e7);
-    box-shadow:
-      0 14px 28px rgb(180 35 35 / 14%),
-      inset 0 1px 0 rgb(255 255 255 / 88%);
+    border-color: rgb(212 112 112 / 72%);
+    background: rgb(217 66 66 / 0.08);
     color: #a92626;
   }
 
   .post-like-button--liked:hover {
-    border-color: rgb(222 143 143 / 72%);
-    background: linear-gradient(180deg, #fff7f7, #ffe7e7);
-    box-shadow:
-      0 14px 28px rgb(180 35 35 / 14%),
-      inset 0 1px 0 rgb(255 255 255 / 88%);
+    border-color: rgb(212 112 112 / 72%);
+    background: rgb(217 66 66 / 0.12);
     color: #a92626;
-    transform: none;
   }
 
   .post-like-button--detail {
-    padding: 0.24rem;
+    width: 2.625rem;
+    height: 2.625rem;
   }
 
   .post-like-button--feed {
-    min-height: 2.02rem;
-    padding: 0.18rem;
+    width: 2.08rem;
+    height: 2.08rem;
   }
 
   .post-like-button-group--detail {
@@ -242,57 +230,30 @@ html.dark {
   }
 
   .post-like-button__icon-shell {
-    position: relative;
-    z-index: 1;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 1.85rem;
-    height: 1.85rem;
+    width: 100%;
+    height: 100%;
     flex: 0 0 auto;
-    border: 1px solid rgb(255 255 255 / 82%);
-    border-radius: 999px;
-    background: linear-gradient(180deg, rgb(255 255 255 / 96%), rgb(239 243 247 / 96%));
-    box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 94%),
-      0 8px 14px rgb(99 115 129 / 14%);
-    transition:
-      background-color 180ms ease,
-      box-shadow 180ms ease,
-      transform 180ms ease;
-  }
-
-  .post-like-button:hover .post-like-button__icon-shell {
-    transform: translateY(-1px);
   }
 
   .post-like-button__icon {
-    position: relative;
-    z-index: 1;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     transform-origin: center;
-    color: #708091;
+    color: currentColor;
   }
 
   .post-like-button__count {
     min-width: 0.85rem;
-    padding-right: 0.04rem;
-    font-size: 0.86em;
-    font-weight: 700;
+    padding-right: 0;
+    font-size: 0.9em;
+    font-weight: 600;
     font-variant-numeric: tabular-nums;
-    letter-spacing: 0.02em;
-    color: #b35454;
-    text-shadow: 0 1px 0 rgb(255 255 255 / 55%);
-  }
-
-  .post-like-button--liked .post-like-button__icon-shell {
-    border-color: rgb(255 255 255 / 62%);
-    background: linear-gradient(180deg, #ffdede, #ffc7c7);
-    box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 70%),
-      0 10px 18px rgb(180 35 35 / 18%);
+    letter-spacing: 0.01em;
+    color: #7d8895;
   }
 
   .post-like-button__icon--liked {
@@ -323,6 +284,8 @@ html.dark {
     min-height: 100svh;
     overflow: hidden;
   }
+
+
 
   /* ── Left Panel ── */
   .home-hero__left {
@@ -728,6 +691,73 @@ html.dark {
 
   .animate-enter {
     animation: fade-rise 850ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .feature-card-sweep {
+    position: relative;
+    overflow: hidden;
+    background: #FFFFFF !important;
+  }
+
+  .feature-card-sweep::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, #DEDEDE, #FFFFFF);
+    transform: translateX(-100%);
+    animation: gradient-sweep 480ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .feature-card-sweep > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  @keyframes gradient-sweep {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(0%);
+    }
+  }
+
+  .feature-detail-panel-transition {
+    animation: feature-panel-rise 640ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .feature-detail-transition {
+    animation: none;
+  }
+
+  .feature-detail-transition__header {
+    animation: feature-content-rise 680ms cubic-bezier(0.2, 0.8, 0.2, 1) 80ms both;
+  }
+
+  .feature-detail-transition__item {
+    animation: feature-content-slide-left 620ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .feature-detail-transition__item:nth-child(1) {
+    animation-delay: 220ms;
+  }
+
+  .feature-detail-transition__item:nth-child(2) {
+    animation-delay: 300ms;
+  }
+
+  .feature-detail-transition__item:nth-child(3) {
+    animation-delay: 380ms;
+  }
+
+  .feature-detail-transition__item:nth-child(4) {
+    animation-delay: 460ms;
+  }
+
+  .feature-detail-transition__item:nth-child(5) {
+    animation-delay: 540ms;
   }
 
   .home-client-logo-card {
@@ -1388,10 +1418,10 @@ html.dark {
     align-items: center;
     gap: 0.75rem;
     min-width: 0;
+    flex: 1; /* Assign equal flex to side groups to stabilize center */
   }
 
-  .inspire-shell__icon-button,
-  .inspire-shell__text-action {
+  .inspire-shell__icon-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1403,36 +1433,141 @@ html.dark {
     transition: color 180ms ease, opacity 180ms ease, transform 180ms ease;
   }
 
-  .inspire-shell__icon-button:hover,
-  .inspire-shell__text-action:hover {
+  .inspire-shell__icon-button:hover {
     color: var(--inspire-text);
     transform: translateY(-1px);
   }
 
   .inspire-shell__wordmark {
-    color: var(--inspire-text);
-    font-size: clamp(2rem, 2.2vw, 2.35rem);
-    font-weight: 700;
-    line-height: 1;
-    letter-spacing: -0.035em;
+    display: flex;
+    align-items: center;
+    gap: 0;
     text-decoration: none;
+    overflow: hidden;
   }
 
+  .inspire-shell__logo-icon {
+    display: block;
+    height: 2.2em;
+    width: 2.35em; /* fixed width instead of animating width */
+    flex-shrink: 0;
+    opacity: 0;
+    margin-right: -2.35em; /* pulls the lettering over the icon */
+    /* Come from the right (behind the lettering) */
+    transform: translateX(40px);
+    transition:
+      opacity 600ms cubic-bezier(0.16, 1, 0.3, 1),
+      margin-right 600ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .inspire-shell__wordmark:hover .inspire-shell__logo-icon,
+  .group:hover .inspire-shell__logo-icon {
+    opacity: 1;
+    margin-right: 0.5em;
+    transform: translateX(0);
+  }
+
+  .inspire-shell__logo-lettering {
+    display: block;
+    height: 2.75em;
+    width: auto;
+    flex-shrink: 0;
+    /* Make sure lettering stays visually above the icon while it slides out */
+    position: relative;
+    z-index: 2;
+    transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* ── Search Bar ── */
   .inspire-shell__search {
     display: flex;
     align-items: center;
-    gap: 0.7rem;
-    min-width: 12rem;
-    width: min(100%, 18rem);
-    padding: 0.85rem 1rem;
+    gap: 0.6rem;
+    width: min(100%, 26rem);
+    padding: 0.7rem 1rem;
     border-radius: 999px;
-    background: #f3f3f3;
+    border: 1.5px solid #e4e4e4;
+    background: #fafafa;
     color: var(--inspire-text);
-    font-size: 0.95rem;
+    font-size: 0.92rem;
+    transition:
+      border-color 250ms ease,
+      background-color 250ms ease,
+      box-shadow 250ms ease;
   }
 
-  .inspire-shell__search--compact {
-    max-width: 14rem;
+  .inspire-shell__search:hover {
+    border-color: #d0d0d0;
+    background: #f5f5f5;
+  }
+
+  .inspire-shell__search:focus-within {
+    border-color: #c0c0c0;
+    background: #ffffff;
+    box-shadow: 0 2px 12px rgb(0 0 0 / 0.06);
+  }
+
+  .inspire-shell__search-icon {
+    flex-shrink: 0;
+    color: var(--inspire-text);
+    opacity: 0.5;
+    transition: color 180ms ease, opacity 180ms ease;
+  }
+
+  .inspire-shell__search:focus-within .inspire-shell__search-icon {
+    color: var(--inspire-text);
+    opacity: 1;
+  }
+
+  .inspire-shell__search-input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: var(--inspire-text);
+    font-size: 0.92rem;
+    font-family: inherit;
+    outline: none;
+  }
+
+  .inspire-shell__search-input::placeholder {
+    color: var(--inspire-text);
+    opacity: 0.45;
+  }
+
+  .inspire-shell__search-clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 0;
+    border-radius: 999px;
+    background: #e8e8e8;
+    color: var(--inspire-text);
+    opacity: 0.7;
+    cursor: pointer;
+    transition: background-color 180ms ease, opacity 180ms ease, transform 180ms ease;
+    animation: inspire-search-fadein 200ms ease;
+  }
+
+  .inspire-shell__search-clear:hover {
+    background: #d4d4d4;
+    opacity: 1;
+    transform: scale(1.08);
+  }
+
+  @keyframes inspire-search-fadein {
+    from {
+      opacity: 0;
+      transform: translateX(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
 
   .inspire-shell__actions {
@@ -1441,40 +1576,28 @@ html.dark {
     justify-content: flex-end;
     gap: 0.9rem;
     min-width: 0;
+    flex: 1; /* Balance with brand-group to keep search center-anchored */
   }
 
   .inspire-shell__app-pill {
     display: inline-flex;
     align-items: center;
     gap: 0.55rem;
-    padding: 0.75rem 1rem;
+    padding: 0.7rem 1.1rem;
     border-radius: 999px;
-    background: #f3f3f3;
+    border: 1.5px solid #e4e4e4;
+    background: #fafafa;
     color: var(--inspire-text);
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     font-weight: 500;
     text-decoration: none;
-    transition: transform 180ms ease, opacity 180ms ease;
+    transition: transform 180ms ease, border-color 200ms ease, background-color 200ms ease;
   }
 
   .inspire-shell__app-pill:hover {
     transform: translateY(-1px);
-    opacity: 0.92;
-  }
-
-  .inspire-shell__text-action {
-    font-size: 0.95rem;
-  }
-
-  .inspire-shell__text-action--icon {
-    gap: 0;
-  }
-
-  .inspire-shell__avatar {
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: 999px;
-    background: linear-gradient(145deg, #f3f3f3, #d9d9d9);
+    border-color: #d0d0d0;
+    background: #f5f5f5;
   }
 
   .inspire-shell__main {
@@ -1515,10 +1638,17 @@ html.dark {
     color: var(--inspire-text);
     font-size: 0.98rem;
     cursor: pointer;
+    opacity: 0.55;
+    transition: opacity 200ms ease;
+  }
+
+  .inspire-page__tab:hover {
+    opacity: 0.8;
   }
 
   .inspire-page__tab.is-active {
     color: var(--inspire-text);
+    opacity: 1;
   }
 
   .inspire-page__tab.is-active::after {
@@ -1529,6 +1659,23 @@ html.dark {
     bottom: -1px;
     height: 1px;
     background: var(--inspire-text);
+  }
+
+  /* ── Search Status ── */
+  .inspire-page__search-status {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 1.25rem 0;
+    border-bottom: 1px solid #ececec;
+    margin-bottom: 0.5rem;
+    color: var(--inspire-text);
+    font-size: 0.95rem;
+    animation: inspire-search-fadein 300ms ease;
+  }
+
+  .inspire-page__search-status p {
+    margin: 0;
   }
 
   .inspire-page__loading {
@@ -1572,9 +1719,9 @@ html.dark {
   .inspire-story__title {
     margin: 0;
     color: var(--inspire-text);
-    font-size: clamp(1.6rem, 2.4vw, 2.1rem);
-    line-height: 1.13;
-    letter-spacing: -0.035em;
+    font-size: clamp(1.4rem, 2vw, 1.7rem);
+    line-height: 1.18;
+    letter-spacing: -0.03em;
     text-wrap: balance;
   }
 
@@ -2092,6 +2239,54 @@ html.dark {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes feature-select-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes feature-panel-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.992);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes feature-content-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes feature-content-slide-left {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 

@@ -11,11 +11,19 @@ function renderHeader(initialPath = '/') {
   )
 }
 
+function setScrollY(value) {
+  Object.defineProperty(window, 'scrollY', {
+    configurable: true,
+    value,
+  })
+}
+
 describe('Header', () => {
   beforeEach(() => {
     cleanup()
     window.localStorage.clear()
     document.documentElement.classList.remove('dark')
+    setScrollY(0)
   })
 
   it('renders the redesigned navigation structure and opens the mobile menu', () => {
@@ -73,17 +81,30 @@ describe('Header', () => {
   it('anchors the mobile menu animation below the docked header', () => {
     renderHeader()
 
-    Object.defineProperty(window, 'scrollY', {
-      configurable: true,
-      value: 120,
-    })
+    setScrollY(120)
     fireEvent.scroll(window)
 
     fireEvent.click(screen.getByRole('button', { name: /open menu/i }))
 
     const mobileMenu = screen.getByRole('dialog', { name: 'Menu principal' })
 
-    expect(mobileMenu).toHaveClass('top-[7rem]', 'sm:top-[7.35rem]', 'origin-top')
+    expect(mobileMenu).toHaveClass('top-[5.9rem]', 'sm:top-[6.15rem]', 'origin-top')
     expect(mobileMenu).toHaveClass('translate-y-0', 'opacity-100', 'scale-100')
+  })
+
+  it('hides the nav while scrolling down and shows it when scrolling up', () => {
+    renderHeader()
+
+    const mainNav = screen.getByRole('navigation', { name: 'Main navigation' })
+
+    setScrollY(160)
+    fireEvent.scroll(window)
+
+    expect(mainNav).toHaveClass('-translate-y-[115%]', 'opacity-0')
+
+    setScrollY(90)
+    fireEvent.scroll(window)
+
+    expect(mainNav).toHaveClass('translate-y-0', 'opacity-100')
   })
 })

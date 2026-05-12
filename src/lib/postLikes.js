@@ -1,4 +1,5 @@
 const POST_LIKE_STORAGE_PREFIX = 'post-like:'
+const postLikeCountCache = new Map()
 
 function getLikesEndpoint(slug) {
   return `/api/posts/${encodeURIComponent(slug)}/likes`
@@ -39,12 +40,42 @@ export function rememberLikedPost(slug) {
   window.localStorage.setItem(getPostLikeStorageKey(slug), 'true')
 }
 
+export function forgetLikedPost(slug) {
+  if (typeof window === 'undefined' || !slug) {
+    return
+  }
+
+  window.localStorage.removeItem(getPostLikeStorageKey(slug))
+}
+
+export function getCachedPostLikeCount(slug) {
+  if (!slug || !postLikeCountCache.has(slug)) {
+    return null
+  }
+
+  return postLikeCountCache.get(slug)
+}
+
+export function cachePostLikeCount(slug, count) {
+  if (!slug || typeof count !== 'number') {
+    return
+  }
+
+  postLikeCountCache.set(slug, count)
+}
+
+export function resetPostLikeCountCache() {
+  postLikeCountCache.clear()
+}
+
 export async function fetchPostLikes(slug) {
   const response = await fetch(getLikesEndpoint(slug), {
     method: 'GET',
   })
 
-  return readJson(response)
+  const payload = await readJson(response)
+  cachePostLikeCount(slug, payload.count)
+  return payload
 }
 
 export async function submitPostLike(slug) {
@@ -52,5 +83,17 @@ export async function submitPostLike(slug) {
     method: 'POST',
   })
 
-  return readJson(response)
+  const payload = await readJson(response)
+  cachePostLikeCount(slug, payload.count)
+  return payload
+}
+
+export async function removePostLike(slug) {
+  const response = await fetch(getLikesEndpoint(slug), {
+    method: 'DELETE',
+  })
+
+  const payload = await readJson(response)
+  cachePostLikeCount(slug, payload.count)
+  return payload
 }

@@ -1,6 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Heart } from 'lucide-react'
-import { fetchPostLikes, hasLikedPost, rememberLikedPost, submitPostLike } from '../lib/postLikes'
+import {
+  cachePostLikeCount,
+  fetchPostLikes,
+  forgetLikedPost,
+  getCachedPostLikeCount,
+  hasLikedPost,
+  rememberLikedPost,
+  removePostLike,
+  submitPostLike,
+} from '../lib/postLikes'
 
 const LIKE_ANIMATION_MS = 220
 
@@ -18,26 +27,30 @@ function getButtonAriaLabel({ likeCount, liked }) {
 }
 
 function PostLikeButton({ slug, className = '', variant = 'detail' }) {
-  const [likeCount, setLikeCount] = useState(null)
+  const [likeCount, setLikeCount] = useState(() => getCachedPostLikeCount(slug))
   const [liked, setLiked] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
+  const interactionVersionRef = useRef(0)
 
   useEffect(() => {
     let cancelled = false
 
+    interactionVersionRef.current = 0
     setLiked(hasLikedPost(slug))
-    setLikeCount(null)
+    setLikeCount(getCachedPostLikeCount(slug))
 
     if (!slug) {
       return undefined
     }
 
+    const loadVersion = interactionVersionRef.current
+
     async function loadLikes() {
       try {
         const data = await fetchPostLikes(slug)
 
-        if (!cancelled) {
+        if (!cancelled && interactionVersionRef.current === loadVersion) {
           setLikeCount(data.count)
         }
       } catch (error) {
@@ -67,20 +80,46 @@ function PostLikeButton({ slug, className = '', variant = 'detail' }) {
   }, [isAnimating])
 
   async function handleClick() {
-    if (!slug || liked || isSubmitting) {
+    if (!slug || isSubmitting) {
       return
     }
 
+    const previousLiked = liked
+    const previousLikeCount = likeCount
+    const nextLiked = !liked
+    const nextLikeCount =
+      typeof likeCount === 'number' ? Math.max(likeCount + (liked ? -1 : 1), 0) : null
+
+    interactionVersionRef.current += 1
     setIsSubmitting(true)
+    setLiked(nextLiked)
+
+    if (typeof nextLikeCount === 'number') {
+      cachePostLikeCount(slug, nextLikeCount)
+      setLikeCount(nextLikeCount)
+    }
+
+    setIsAnimating(true)
 
     try {
-      const data = await submitPostLike(slug)
-      rememberLikedPost(slug)
-      setLiked(true)
+      const data = liked ? await removePostLike(slug) : await submitPostLike(slug)
+
+      if (data.liked) {
+        rememberLikedPost(slug)
+      } else {
+        forgetLikedPost(slug)
+      }
+
+      setLiked(Boolean(data.liked))
       setLikeCount(data.count)
-      setIsAnimating(true)
     } catch (error) {
       console.error('Error submitting post like:', error)
+      setLiked(previousLiked)
+      setLikeCount(previousLikeCount)
+      if (typeof previousLikeCount === 'number') {
+        cachePostLikeCount(slug, previousLikeCount)
+      }
+      setIsAnimating(false)
     } finally {
       setIsSubmitting(false)
     }
@@ -109,7 +148,7 @@ function PostLikeButton({ slug, className = '', variant = 'detail' }) {
         type="button"
         aria-label={getButtonAriaLabel({ likeCount, liked })}
         aria-pressed={liked}
-        disabled={liked || isSubmitting}
+        aria-disabled={isSubmitting}
         onClick={handleClick}
         className={buttonClassName}
       >

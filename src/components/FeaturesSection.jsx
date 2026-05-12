@@ -2,16 +2,15 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
 function useScrollReveal(threshold = 0.15) {
-  const [isVisible, setIsVisible] = useState(false);
+  const [hasEnteredView, setHasEnteredView] = useState(false);
+  const [isInView, setIsInView] = useState(false);
   const ref = useRef(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          if (ref.current) observer.unobserve(ref.current);
-        }
+        setIsInView(entry.isIntersecting);
+        if (entry.isIntersecting) setHasEnteredView(true);
       },
       { threshold }
     );
@@ -23,7 +22,7 @@ function useScrollReveal(threshold = 0.15) {
     return () => observer.disconnect();
   }, [threshold]);
 
-  return [ref, isVisible];
+  return [ref, hasEnteredView, isInView];
 }
 
 const featuresData = [
@@ -98,130 +97,127 @@ const featuresData = [
 export default function FeaturesSection() {
   const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
   const activeFeature = featuresData[activeFeatureIndex];
-  const [sectionRef, isVisible] = useScrollReveal(0.7);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveFeatureIndex((prevIndex) => (prevIndex + 1) % featuresData.length);
-    }, 6000);
-    return () => clearInterval(timer);
-  }, [activeFeatureIndex]);
+  const [sectionRef, isVisible] = useScrollReveal(0.35);
 
   return (
-    <section ref={sectionRef} className="w-full py-10 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-transparent" id="nossas-solucoes">
-      <div className="max-w-[1400px] mx-auto">
-        <div className={`text-center mb-8 md:mb-12 ${isVisible ? 'animate-enter [animation-duration:800ms]' : 'opacity-0'}`}>
-          <h2 className="mb-4 font-display text-3xl sm:text-4xl lg:text-5xl text-neutral-900 dark:text-white">
+    <section ref={sectionRef} className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-10 sm:py-16 md:py-20 lg:py-24 bg-[#F7F8FA] dark:bg-neutral-950 px-4 sm:px-6 lg:px-8" id="nossas-solucoes">
+      <div className="max-w-[1320px] mx-auto w-full">
+        <div className={`text-center mb-10 md:mb-14 ${isVisible ? 'animate-enter [animation-duration:800ms]' : 'opacity-0'}`}>
+          <h2 className="mb-3 font-display text-3xl sm:text-4xl lg:text-5xl text-neutral-900 dark:text-white tracking-tight">
             Nossas Soluções
           </h2>
-          <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-neutral-500 dark:text-neutral-400 max-w-2xl mx-auto leading-relaxed">
             Identificamos problemas na empresa com base em conhecimento, experiência e tecnologia.
           </p>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 min-h-[480px] lg:min-h-[520px]">
-          <div className="lg:col-span-4 grid grid-rows-4 gap-3 lg:gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 lg:min-h-[540px]">
+          {/* ── Left Sidebar ── */}
+          <div className="lg:col-span-4 flex flex-col gap-3 lg:h-[540px]">
             {featuresData.map((feature, index) => {
               const isActive = index === activeFeatureIndex;
               return (
                 <button
                   key={feature.id}
                   onClick={() => setActiveFeatureIndex(index)}
-                  className={`group w-full h-full text-left p-3 md:p-4 rounded-2xl transition-all duration-300 flex items-center border ${
+                  className={`group relative w-full text-left px-5 py-5 md:px-6 md:py-6 rounded-2xl transition-all duration-300 ease-out flex items-center flex-1 border ${
                     isActive 
-                      ? 'bg-[#EFEFF4] dark:bg-neutral-800 border-neutral-300 dark:border-neutral-600 scale-[1.01] z-10' 
-                      : 'bg-neutral-50/80 dark:bg-neutral-900/50 border-neutral-200/60 dark:border-neutral-800/60 hover:bg-white dark:hover:bg-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 hover:-translate-y-0.5'
+                      ? "feature-card-sweep border-neutral-300 dark:border-neutral-700" 
+                      : 'bg-white dark:bg-neutral-900/35 border-neutral-200/80 dark:border-neutral-800/60 hover:bg-white dark:hover:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700 hover:translate-x-0.5'
                   } ${isVisible ? 'animate-enter [animation-duration:800ms]' : 'opacity-0'}`}
                   style={{ animationDelay: isVisible ? `${300 + index * 200}ms` : '0ms' }}
                 >
-                  <div className="flex items-center gap-4 w-full">
-                    <div className={`shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                  <div className="flex items-center gap-4 md:gap-5 w-full">
+                    <div className={`shrink-0 w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-300 ${
                       isActive 
-                        ? 'bg-neutral-100 dark:bg-neutral-700 text-neutral-900 dark:text-white' 
-                        : 'bg-neutral-100/50 dark:bg-neutral-800/50 text-neutral-500 dark:text-neutral-400 group-hover:text-neutral-900 group-hover:bg-neutral-100 dark:group-hover:text-white dark:group-hover:bg-neutral-800'
+                        ? 'bg-red-50 dark:bg-neutral-700 text-brand-red dark:text-brand-red' 
+                        : 'bg-neutral-100 dark:bg-neutral-800/70 text-neutral-400 dark:text-neutral-500 group-hover:text-brand-red group-hover:bg-red-50/60'
                     }`}>
-                      <div className="w-6 h-6">
+                      <div className="w-[22px] h-[22px] stroke-[2.4]">
                         {feature.icon}
                       </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className={`text-base md:text-lg font-semibold mb-0.5 transition-colors duration-300 ${
-                        isActive ? 'text-neutral-900 dark:text-white' : 'text-neutral-700 dark:text-neutral-300 group-hover:text-neutral-900 dark:group-hover:text-white'
+                    <div className="flex-1 min-w-0 flex items-center">
+                      <h3 className={`text-[15px] md:text-base leading-snug transition-colors duration-300 ${
+                        isActive ? 'font-bold text-neutral-900 dark:text-white' : 'font-semibold text-neutral-500 dark:text-neutral-400 group-hover:text-neutral-800 dark:group-hover:text-white'
                       }`}>
                         {feature.title}
                       </h3>
-                      <p className={`text-xs md:text-sm line-clamp-2 transition-colors duration-300 ${
-                        isActive ? 'text-neutral-600 dark:text-neutral-400' : 'text-neutral-500 dark:text-neutral-500'
-                      }`}>
-                        {feature.description}
-                      </p>
                     </div>
+                    {/* Active indicator arrow */}
+                    <svg className={`w-5 h-5 shrink-0 transition-all duration-300 ${isActive ? 'opacity-100 text-brand-red translate-x-0' : 'opacity-0 text-neutral-300 -translate-x-2'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
                   </div>
                 </button>
               );
             })}
           </div>
           
+          {/* ── Right Detail Panel ── */}
           <div 
             className={`lg:col-span-8 flex transition-all ${isVisible ? 'animate-enter [animation-duration:1000ms]' : 'opacity-0'}`} 
             style={{ animationDelay: isVisible ? '450ms' : '0ms' }}
           >
-            <div className="rounded-3xl border border-neutral-200/80 dark:border-neutral-800/80 bg-white dark:bg-neutral-900/90 p-5 md:p-6 lg:p-8 flex-1 flex flex-col relative overflow-hidden h-[480px] sm:h-[500px] lg:h-[520px]">
-              <div key={activeFeature.id} className="animate-enter flex-1 flex flex-col z-10 w-full h-full">
-                <div className="mb-5 lg:mb-6 shrink-0">
-                  <div className="inline-flex items-center justify-center w-12 h-12 lg:w-14 lg:h-14 rounded-2xl bg-neutral-100 dark:bg-neutral-800 mb-4 border border-neutral-200 dark:border-neutral-700">
-                    <div className="w-6 h-6 lg:w-7 lg:h-7 text-neutral-900 dark:text-white">
+            <div key={activeFeature.id} className="feature-detail-panel-transition rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/90 p-6 md:p-7 lg:p-8 flex-1 flex flex-col relative z-0 overflow-hidden lg:min-h-[540px] lg:max-h-[540px]">
+              <div className="feature-detail-transition flex-1 flex flex-col z-10 w-full">
+                {/* Header */}
+                <div className="feature-detail-transition__header mb-6 lg:mb-8 shrink-0">
+                  <div className="inline-flex items-center justify-center w-11 h-11 lg:w-12 lg:h-12 rounded-xl bg-red-50 dark:bg-neutral-800 mb-5 border border-red-100 dark:border-neutral-700">
+                    <div className="w-[22px] h-[22px] lg:w-6 lg:h-6 text-brand-red">
                       {activeFeature.icon}
                     </div>
                   </div>
-                  <h3 className="text-xl md:text-2xl lg:text-3xl font-display font-bold text-neutral-900 dark:text-white mb-2">
+                  <h3 className="text-xl md:text-2xl lg:text-[28px] font-display font-bold text-neutral-900 dark:text-white mb-2 tracking-tight">
                     {activeFeature.title}
                   </h3>
-                  <p className="text-sm md:text-base text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-3xl">
+                  <p className="text-sm md:text-[15px] text-neutral-500 dark:text-neutral-400 leading-relaxed max-w-3xl">
                     {activeFeature.description}
                   </p>
                 </div>
                 
-                <div className="space-y-4 lg:space-y-5 flex-1 overflow-y-auto pr-2 pb-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-neutral-200 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-700 [&::-webkit-scrollbar-thumb]:rounded-full">
+                {/* Content Cards */}
+                <div className="space-y-3 lg:space-y-4">
                   {activeFeature.processo && (
-                    <div className="p-4 lg:p-5 rounded-2xl bg-neutral-50/80 dark:bg-neutral-800/40 border border-neutral-200/60 dark:border-neutral-800/60 hover:bg-white dark:hover:bg-neutral-800/60 transition-colors">
-                      <h4 className="text-xs font-bold tracking-wider text-neutral-600 dark:text-neutral-400 mb-2 uppercase flex items-center gap-2">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="feature-detail-transition__item p-4 lg:p-5 rounded-xl bg-[#F9FAFB] dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800/60 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
+                      <h4 className="text-[11px] font-bold tracking-[0.12em] text-neutral-500 dark:text-neutral-400 mb-2.5 uppercase flex items-center gap-2">
+                        <svg className="w-3.5 h-3.5 text-brand-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                         </svg>
                         Processo
                       </h4>
-                      <p className="text-neutral-700 dark:text-neutral-300 text-sm md:text-base leading-relaxed">
+                      <p className="text-neutral-600 dark:text-neutral-300 text-sm md:text-[15px] leading-relaxed">
                         {activeFeature.processo}
                       </p>
                     </div>
                   )}
                   
                   {activeFeature.resultados && (
-                    <div className="p-4 lg:p-5 rounded-2xl bg-neutral-50/80 dark:bg-neutral-800/40 border border-neutral-200/60 dark:border-neutral-800/60 hover:bg-white dark:hover:bg-neutral-800/60 transition-colors">
-                      <h4 className="text-xs font-bold tracking-wider text-neutral-600 dark:text-neutral-400 mb-2 uppercase flex items-center gap-2">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="feature-detail-transition__item p-4 lg:p-5 rounded-xl bg-[#F9FAFB] dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800/60 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
+                      <h4 className="text-[11px] font-bold tracking-[0.12em] text-neutral-500 dark:text-neutral-400 mb-2.5 uppercase flex items-center gap-2">
+                        <svg className="w-3.5 h-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                         Resultados
                       </h4>
-                      <p className="text-neutral-700 dark:text-neutral-300 text-sm md:text-base leading-relaxed">
+                      <p className="text-neutral-600 dark:text-neutral-300 text-sm md:text-[15px] leading-relaxed">
                         {activeFeature.resultados}
                       </p>
                     </div>
                   )}
                   
                   {activeFeature.fullDescription && (
-                    <div className="p-4 lg:p-5 rounded-2xl bg-neutral-50/80 dark:bg-neutral-800/40 border border-neutral-200/60 dark:border-neutral-800/60 hover:bg-white dark:hover:bg-neutral-800/60 transition-colors">
-                       <p className="text-neutral-700 dark:text-neutral-300 text-sm md:text-base leading-relaxed">
+                    <div className="feature-detail-transition__item p-4 lg:p-5 rounded-xl bg-[#F9FAFB] dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800/60 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
+                       <p className="text-neutral-600 dark:text-neutral-300 text-sm md:text-[15px] leading-relaxed">
                         {activeFeature.fullDescription}
                       </p>
                     </div>
                   )}
                 </div>
 
+                {/* CTA — always pinned to bottom */}
                 {activeFeature.cta && (
-                  <div className="mt-4 lg:mt-6 pt-4 lg:pt-5 border-t border-neutral-100 dark:border-neutral-800 shrink-0">
+                  <div className="feature-detail-transition__item mt-auto pt-5 lg:pt-6 border-t border-neutral-100 dark:border-neutral-800 shrink-0">
                     <Link to={activeFeature.ctaLink} className="btn-primary inline-flex items-center group/btn">
                       {activeFeature.cta}
                       <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 ml-2 transition-transform group-hover/btn:translate-x-1">

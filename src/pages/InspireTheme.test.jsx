@@ -19,4 +19,6 @@ describe('Inspire theme text color', () => {
     expect(postDetailSource).not.toMatch(/text-white|text-brand-red|text-slate-\d+/)
     expect(postDetailSource).not.toMatch(/text-\[#(?!5A6572\])/i)
   })
+
+
 })

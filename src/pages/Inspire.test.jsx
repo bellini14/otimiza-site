@@ -1,5 +1,5 @@
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { createMemoryRouter, MemoryRouter, Route, RouterProvider, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../lib/sanity', () => ({
@@ -10,6 +10,8 @@ vi.mock('../lib/sanity', () => ({
 
 import { client } from '../lib/sanity'
 import InspireLayout from '../components/InspireLayout'
+import { staticBlogPosts } from '../data/blogPosts'
+import { clearCachedInspirePosts, setCachedInspirePosts } from '../lib/inspirePostCache'
 import Inspire from './Inspire'
 
 let observerInstances = []
@@ -72,6 +74,7 @@ function renderInspirePage() {
 }
 
 beforeEach(() => {
+  clearCachedInspirePosts()
   observerInstances = []
   globalThis.IntersectionObserver = ControlledIntersectionObserver
   fetchMock = vi.fn(async (input, init) => {
@@ -90,6 +93,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  clearCachedInspirePosts()
   cleanup()
   vi.clearAllMocks()
   globalThis.IntersectionObserver = originalIntersectionObserver
@@ -97,6 +101,23 @@ afterEach(() => {
 })
 
 describe('Inspire', () => {
+  it('renders cached Sanity stories immediately while the refresh request is still pending', () => {
+    setCachedInspirePosts([
+      makePost(101, {
+        title: 'Cached Sanity Post',
+        eyebrow: 'Sanity Cache',
+      }),
+    ])
+    client.fetch.mockReturnValue(new Promise(() => {}))
+
+    renderInspirePage()
+
+    expect(screen.getAllByRole('heading', { name: 'Cached Sanity Post' }).length).toBeGreaterThanOrEqual(1)
+    expect(screen.queryByText(staticBlogPosts[0].title)).not.toBeInTheDocument()
+    expect(screen.queryByText('Buscar')).toBeInTheDocument()
+    expect(document.querySelector('.inspire-page__loading')).toBeNull()
+  })
+
   it('renders inside the editorial shell instead of the institutional header', async () => {
     client.fetch.mockResolvedValue([
       {
@@ -141,7 +162,7 @@ describe('Inspire', () => {
     expect(nav).toHaveClass('px-6', 'sm:px-8', 'lg:px-12')
     expect(main).toHaveClass('px-4', 'sm:px-6', 'lg:px-8')
     expect(screen.queryByRole('navigation', { name: 'Main navigation' })).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Voltar para o site Otimiza' })).toHaveAttribute('href', '/')
+    expect(screen.getByRole('button', { name: /voltar para a p.+gina anterior/i })).toBeInTheDocument()
     expect(await screen.findAllByRole('heading', { name: 'Should You Still Learn to Code in 2026?' })).toHaveLength(2)
     expect(screen.getByText('Buscar')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Assinar newsletter' })).toBeInTheDocument()
@@ -150,6 +171,62 @@ describe('Inspire', () => {
     expect(screen.getByText('Seleções da redação')).toBeInTheDocument()
     expect(screen.getByText('Tópicos recomendados')).toBeInTheDocument()
     expect(screen.getByText('Quem seguir')).toBeInTheDocument()
+  })
+
+  it('returns to the previous page instead of forcing the home route', async () => {
+    const router = createMemoryRouter(
+      [
+        {
+          element: <InspireLayout />,
+          children: [
+            { path: '/', element: <div>Home</div> },
+            { path: '/inspire', element: <div>Inspire</div> },
+          ],
+        },
+      ],
+      {
+        initialEntries: ['/inspire'],
+        initialIndex: 0,
+      },
+    )
+
+    render(<RouterProvider router={router} />)
+
+    fireEvent.click(screen.getByRole('button', { name: /voltar para a p.+gina anterior/i }))
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe('/')
+    })
+
+    expect(screen.getByText('Home')).toBeInTheDocument()
+  })
+
+  it('returns to the previous page on non-landing Inspire routes', async () => {
+    const router = createMemoryRouter(
+      [
+        {
+          element: <InspireLayout />,
+          children: [
+            { path: '/contato', element: <div>Contato</div> },
+            { path: '/inspire/newsletter', element: <div>Newsletter</div> },
+          ],
+        },
+      ],
+      {
+        initialEntries: ['/contato', '/inspire/newsletter'],
+        initialIndex: 1,
+      },
+    )
+
+    render(<RouterProvider router={router} />)
+
+    fireEvent.click(screen.getByRole('button', { name: /voltar para a p.+gina anterior/i }))
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe('/contato')
+    })
+
+    expect(screen.getByText('Contato')).toBeInTheDocument()
   })
 
   it('renders the article card actions in Portuguese with like and share controls', async () => {
@@ -190,8 +267,7 @@ describe('Inspire', () => {
 
     renderInspirePage()
 
-    expect(await screen.findByRole('heading', { name: 'Post 1' })).toBeInTheDocument()
-    expect(screen.getAllByRole('heading', { name: 'Post 15' }).length).toBeGreaterThanOrEqual(1)
+    expect(await screen.findAllByRole('heading', { name: 'Post 15' })).toHaveLength(2)
     expect(screen.queryByRole('heading', { name: 'Post 16' })).not.toBeInTheDocument()
 
     expect(client.fetch).toHaveBeenNthCalledWith(1, expect.stringContaining('[$start...$end]'), {

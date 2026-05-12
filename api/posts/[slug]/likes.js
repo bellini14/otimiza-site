@@ -7,8 +7,8 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid post slug.' })
   }
 
-  if (req.method !== 'GET' && req.method !== 'POST') {
-    res.setHeader('Allow', ['GET', 'POST'])
+  if (req.method !== 'GET' && req.method !== 'POST' && req.method !== 'DELETE') {
+    res.setHeader('Allow', ['GET', 'POST', 'DELETE'])
     return res.status(405).json({ error: 'Method not allowed.' })
   }
 
@@ -18,6 +18,11 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       const count = await store.getCount(slug)
       return res.status(200).json({ slug, count })
+    }
+
+    if (req.method === 'DELETE') {
+      const count = await store.decrementCount(slug)
+      return res.status(200).json({ slug, count, liked: false })
     }
 
     const count = await store.incrementCount(slug)

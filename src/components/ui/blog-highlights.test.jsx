@@ -5,14 +5,25 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { BlogHighlights } from './blog-highlights'
 import { ProjectCard } from './project-card'
 import { staticBlogPosts } from '../../data/blogPosts'
+import { client } from '@/lib/sanity'
+import { clearCachedInspirePosts, getCachedInspirePosts } from '../../lib/inspirePostCache'
+
+vi.mock('@/lib/sanity', () => ({
+  client: {
+    fetch: vi.fn(),
+  },
+}))
 
 const STAGE_GAP_PX = 24
 
 beforeEach(() => {
+  clearCachedInspirePosts()
+  client.fetch.mockResolvedValue([])
   vi.useFakeTimers()
 })
 
 afterEach(() => {
+  clearCachedInspirePosts()
   vi.runOnlyPendingTimers()
   vi.useRealTimers()
   cleanup()
@@ -130,6 +141,35 @@ describe('BlogHighlights', () => {
 
     expect(screen.getByTestId('blog-slider-stage')).toHaveAttribute('data-phase', 'idle')
     expect(nextButton).not.toBeDisabled()
+  })
+
+  it('stores fetched Sanity posts in the shared Inspire cache', async () => {
+    window.innerWidth = 1440
+    client.fetch.mockResolvedValue([
+      {
+        title: 'Cached from Home',
+        description: 'Descricao dinamica',
+        imgSrc: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80',
+        link: '/inspire/cached-from-home',
+        slug: 'cached-from-home',
+        eyebrow: 'Sanity',
+        publishedAt: '2026-04-15T12:00:00Z',
+        linkText: 'Ler artigo',
+      },
+    ])
+
+    render(
+      <MemoryRouter>
+        <BlogHighlights />
+      </MemoryRouter>,
+    )
+
+    await act(async () => {
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+
+    expect(getCachedInspirePosts()[0]?.title).toBe('Cached from Home')
   })
 
   it('keeps the blog cards minimal and without shadow utilities', () => {

@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { ProjectCard } from './project-card'
 import { client } from '@/lib/sanity'
 import { staticBlogPosts } from '../../data/blogPosts'
+import { setCachedInspirePosts } from '../../lib/inspirePostCache'
 
 
 
@@ -34,6 +35,7 @@ export function BlogHighlights() {
         }`
         const dynamicPosts = await client.fetch(query)
         if (dynamicPosts && dynamicPosts.length > 0) {
+          setCachedInspirePosts(dynamicPosts)
           setBlogPosts(dynamicPosts)
         }
       } catch (error) {
@@ -196,7 +198,19 @@ export function BlogHighlights() {
                   className="shrink-0"
                   style={{ width: `calc((100% - ${(slidesPerView - 1) * STAGE_GAP_PX}px) / ${slidesPerView})` }}
                 >
-                  <ProjectCard {...post} />
+                  <ProjectCard
+                    {...post}
+                    linkState={{
+                      postPreview: {
+                        title: post.title,
+                        description: post.description,
+                        publishedAt: post.publishedAt,
+                        eyebrow: post.eyebrow,
+                        imgSrc: post.imgSrc,
+                        slug: post.slug,
+                      },
+                    }}
+                  />
                 </div>
               )
             })}

@@ -13,4 +13,8 @@ describe('global text color system', () => {
     expect(indexCss).toMatch(/--theme-toggle-ink:\s*#5a6572;/)
     expect(headerSource).toContain("text-[#5a6572]")
   })
+
+  it('enables smooth native page scrolling', () => {
+    expect(indexCss).toMatch(/scroll-behavior:\s*smooth;/)
+  })
 })

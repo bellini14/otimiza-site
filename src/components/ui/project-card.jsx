@@ -13,8 +13,11 @@ const ProjectCard = React.forwardRef(function ProjectCard(
     title,
     description,
     link,
+    linkState,
     linkText = 'View Project',
     eyebrow,
+    publishedAt,
+    slug,
     ...props
   },
   ref,
@@ -51,7 +54,7 @@ const ProjectCard = React.forwardRef(function ProjectCard(
         <p className="mt-3 flex-1 text-muted-foreground">{description}</p>
 
         {isInternalLink ? (
-          <Link to={link} className={linkBaseClassName}>
+          <Link to={link} state={linkState} className={linkBaseClassName}>
             {linkText}
             <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/button:translate-x-1" />
           </Link>

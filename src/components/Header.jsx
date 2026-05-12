@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import logoOtimiza from '../assets/logo-otimiza.svg'
 import { siteNav } from '../data/sitePages'
-import GradualBlur from './GradualBlur'
 
 const dropdownGroups = [
   {
@@ -50,7 +49,7 @@ function ThemeToggle({ theme, onToggle }) {
       aria-pressed={isDarkTheme}
       data-theme-icon={isDarkTheme ? 'sun' : 'moon'}
       onClick={onToggle}
-      className="hidden lg:inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#efeff4]/90 backdrop-blur-md dark:bg-white/10 text-[#5a6572] dark:text-white/90 transition-all hover:bg-[#e2e2e8] dark:hover:bg-white/20 dark:hover:text-white ring-1 ring-[#434b54]/5 dark:ring-white/10 drop-shadow-sm"
+      className="hidden lg:inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#efeff4]/90 backdrop-blur-md dark:bg-white/10 text-[#5a6572] dark:text-white/90 transition-all hover:bg-[#e2e2e8] dark:hover:bg-white/20 dark:hover:text-white ring-1 ring-[#434b54]/5 dark:ring-white/10 drop-shadow-sm"
     >
       <span key={theme} className="theme-toggle__icon" aria-hidden="true">
         {isDarkTheme ? (
@@ -100,7 +99,7 @@ function ThemeToggle({ theme, onToggle }) {
 function LanguageSelector() {
   return (
     <button
-      className="hidden lg:inline-flex h-11 items-center gap-2.5 rounded-[1.15rem] bg-[#efeff4]/90 backdrop-blur-md dark:bg-white/10 px-4 text-[14.5px] font-medium text-[#5a6572] dark:text-white/90 transition-all hover:bg-[#e2e2e8] dark:hover:bg-white/20 dark:hover:text-white ring-1 ring-[#434b54]/5 dark:ring-white/10 drop-shadow-sm"
+      className="hidden lg:inline-flex h-10 items-center gap-2.5 rounded-[1rem] bg-[#efeff4]/90 backdrop-blur-md dark:bg-white/10 px-3.5 text-[14px] font-[400] text-[#5a6572] dark:text-white/90 transition-all hover:bg-[#e2e2e8] dark:hover:bg-white/20 dark:hover:text-white ring-1 ring-[#434b54]/5 dark:ring-white/10 drop-shadow-sm"
       aria-label="Selecionar idioma"
     >
       <span className="text-base leading-none drop-shadow-sm">🇧🇷</span>
@@ -128,16 +127,18 @@ function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [openDropdown, setOpenDropdown] = useState(null)
   const [theme, setTheme] = useState(getInitialTheme)
+  const lastScrollYRef = useRef(0)
   
   // Animation states
   const [isTop, setIsTop] = useState(true)
+  const [isNavHidden, setIsNavHidden] = useState(false)
   
   const location = useLocation()
   const isDarkTheme = theme === 'dark'
 
   const isActive = (path) => location.pathname === path
   const isGroupActive = (items) => items.some((item) => isActive(item.path))
-  const mobileMenuPosition = isTop ? 'top-[5.9rem] sm:top-[6.25rem]' : 'top-[7rem] sm:top-[7.35rem]'
+  const mobileMenuPosition = isTop ? 'top-[4.9rem] sm:top-[5.2rem]' : 'top-[5.9rem] sm:top-[6.15rem]'
 
   const closeAll = () => {
     setMenuOpen(false)
@@ -163,50 +164,62 @@ function Header() {
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY <= 40) {
-        setIsTop(true)
-      } else {
-        setIsTop(false)
+      const currentScrollY = Math.max(window.scrollY, 0)
+      const scrollDelta = currentScrollY - lastScrollYRef.current
+
+      setIsTop((current) => {
+        const next = current ? currentScrollY < 48 : currentScrollY < 20
+        return next === current ? current : next
+      })
+
+      if (currentScrollY < 64) {
+        setIsNavHidden(false)
+      } else if (scrollDelta > 6) {
+        setIsNavHidden(true)
+      } else if (scrollDelta < -6) {
+        setIsNavHidden(false)
       }
+
+      lastScrollYRef.current = currentScrollY
     }
 
+    lastScrollYRef.current = Math.max(window.scrollY, 0)
+    handleScroll()
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  const shouldHideNav = isNavHidden && !menuOpen && !openDropdown
+
   return (
     <>
       <nav
-        className={`fixed inset-x-0 top-0 z-40 transition-all duration-500 ease-in-out ${
-          isTop ? 'px-0 pt-0 sm:px-0 lg:px-0' : 'px-4 pt-4 sm:px-6 lg:px-8'
+        className={`fixed inset-x-0 top-0 z-40 transition-[padding,transform,opacity] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          isTop ? 'px-0 pt-0 sm:px-0 lg:px-0' : 'px-4 pt-3 sm:px-6 lg:px-8'
+        } ${
+          shouldHideNav ? '-translate-y-[115%] opacity-0' : 'translate-y-0 opacity-100'
         }`}
         role="navigation"
         aria-label="Main navigation"
       >
-        <div className={`absolute inset-0 z-0 transition-opacity duration-500 ${isTop ? 'opacity-100 pointer-events-none' : 'opacity-0 pointer-events-none'}`}>
-          <GradualBlur
-            target="parent"
-            position="top"
-            height="7rem"
-            strength={2}
-            divCount={5}
-            curve="bezier"
-            exponential
-            opacity={1}
-            zIndex={0}
-          />
-        </div>
         <div 
-          className={`mx-auto w-full transition-all duration-500 ease-out py-5 relative z-10 ${
+          className={`mx-auto w-full transform-gpu transition-[max-width,border-radius,padding,transform] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] relative z-10 ${
             isTop
-              ? 'max-w-full rounded-none bg-transparent px-6 sm:px-8 lg:px-12'
-              : 'max-w-[1380px] rounded-[1.65rem] bg-white/95 dark:bg-[#0f172a]/90 shadow-[0_20px_60px_rgba(67,75,84,0.08)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.5)] backdrop-blur-2xl dark:backdrop-blur-2xl border border-[#434b54]/10 dark:border-white/10 px-5 sm:px-6'
+              ? 'max-w-full rounded-none bg-transparent px-5 py-3 sm:px-7 lg:px-10'
+              : 'max-w-[1320px] rounded-[1.25rem] px-4 py-2.5 sm:px-5'
           }`}
         >
-          <div className="flex items-center justify-between gap-6">
-            <div className="flex items-center gap-6 lg:gap-8">
+          <div
+            className={`absolute inset-0 rounded-[1.25rem] border border-[#434b54]/10 bg-white/95 shadow-[0_14px_42px_rgba(67,75,84,0.08)] backdrop-blur-2xl transition-[opacity,transform,box-shadow] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] dark:border-white/10 dark:bg-[#0f172a]/90 dark:shadow-[0_14px_42px_rgba(0,0,0,0.48)] ${
+              isTop ? 'opacity-0 scale-[0.985]' : 'opacity-100 scale-100'
+            }`}
+            aria-hidden="true"
+          />
+
+          <div className="relative z-10 flex items-center justify-between gap-5">
+            <div className="flex items-center gap-5 lg:gap-7">
               <Link to="/" aria-label="Otimiza home" className="z-50 flex items-center" onClick={closeAll}>
-                <img src={logoOtimiza} alt="Otimiza" className="h-10 w-auto sm:h-11 md:h-12 dark:drop-shadow-[0_0_12px_rgba(255,255,255,0.15)]" />
+                <img src={logoOtimiza} alt="Otimiza" className="-mt-[2px] h-11 w-auto sm:h-12 md:h-[3.25rem] dark:drop-shadow-[0_0_12px_rgba(255,255,255,0.15)]" />
               </Link>
 
               <div className="hidden items-center gap-1 lg:flex">
@@ -219,10 +232,10 @@ function Header() {
                   >
                     <button
                       type="button"
-                      className={`flex items-center gap-1.5 rounded-full px-4 py-2.5 text-[15px] transition-all duration-200 drop-shadow-sm ${
+                      className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[16px] transition-all duration-200 ${
                         isGroupActive(group.items)
-                          ? 'font-semibold text-[#5a6572] dark:text-white'
-                          : 'font-medium text-[#5a6572] dark:text-white/90 hover:text-[#5a6572] dark:hover:text-white hover:drop-shadow-md'
+                          ? 'font-[400] text-[#5a6572] dark:text-white'
+                          : 'font-[400] text-[#5a6572] dark:text-white/90 hover:text-[#5a6572] dark:hover:text-white'
                       }`}
                       aria-expanded={openDropdown === group.label}
                       aria-controls={`dropdown-${group.id}`}
@@ -262,10 +275,10 @@ function Header() {
                             key={item.path}
                             to={item.path}
                             onClick={closeAll}
-                            className={`block rounded-[1rem] px-4 py-3 text-[14.5px] transition-all duration-200 ${
+                            className={`block rounded-[1rem] px-4 py-3 text-[16px] transition-all duration-200 ${
                               isActive(item.path)
-                                ? 'bg-[#434b54] font-semibold text-white dark:bg-white/10 dark:text-white'
-                                : 'font-medium text-[#5a6572] dark:text-white/70 hover:bg-[#434b54]/5 hover:text-[#5a6572] dark:hover:bg-white/10 dark:hover:text-white'
+                                ? 'bg-[#434b54] font-[400] text-white dark:bg-white/10 dark:text-white'
+                                : 'font-[400] text-[#5a6572] dark:text-white/70 hover:bg-[#434b54]/5 hover:text-[#5a6572] dark:hover:bg-white/10 dark:hover:text-white'
                             }`}
                           >
                             {item.label}
@@ -280,10 +293,10 @@ function Header() {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`rounded-full px-4 py-2.5 text-[15px] no-underline transition-all duration-200 drop-shadow-sm ${
+                    className={`group flex items-center rounded-full px-3.5 py-2 text-[16px] no-underline transition-all duration-200 ${
                       isActive(item.path)
-                        ? 'font-semibold text-[#5a6572] dark:text-white'
-                        : 'font-medium text-[#5a6572] dark:text-white/90 hover:text-[#5a6572] dark:hover:text-white hover:drop-shadow-md'
+                        ? 'font-[400] text-[#5a6572] dark:text-white'
+                        : 'font-[400] text-[#5a6572] dark:text-white/90 hover:text-[#5a6572] dark:hover:text-white'
                     }`}
                   >
                     {item.label}
@@ -298,7 +311,7 @@ function Header() {
 
               <Link
                 to="/contato"
-                className="hidden lg:flex h-11 items-center justify-center rounded-[1.15rem] bg-[#efeff4]/90 backdrop-blur-md dark:bg-white/10 px-5 text-[15px] font-medium text-[#5a6572] dark:text-white/90 transition-all hover:bg-[#e2e2e8] dark:hover:bg-white/20 dark:hover:text-white ring-1 ring-[#434b54]/5 dark:ring-white/10 drop-shadow-sm"
+                className="hidden lg:flex h-10 items-center justify-center rounded-[1rem] bg-[#efeff4]/90 backdrop-blur-md dark:bg-white/10 px-4 text-[14.5px] font-[400] text-[#5a6572] dark:text-white/90 transition-all hover:bg-[#e2e2e8] dark:hover:bg-white/20 dark:hover:text-white ring-1 ring-[#434b54]/5 dark:ring-white/10 drop-shadow-sm"
               >
                 Fale com a Otimiza
               </Link>
@@ -306,7 +319,7 @@ function Header() {
               <button
                 type="button"
                 onClick={toggleMenu}
-                className="z-50 flex h-11 w-11 items-center justify-center rounded-[0.9rem] bg-[#434b54]/90 backdrop-blur-md dark:bg-white/10 text-white dark:text-white/90 lg:hidden transition-all hover:bg-[#364048] dark:hover:bg-white/20 dark:hover:text-white ring-1 ring-[#434b54]/5 dark:ring-white/10 drop-shadow-sm"
+                className="z-50 flex h-10 w-10 items-center justify-center rounded-[0.85rem] bg-[#434b54]/90 backdrop-blur-md dark:bg-white/10 text-white dark:text-white/90 lg:hidden transition-all hover:bg-[#364048] dark:hover:bg-white/20 dark:hover:text-white ring-1 ring-[#434b54]/5 dark:ring-white/10 drop-shadow-sm"
                 aria-label="Open menu"
                 aria-expanded={menuOpen}
                 aria-controls="site-mobile-menu"
@@ -383,8 +396,8 @@ function Header() {
               onClick={closeAll}
               className={`rounded-[1rem] px-4 py-3 text-[14.5px] transition-all duration-200 ${
                 isActive(item.path)
-                  ? 'bg-[#434b54] font-semibold text-white dark:bg-white/10'
-                  : 'font-medium text-[#5a6572] dark:text-white/70 hover:bg-[#434b54]/5 hover:text-[#5a6572] dark:hover:bg-white/10 dark:hover:text-white'
+                  ? 'bg-[#434b54] font-[400] text-white dark:bg-white/10'
+                  : 'font-[400] text-[#5a6572] dark:text-white/70 hover:bg-[#434b54]/5 hover:text-[#5a6572] dark:hover:bg-white/10 dark:hover:text-white'
               }`}
             >
               {item.label}
@@ -396,7 +409,7 @@ function Header() {
           <Link
             to="/contato"
             onClick={closeAll}
-            className="rounded-[0.9rem] bg-[#434b54] dark:bg-white/10 px-5 py-3 text-center text-[14.5px] font-medium text-white dark:text-white transition hover:bg-[#364048] dark:hover:bg-white/20 ring-1 ring-transparent dark:ring-white/5"
+            className="rounded-[0.9rem] bg-[#434b54] dark:bg-white/10 px-5 py-3 text-center text-[14.5px] font-[400] text-white dark:text-white transition hover:bg-[#364048] dark:hover:bg-white/20 ring-1 ring-transparent dark:ring-white/5"
           >
             Fale com a Otimiza
           </Link>

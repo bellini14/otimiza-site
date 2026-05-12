@@ -90,6 +90,22 @@ export function createPostLikesStore(sql = getSqlClient()) {
 
       return rows[0]?.count ?? 1
     },
+
+    async decrementCount(slug) {
+      await ensurePostLikesTable(sql)
+
+      const rows = await sql`
+        INSERT INTO post_likes (slug, count, updated_at)
+        VALUES (${slug}, 0, NOW())
+        ON CONFLICT (slug)
+        DO UPDATE SET
+          count = GREATEST(post_likes.count - 1, 0),
+          updated_at = NOW()
+        RETURNING count
+      `
+
+      return rows[0]?.count ?? 0
+    },
   }
 }
 

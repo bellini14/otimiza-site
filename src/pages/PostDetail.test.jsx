@@ -62,9 +62,9 @@ function buildPostResponse() {
   }
 }
 
-function renderPostDetail() {
+function renderPostDetail(initialEntry = '/inspire/post-com-imagem-inline') {
   return render(
-    <MemoryRouter initialEntries={['/inspire/post-com-imagem-inline']}>
+    <MemoryRouter initialEntries={[initialEntry]}>
       <Routes>
         <Route path="/inspire/:slug" element={<PostDetail />} />
       </Routes>
@@ -92,6 +92,36 @@ afterEach(() => {
 })
 
 describe('PostDetail', () => {
+  it('renders an article loading shell immediately while the Sanity detail request is pending', () => {
+    client.fetch.mockReturnValue(new Promise(() => {}))
+
+    renderPostDetail()
+
+    expect(screen.getByRole('link', { name: /voltar para inspire/i })).toHaveAttribute('href', '/inspire')
+    expect(document.querySelector('.post-detail__loading-shell')).not.toBeNull()
+    expect(document.querySelector('.animate-spin')).toBeNull()
+  })
+
+  it('renders the article shell immediately when navigation preview data is available', () => {
+    client.fetch.mockReturnValue(new Promise(() => {}))
+
+    renderPostDetail({
+      pathname: '/inspire/post-com-imagem-inline',
+      state: {
+        postPreview: {
+          title: 'Post com imagem inline',
+          description: 'Resumo do post',
+          publishedAt: '2026-04-13T12:00:00Z',
+          eyebrow: 'Insights',
+        },
+      },
+    })
+
+    expect(screen.getByRole('heading', { name: 'Post com imagem inline' })).toBeInTheDocument()
+    expect(screen.getByText('Resumo do post')).toBeInTheDocument()
+    expect(document.querySelector('.animate-spin')).toBeNull()
+  })
+
   it('renders inline body images, captions, and the fetched global like count', async () => {
     fetchMock.mockResolvedValueOnce(createJsonResponse({ slug: 'post-com-imagem-inline', count: 7 }))
 
@@ -103,6 +133,8 @@ describe('PostDetail', () => {
       'src',
       'https://cdn.sanity.io/images/demo/workshop.jpg',
     )
+    expect(screen.getByRole('img', { name: 'Equipe em workshop' })).toHaveAttribute('loading', 'eager')
+    expect(screen.getByRole('img', { name: 'Equipe em workshop' })).toHaveAttribute('fetchpriority', 'high')
     expect(screen.getByText('Workshop com o time do cliente.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /voltar para inspire/i })).toHaveAttribute('href', '/inspire')
     expect(screen.getByText('Obrigado por ler na Inspire.')).toBeInTheDocument()
@@ -120,7 +152,7 @@ describe('PostDetail', () => {
 
     renderPostDetail()
 
-    expect(await screen.findByRole('button', { name: /7 curtidas, curtido/i })).toBeDisabled()
+    expect(await screen.findByRole('button', { name: /7 curtidas, curtido/i })).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('marks the post as liked after a successful click and persists it locally', async () => {
@@ -134,7 +166,7 @@ describe('PostDetail', () => {
     fireEvent.click(likeButton)
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /8 curtidas, curtido/i })).toBeDisabled()
+      expect(screen.getByRole('button', { name: /8 curtidas, curtido/i })).toHaveAttribute('aria-pressed', 'true')
     })
 
     expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/posts/post-com-imagem-inline/likes', { method: 'POST' })
