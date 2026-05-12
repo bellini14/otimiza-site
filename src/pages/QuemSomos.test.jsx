@@ -16,7 +16,15 @@ describe('QuemSomos', () => {
     )
 
     expect(screen.getByRole('heading', { name: 'Quem somos' })).toBeInTheDocument()
+    expect(screen.queryByText('Desde 1990')).not.toBeInTheDocument()
+    expect(screen.queryByAltText('Otimiza')).not.toBeInTheDocument()
     expect(screen.getByText(/A Otimiza Consultoria nasceu em Caxias do Sul, em 1990/i)).toBeInTheDocument()
+    expect(screen.getByTestId('quem-somos-client-logo-carousel')).toBeInTheDocument()
+    expect(screen.getAllByAltText('Moneo').length).toBeGreaterThan(0)
+    expect(screen.getByLabelText(/Uma equipe multidisciplinar de consultores seniores/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/conduzimos transformações práticas no negócio/i)).toBeInTheDocument()
+    expect(screen.queryByText('História')).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Uma consultoria formada pela prática.' })).not.toBeInTheDocument()
     expect(screen.getByText(/Somos sustentados por três vértices de atuação/i)).toBeInTheDocument()
 
     expect(screen.getByRole('heading', { name: 'Consultoria' })).toBeInTheDocument()
