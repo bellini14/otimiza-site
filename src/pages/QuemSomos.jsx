@@ -108,8 +108,6 @@ const strategyItems = [
   'Realização de eventos que entreguem eficácia',
 ]
 
-const legacyClients = ['Ana Nery', 'Agrimar', 'AES Brasil', 'Agua Fast']
-
 const storyParagraphs = [
   'Uma equipe multidisciplinar de consultores seniores, preparada para atuar em empresas de diferentes portes e segmentos.',
   'Mais do que aconselhar, conduzimos transformações práticas no negócio.',
@@ -365,8 +363,79 @@ function StoryRevealCopy() {
 
 function QuemSomos() {
   const [activePillarIndex, setActivePillarIndex] = useState(0)
+  const [pillarHoverState, setPillarHoverState] = useState({ visibleIndex: null, exitingIndex: null })
+  const [pillarActiveExitIndex, setPillarActiveExitIndex] = useState(null)
   const [pillarsRef, pillarsVisible] = useScrollReveal()
+  const pillarHoverTimeoutRef = useRef(null)
+  const pillarHoverFadeTimeoutRef = useRef(null)
+  const pillarHoverStartedAtRef = useRef(null)
+  const pillarActiveExitTimeoutRef = useRef(null)
   const activePillar = pillars[activePillarIndex]
+  const handlePillarHoverEnter = (event, index) => {
+    const rect = event.currentTarget.getBoundingClientRect()
+
+    window.clearTimeout(pillarHoverTimeoutRef.current)
+    window.clearTimeout(pillarHoverFadeTimeoutRef.current)
+    pillarHoverStartedAtRef.current = window.performance.now()
+    event.currentTarget.style.setProperty('--pillar-hover-x', `${event.clientX - rect.left}px`)
+    event.currentTarget.style.setProperty('--pillar-hover-y', `${event.clientY - rect.top}px`)
+    setPillarHoverState({ visibleIndex: index, exitingIndex: null })
+  }
+
+  const handlePillarHoverLeave = (index) => {
+    window.clearTimeout(pillarHoverTimeoutRef.current)
+    window.clearTimeout(pillarHoverFadeTimeoutRef.current)
+
+    const hoverElapsed = pillarHoverStartedAtRef.current
+      ? window.performance.now() - pillarHoverStartedAtRef.current
+      : 1180
+    const remainingHoverDuration = hoverElapsed < 220
+      ? 120
+      : hoverElapsed < 520
+        ? 240
+        : Math.max(0, 1180 - hoverElapsed)
+
+    setPillarHoverState({ visibleIndex: index, exitingIndex: null })
+    pillarHoverTimeoutRef.current = window.setTimeout(() => {
+      setPillarHoverState({ visibleIndex: null, exitingIndex: index })
+
+      pillarHoverFadeTimeoutRef.current = window.setTimeout(() => {
+        setPillarHoverState((currentState) => (
+          currentState.exitingIndex === index
+            ? { visibleIndex: null, exitingIndex: null }
+            : currentState
+        ))
+      }, hoverElapsed < 220 ? 360 : 900)
+    }, remainingHoverDuration)
+  }
+
+  const handlePillarClick = (event, index) => {
+    const rect = event.currentTarget.getBoundingClientRect()
+
+    if (index === activePillarIndex) {
+      return
+    }
+
+    window.clearTimeout(pillarHoverTimeoutRef.current)
+    window.clearTimeout(pillarHoverFadeTimeoutRef.current)
+    window.clearTimeout(pillarActiveExitTimeoutRef.current)
+    pillarHoverStartedAtRef.current = null
+    event.currentTarget.style.setProperty('--pillar-hover-x', `${event.clientX - rect.left}px`)
+    event.currentTarget.style.setProperty('--pillar-hover-y', `${event.clientY - rect.top}px`)
+    setPillarHoverState({ visibleIndex: null, exitingIndex: null })
+    setPillarActiveExitIndex(activePillarIndex)
+    setActivePillarIndex(index)
+
+    pillarActiveExitTimeoutRef.current = window.setTimeout(() => {
+      setPillarActiveExitIndex((currentIndex) => (currentIndex === activePillarIndex ? null : currentIndex))
+    }, 200)
+  }
+
+  useEffect(() => () => {
+    window.clearTimeout(pillarHoverTimeoutRef.current)
+    window.clearTimeout(pillarHoverFadeTimeoutRef.current)
+    window.clearTimeout(pillarActiveExitTimeoutRef.current)
+  }, [])
 
   return (
     <div data-testid="quem-somos-page" className="-mt-32 sm:-mt-36">
@@ -439,28 +508,52 @@ function QuemSomos() {
             {pillars.map((pillar, index) => {
               const PillarIcon = pillar.icon
               const isActive = activePillarIndex === index
+              const isHoverVisible = pillarHoverState.visibleIndex === index
+              const isHoverExiting = pillarHoverState.exitingIndex === index
+              const isActiveExiting = pillarActiveExitIndex === index
 
               return (
                 <button
                   key={pillar.title}
                   type="button"
                   aria-pressed={isActive}
-                  onClick={() => setActivePillarIndex(index)}
+                  onClick={(event) => handlePillarClick(event, index)}
+                  onPointerEnter={isActive ? undefined : (event) => handlePillarHoverEnter(event, index)}
+                  onPointerLeave={isActive ? undefined : () => handlePillarHoverLeave(index)}
                   data-reveal={`pillars-card-${index}`}
-                  className={`group relative flex min-w-[13rem] shrink-0 items-center justify-start gap-4 rounded-xl border px-5 py-4 text-left transition duration-300 sm:min-w-0 sm:flex-col sm:items-center sm:justify-center sm:gap-6 sm:px-8 sm:py-12 sm:text-center lg:py-14 ${
-                    isActive
-                      ? 'border-[#5a6572]/28 bg-white shadow-[0_12px_35px_rgba(90,101,114,0.08)]'
-                      : 'border-transparent bg-[#F7F8FA] hover:bg-white'
+                  style={{ '--pillar-hover-x': '50%', '--pillar-hover-y': '50%' }}
+                  className={`pillar-card group relative flex min-w-[13rem] shrink-0 items-center justify-start gap-4 overflow-hidden rounded-xl border px-5 py-4 text-left transition-[box-shadow,opacity,transform] duration-300 sm:min-w-0 sm:flex-col sm:items-center sm:justify-center sm:gap-6 sm:px-8 sm:py-12 sm:text-center lg:py-14 ${
+                    isActive || isActiveExiting
+                      ? `${isActive ? 'bg-white' : 'bg-[#E5E9F1]'} border-[#5a6572]/28 shadow-[0_12px_35px_rgba(90,101,114,0.08)]`
+                      : 'border-transparent bg-[#E5E9F1] hover:border-[#5a6572]/28'
                   } ${pillarsVisible ? 'animate-enter' : 'opacity-0'} ${pillarRevealDelays[index]}`}
                 >
+                  {isActiveExiting ? (
+                    <span
+                      aria-hidden="true"
+                      className="pillar-active-exit-fill"
+                    />
+                  ) : null}
+                  {!isActive && isHoverVisible ? (
+                    <span
+                      aria-hidden="true"
+                      className="pillar-hover-fill is-visible"
+                    />
+                  ) : null}
+                  {isHoverExiting ? (
+                    <span
+                      aria-hidden="true"
+                      className="pillar-hover-exit-fill"
+                    />
+                  ) : null}
                   <span
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition sm:h-16 sm:w-16 ${
+                    className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition sm:h-16 sm:w-16 ${
                       isActive ? 'bg-[#F1F3F7] text-[#5a6572]' : 'bg-white text-[#5a6572]/58'
                     }`}
                   >
                     <PillarIcon className="h-5 w-5 sm:h-8 sm:w-8" aria-hidden="true" />
                   </span>
-                  <h3 className={`text-sm font-semibold sm:text-lg ${isActive ? 'text-[#5a6572]' : 'text-[#5a6572]/72'}`}>
+                  <h3 className={`relative z-10 text-sm font-semibold sm:text-lg ${isActive ? 'text-[#5a6572]' : 'text-[#5a6572]/72'}`}>
                     {pillar.title}
                   </h3>
                 </button>
@@ -474,7 +567,10 @@ function QuemSomos() {
               pillarsVisible ? 'animate-enter' : 'opacity-0'
             } [animation-delay:420ms]`}
           >
-            <div className="grid gap-10 md:grid-cols-[0.92fr_1.08fr] md:items-start lg:gap-20">
+            <div
+              key={activePillar.title}
+              className="pillar-panel-copy grid gap-10 md:grid-cols-[0.92fr_1.08fr] md:items-start lg:gap-20"
+            >
               <div className="flex flex-col gap-7">
                 <h3 className="text-3xl font-semibold leading-tight tracking-tight text-[#5a6572] sm:text-4xl">
                   {activePillar.title}
@@ -498,10 +594,10 @@ function QuemSomos() {
       </section>
 
       <section className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-[#E5E9F1] px-4 py-24 sm:px-6 sm:py-28 lg:px-8 lg:py-36">
-        <div className="mx-auto grid w-full max-w-[1320px] lg:grid-cols-2">
+        <div className="mx-auto grid w-full max-w-[1320px] lg:grid-cols-[0.45fr_0.55fr]">
           <div className="hidden lg:block" aria-hidden="true" />
 
-          <div className="w-full max-w-[700px] justify-self-start">
+          <div className="w-full max-w-[700px] justify-self-end">
             <h2 className="font-display text-5xl font-semibold tracking-tight text-[#5A6572] sm:text-[3.35rem]">
               Estratégia
             </h2>
@@ -509,15 +605,15 @@ function QuemSomos() {
               Nossa orientação estratégica está baseada em:
             </p>
             <div className="mt-12 grid gap-8">
-            {strategyItems.map((item) => (
-              <div
-                key={item}
-                className="flex items-start gap-7 sm:items-center"
-              >
-                <span className="mt-2 inline-flex h-5 w-5 shrink-0 rounded-full bg-[#5A6572] sm:mt-0" aria-hidden="true" />
-                <p className="text-base font-semibold leading-8 text-[#5A6572] sm:text-lg">{item}</p>
-              </div>
-            ))}
+              {strategyItems.map((item) => (
+                <div
+                  key={item}
+                  className="flex items-start gap-7 sm:items-center"
+                >
+                  <span className="mt-2 inline-flex h-5 w-5 shrink-0 rounded-full bg-[#5A6572] sm:mt-0" aria-hidden="true" />
+                  <p className="text-base font-semibold leading-8 text-[#5A6572] sm:text-lg">{item}</p>
+                </div>
+              ))}
             </div>
 
             <p className="mt-14 max-w-2xl text-lg leading-9 text-[#5A6572]/82">
@@ -549,45 +645,36 @@ function QuemSomos() {
         </div>
       </section>
 
-      <section className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-[#EFEFF4] px-4 py-10 sm:px-6 lg:px-8">
-        <div className="mx-auto grid w-full max-w-[1320px] grid-cols-2 gap-3 sm:grid-cols-4">
-          {legacyClients.map((client) => (
-            <div key={client} className="flex min-h-24 items-center justify-center rounded-[1rem] border border-[#434b54]/8 bg-white/58 px-4 text-center text-xl font-semibold text-[#5a6572]/42 grayscale">
-              {client}
+      <section className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-[#E5E9F1] px-4 py-24 sm:px-6 sm:py-28 lg:px-8 lg:py-36">
+        <div className="mx-auto grid w-full max-w-[1320px] lg:grid-cols-2">
+          <div className="w-full max-w-[700px] justify-self-start">
+            <h2 className="font-display text-5xl font-semibold tracking-tight text-[#5A6572] sm:text-[3.35rem]">Consultores</h2>
+            <div className="mt-10 grid gap-6 text-base leading-8 text-[#5A6572]/78">
+              <p>
+              Nossos consultores possuem elevadas qualificações acadêmicas e práticas. Diferentes perfis profissionais em sinergia, garantindo alto desempenho nos contextos de administração. Um grupo coeso e multidisciplinar, gerador de inteligência coletiva, orientado para e pelo seu negócio.
+              </p>
+              <p>
+              Nossos profissionais possuem competências lato e stricto sensu em Administração de Empresas, Automação Industrial, Psicologia, Engenharia de Produção, Engenharia Mecânica e Processamento de Dados.
+              </p>
+              <p>
+              Especialistas em Gestão Empresarial, Gestão de Pessoas, Gerenciamento de Projetos, Gestão de Negócios, Gestão Estratégica de Custos e Comércio Exterior.
+              </p>
+              <p>
+              Certificações - CBPP (Gestão de Processos de Negócio), PMP - (Gerenciamento de Projetos).
+              </p>
             </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-white px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
-        <div className="mx-auto grid w-full max-w-[1320px] gap-12 lg:grid-cols-[0.55fr_1.45fr]">
-          <div>
-            <h2 className="font-display text-4xl font-semibold tracking-tight text-[#5a6572]">Consultores</h2>
             <a
               href="https://www.linkedin.com/company/otimiza-consultoria"
               target="_blank"
               rel="noreferrer"
-              className="mt-8 inline-flex items-center gap-2 rounded-[1rem] bg-[#434b54] px-5 py-3 text-sm font-semibold text-[#fff] transition hover:-translate-y-0.5 hover:bg-[#364048]"
+              className="mt-9 inline-flex min-h-16 w-full items-center justify-center gap-2 rounded-[0.2rem] bg-[#5A6572] px-10 text-base font-semibold text-white transition hover:bg-[#4d5661] sm:w-auto sm:min-w-[17rem]"
             >
               Acesse nosso LinkedIn
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </a>
           </div>
 
-          <div className="grid gap-5 text-base leading-8 text-[#5a6572]/78">
-            <p>
-              Nossos consultores possuem elevadas qualificações acadêmicas e práticas. Diferentes perfis profissionais em sinergia, garantindo alto desempenho nos contextos de administração. Um grupo coeso e multidisciplinar, gerador de inteligência coletiva, orientado para e pelo seu negócio.
-            </p>
-            <p>
-              Nossos profissionais possuem competências lato e stricto sensu em Administração de Empresas, Automação Industrial, Psicologia, Engenharia de Produção, Engenharia Mecânica e Processamento de Dados.
-            </p>
-            <p>
-              Especialistas em Gestão Empresarial, Gestão de Pessoas, Gerenciamento de Projetos, Gestão de Negócios, Gestão Estratégica de Custos e Comércio Exterior.
-            </p>
-            <p>
-              Certificações - CBPP (Gestão de Processos de Negócio), PMP - (Gerenciamento de Projetos).
-            </p>
-          </div>
+          <div className="hidden lg:block" aria-hidden="true" />
         </div>
       </section>
     </div>

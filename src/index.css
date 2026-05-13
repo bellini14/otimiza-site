@@ -96,12 +96,12 @@ html.dark {
   inset: 0;
   z-index: 9999;
   overflow: hidden;
-  background: #ffffff;
+  background: #cad2e2;
   will-change: transform;
 }
 
 html.dark .page-curtain {
-  background: #111827;
+  background: #cad2e2;
 }
 
 .page-curtain__inner {
@@ -151,6 +151,110 @@ html.dark .page-curtain {
     align-items: center;
     justify-content: center;
     animation: theme-toggle-pop 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .pillar-card {
+    --pillar-damped-ease: cubic-bezier(0.18, 0.82, 0.22, 1);
+    --pillar-soft-ease: cubic-bezier(0.2, 0.72, 0.18, 1);
+  }
+
+  .pillar-hover-fill {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: rgb(255 255 255 / 0.78);
+    opacity: 1;
+    animation: pillar-hover-enter 1180ms var(--pillar-damped-ease) both;
+    will-change: clip-path, opacity;
+  }
+
+  @keyframes pillar-hover-enter {
+    0% {
+      opacity: 0;
+      clip-path: circle(0 at var(--pillar-hover-x, 50%) var(--pillar-hover-y, 50%));
+    }
+
+    18% {
+      opacity: 0.78;
+    }
+
+    100% {
+      opacity: 1;
+      clip-path: circle(145% at var(--pillar-hover-x, 50%) var(--pillar-hover-y, 50%));
+    }
+  }
+
+  .pillar-hover-exit-fill {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: #ffffff;
+    animation: pillar-hover-exit-fade 880ms var(--pillar-soft-ease) forwards;
+    will-change: opacity;
+  }
+
+  @keyframes pillar-hover-exit-fade {
+    0% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0;
+    }
+  }
+
+  .pillar-active-exit-fill {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: #ffffff;
+    animation: pillar-active-exit-fade 220ms var(--pillar-soft-ease) forwards;
+    will-change: opacity;
+  }
+
+  @keyframes pillar-active-exit-fade {
+    0% {
+      opacity: 1;
+    }
+
+    40% {
+      opacity: 0.64;
+    }
+
+    100% {
+      opacity: 0;
+    }
+  }
+
+  .pillar-panel-copy h3,
+  .pillar-panel-copy a,
+  .pillar-panel-copy h4,
+  .pillar-panel-copy p {
+    animation: pillar-panel-fade-up 760ms cubic-bezier(0.18, 0.82, 0.22, 1) both;
+  }
+
+  .pillar-panel-copy a {
+    animation-delay: 40ms;
+  }
+
+  .pillar-panel-copy h4 {
+    animation-delay: 70ms;
+  }
+
+  .pillar-panel-copy p {
+    animation-delay: 110ms;
+  }
+
+  @keyframes pillar-panel-fade-up {
+    0% {
+      opacity: 0;
+      transform: translateY(0.35rem);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .post-like-button-group {
