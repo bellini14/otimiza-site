@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowDown, ArrowRight, BrainCircuit, GraduationCap, Network, Stethoscope, Target } from 'lucide-react'
+import { ArrowDown, ArrowRight, BrainCircuit, GraduationCap, Stethoscope } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { ScrollVelocity } from '../components/ui/ScrollVelocity'
 import { client } from '../lib/sanity'
 import heroBwImage from '../../imagens/hero quem somos.png'
+import hairlineIcon from '../../imagens/icone hairline.svg'
 
 const clientLogoQuery = `*[_type == "clientLogo" && isVisible != false && showOnHome == true && defined(logo.asset)] | order(coalesce(sortOrder, 9999) asc, name asc) {
   _id,
@@ -98,6 +99,8 @@ const pillars = [
   },
 ]
 
+const pillarRevealDelays = ['[animation-delay:120ms]', '[animation-delay:240ms]', '[animation-delay:360ms]']
+
 const strategyItems = [
   'Transformação dos modelos de negócio',
   'Aplicação de métodos que produzam melhores e maiores acertos',
@@ -112,6 +115,76 @@ const storyParagraphs = [
   'Mais do que aconselhar, conduzimos transformações práticas no negócio.',
   'Nosso crescimento vem da satisfação dos clientes.',
 ]
+
+function useScrollReveal(threshold = 0.18) {
+  const [hasEnteredView, setHasEnteredView] = useState(() => typeof IntersectionObserver === 'undefined')
+  const ref = useRef(null)
+
+  useEffect(() => {
+    if (hasEnteredView) {
+      return undefined
+    }
+
+    let animationFrameId = 0
+
+    const checkPosition = () => {
+      if (!ref.current) {
+        return
+      }
+
+      const rect = ref.current.getBoundingClientRect()
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight
+
+      if (rect.top <= viewportHeight * 0.78 && rect.bottom >= viewportHeight * 0.18) {
+        setHasEnteredView(true)
+      }
+    }
+
+    const queueCheck = () => {
+      window.cancelAnimationFrame(animationFrameId)
+      animationFrameId = window.requestAnimationFrame(checkPosition)
+    }
+
+    const pollUntilVisible = () => {
+      checkPosition()
+
+      if (!hasEnteredView) {
+        animationFrameId = window.requestAnimationFrame(pollUntilVisible)
+      }
+    }
+
+    animationFrameId = window.requestAnimationFrame(pollUntilVisible)
+    window.addEventListener('scroll', queueCheck, { passive: true })
+    window.addEventListener('resize', queueCheck)
+
+    let observer
+
+    if (typeof IntersectionObserver !== 'undefined') {
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setHasEnteredView(true)
+            observer.disconnect()
+          }
+        },
+        { threshold },
+      )
+
+      if (ref.current) {
+        observer.observe(ref.current)
+      }
+    }
+
+    return () => {
+      window.cancelAnimationFrame(animationFrameId)
+      observer?.disconnect()
+      window.removeEventListener('scroll', queueCheck)
+      window.removeEventListener('resize', queueCheck)
+    }
+  }, [hasEnteredView, threshold])
+
+  return [ref, hasEnteredView]
+}
 
 function repeatClientLogos(logos, targetCount = 12) {
   if (logos.length >= targetCount) {
@@ -291,6 +364,10 @@ function StoryRevealCopy() {
 }
 
 function QuemSomos() {
+  const [activePillarIndex, setActivePillarIndex] = useState(0)
+  const [pillarsRef, pillarsVisible] = useScrollReveal()
+  const activePillar = pillars[activePillarIndex]
+
   return (
     <div data-testid="quem-somos-page" className="-mt-32 sm:-mt-36">
       <section
@@ -339,75 +416,134 @@ function QuemSomos() {
         </div>
       </section>
 
-      <section className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden bg-[#F7F8FA] px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+      <section
+        id="tres-vertices"
+        ref={pillarsRef}
+        data-testid="quem-somos-pillars"
+        className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden bg-white px-4 py-24 sm:px-6 sm:py-28 lg:px-8 lg:py-36"
+      >
         <div className="mx-auto w-full max-w-[1320px]">
-          <div className="mx-auto mb-12 max-w-3xl text-center">
-            <p className="mb-4 text-sm font-semibold text-brand-red">Somos sustentados por três vértices de atuação</p>
-            <h2 className="font-display text-3xl font-semibold leading-tight text-[#5a6572] sm:text-5xl">
+          <div
+            data-reveal="pillars-heading"
+            className={`mx-auto mb-16 max-w-5xl text-center sm:mb-20 ${
+              pillarsVisible ? 'animate-enter' : 'opacity-0'
+            }`}
+          >
+            <p className="mb-4 text-sm font-semibold text-[#5a6572]">Somos sustentados por três vértices de atuação</p>
+            <h2 className="font-display text-4xl font-medium leading-tight tracking-tight text-[#5a6572] sm:text-6xl">
               Consultoria, tecnologia e academia trabalhando juntas.
             </h2>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="flex gap-4 overflow-x-auto pb-1 sm:grid sm:grid-cols-3 sm:gap-6 sm:overflow-visible sm:pb-0 lg:gap-8">
             {pillars.map((pillar, index) => {
               const PillarIcon = pillar.icon
+              const isActive = activePillarIndex === index
 
               return (
-                <article
+                <button
                   key={pillar.title}
-                  className="group rounded-[1.25rem] border border-[#434b54]/10 bg-white p-6 shadow-[0_14px_44px_rgba(67,75,84,0.06)] transition duration-300 hover:-translate-y-1 hover:border-brand-red/25"
-                  style={{ animationDelay: `${index * 120}ms` }}
+                  type="button"
+                  aria-pressed={isActive}
+                  onClick={() => setActivePillarIndex(index)}
+                  data-reveal={`pillars-card-${index}`}
+                  className={`group relative flex min-w-[13rem] shrink-0 items-center justify-start gap-4 rounded-xl border px-5 py-4 text-left transition duration-300 sm:min-w-0 sm:flex-col sm:items-center sm:justify-center sm:gap-6 sm:px-8 sm:py-12 sm:text-center lg:py-14 ${
+                    isActive
+                      ? 'border-[#5a6572]/28 bg-white shadow-[0_12px_35px_rgba(90,101,114,0.08)]'
+                      : 'border-transparent bg-[#F7F8FA] hover:bg-white'
+                  } ${pillarsVisible ? 'animate-enter' : 'opacity-0'} ${pillarRevealDelays[index]}`}
                 >
-                  <div className="mb-8 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-red/10 text-brand-red transition duration-300 group-hover:bg-brand-red group-hover:text-[#fff]">
-                    <PillarIcon className="h-7 w-7" aria-hidden="true" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-[#5a6572]">{pillar.title}</h3>
-                  <p className="mt-4 text-sm leading-7 text-[#5a6572]/72">{pillar.description}</p>
-                </article>
+                  <span
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition sm:h-16 sm:w-16 ${
+                      isActive ? 'bg-[#F1F3F7] text-[#5a6572]' : 'bg-white text-[#5a6572]/58'
+                    }`}
+                  >
+                    <PillarIcon className="h-5 w-5 sm:h-8 sm:w-8" aria-hidden="true" />
+                  </span>
+                  <h3 className={`text-sm font-semibold sm:text-lg ${isActive ? 'text-[#5a6572]' : 'text-[#5a6572]/72'}`}>
+                    {pillar.title}
+                  </h3>
+                </button>
               )
             })}
           </div>
 
-          <div className="mt-10 flex justify-center">
-            <Link to="/contato" className="btn-primary rounded-[1rem]">
+          <div
+            data-reveal="pillars-panel"
+            className={`mt-14 border-t border-[#5a6572]/18 pt-12 sm:mt-16 sm:pt-14 ${
+              pillarsVisible ? 'animate-enter' : 'opacity-0'
+            } [animation-delay:420ms]`}
+          >
+            <div className="grid gap-10 md:grid-cols-[0.92fr_1.08fr] md:items-start lg:gap-20">
+              <div className="flex flex-col gap-7">
+                <h3 className="text-3xl font-semibold leading-tight tracking-tight text-[#5a6572] sm:text-4xl">
+                  {activePillar.title}
+                </h3>
+                <Link
+                  to="/contato"
+                  className="inline-flex self-start items-center gap-2 rounded-lg border border-[#5a6572]/24 bg-white px-5 py-2.5 text-sm font-medium text-[#5a6572] transition hover:bg-[#F7F8FA]"
+                >
+                  Entre em contato
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                <h4 className="text-base font-semibold text-[#5a6572] sm:text-lg">{activePillar.title}</h4>
+                <p className="text-base leading-8 text-[#5a6572]/76">{activePillar.description}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-[#E5E9F1] px-4 py-24 sm:px-6 sm:py-28 lg:px-8 lg:py-36">
+        <div className="mx-auto grid w-full max-w-[1320px] lg:grid-cols-2">
+          <div className="hidden lg:block" aria-hidden="true" />
+
+          <div className="w-full max-w-[700px] justify-self-start">
+            <h2 className="font-display text-5xl font-semibold tracking-tight text-[#5A6572] sm:text-[3.35rem]">
+              Estratégia
+            </h2>
+            <p className="mt-6 max-w-2xl text-lg leading-9 text-[#5A6572]/82">
+              Nossa orientação estratégica está baseada em:
+            </p>
+            <div className="mt-12 grid gap-8">
+            {strategyItems.map((item) => (
+              <div
+                key={item}
+                className="flex items-start gap-7 sm:items-center"
+              >
+                <span className="mt-2 inline-flex h-5 w-5 shrink-0 rounded-full bg-[#5A6572] sm:mt-0" aria-hidden="true" />
+                <p className="text-base font-semibold leading-8 text-[#5A6572] sm:text-lg">{item}</p>
+              </div>
+            ))}
+            </div>
+
+            <p className="mt-14 max-w-2xl text-lg leading-9 text-[#5A6572]/82">
+              Conte com a nossa equipe de consultores para potencializar seus projetos, permitindo assim alto desempenho na prática.
+            </p>
+            <Link
+              to="/contato"
+              aria-label="Entrar em contato sobre estratégia"
+              className="mt-9 inline-flex min-h-16 w-full items-center justify-center rounded-[0.2rem] bg-[#5A6572] px-10 text-base font-semibold text-white transition hover:bg-[#4d5661] sm:w-auto sm:min-w-[17rem]"
+            >
               Entre em contato
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </div>
         </div>
       </section>
 
-      <section className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-white px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
-        <div className="mx-auto grid w-full max-w-[1320px] gap-10 lg:grid-cols-[0.75fr_1.25fr] lg:items-center">
-          <div>
-            <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-[1.25rem] bg-brand-red/10 text-brand-red">
-              <Network className="h-8 w-8" aria-hidden="true" />
-            </div>
-            <h2 className="font-display text-4xl font-semibold tracking-tight text-[#5a6572]">Estratégia</h2>
-            <p className="mt-4 max-w-md text-base leading-8 text-[#5a6572]/74">
-              Nossa orientação estratégica está baseada em método, prática e aproximação com o resultado.
-            </p>
-          </div>
-
-          <div className="grid gap-3">
-            {strategyItems.map((item) => (
-              <div key={item} className="flex items-start gap-4 rounded-[1rem] border border-[#434b54]/10 bg-[#F7F8FA] p-5">
-                <Target className="mt-0.5 h-5 w-5 shrink-0 text-brand-red" aria-hidden="true" />
-                <p className="text-sm font-semibold leading-7 text-[#5a6572]">{item}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden bg-[#2F363E] px-4 py-16 text-[#f8fafc] sm:px-6 sm:py-20 lg:px-8">
-        <div className="absolute inset-0 opacity-30" aria-hidden="true">
-          <img src={heroBwImage} alt="" className="h-full w-full object-cover grayscale" />
-          <div className="absolute inset-0 bg-[#2F363E]/85" />
-        </div>
-        <div className="relative mx-auto w-full max-w-[1320px]">
-          <p className="mb-5 text-sm text-[#f8fafc]/72">Nossa missão</p>
-          <blockquote className="max-w-5xl font-display text-2xl font-semibold leading-tight tracking-tight sm:text-4xl">
+      <section className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden bg-[#cad2e2] px-4 py-28 text-[#2F363E] sm:px-6 sm:py-32 lg:px-8 lg:py-40">
+        <img
+          src={hairlineIcon}
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none absolute left-1/2 top-1/2 h-auto w-[52rem] max-w-none -translate-x-1/2 -translate-y-1/2 opacity-45 sm:w-[68rem] lg:w-[84rem]"
+        />
+        <div className="relative mx-auto flex w-full max-w-[1180px] flex-col items-center text-center">
+          <p className="mb-7 text-sm font-semibold text-[#2F363E]/68">Nossa missão</p>
+          <blockquote className="max-w-5xl font-display text-2xl font-normal leading-[1.34] tracking-normal sm:text-[2.65rem] sm:leading-[1.24] lg:text-[3rem] lg:leading-[1.22]">
             “Contribuir para o crescimento e a solidez dos clientes, viabilizando mudanças, através de ações competentes e personalizadas, promovendo o êxito do negócio, com uma equipe inspirada e motivada”.
           </blockquote>
         </div>
