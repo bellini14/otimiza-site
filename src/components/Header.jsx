@@ -3,32 +3,25 @@ import { Link, useLocation } from 'react-router-dom'
 import logoOtimiza from '../assets/logo-otimiza.svg'
 import { siteNav } from '../data/sitePages'
 
-const dropdownGroups = [
-  {
-    id: 'institucional',
-    label: 'Institucional',
-    items: [
-      { path: '/quem-somos', label: 'Quem somos' },
-      { path: '/contato', label: 'Contato' },
-    ],
-  },
-  {
-    id: 'solucoes',
-    label: 'Soluções',
-    items: [
-      { path: '/o-que-fazemos', label: 'O que fazemos' },
-      { path: '/tecnologia', label: 'Tecnologia' },
-      { path: '/academia-otimiza', label: 'Academia Otimiza' },
-    ],
-  },
-]
+const dropdownGroups = []
 
 const directLinks = [
-  { path: '/cases', label: 'Cases' },
+  { path: '/quem-somos', label: 'Quem somos' },
+  { path: '/quem-somos#nossa-abordagem', label: 'Nossa abordagem', disabled: true },
+  { path: '/o-que-fazemos', label: 'O que fazemos', disabled: true },
+  { path: '/cases', label: 'Cases', disabled: true },
   { path: '/inspire', label: 'Inspire' },
 ]
 
-const mobileLinks = [{ path: '/', label: 'Home' }, ...siteNav]
+const disabledNavLabels = new Set(['Nossa abordagem', 'O que fazemos', 'Cases'])
+
+const mobileLinks = [
+  { path: '/', label: 'Home' },
+  ...siteNav.map((item) => ({
+    ...item,
+    disabled: disabledNavLabels.has(item.label),
+  })),
+]
 
 function getInitialTheme() {
   if (typeof window === 'undefined') {
@@ -289,19 +282,29 @@ function Header() {
                   </div>
                 ))}
 
-                {directLinks.map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`group flex items-center rounded-full px-3.5 py-2 text-[16px] no-underline transition-all duration-200 ${
-                      isActive(item.path)
-                        ? 'font-[400] text-[#5a6572] dark:text-white'
-                        : 'font-[400] text-[#5a6572] dark:text-white/90 hover:text-[#5a6572] dark:hover:text-white'
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
+                {directLinks.map((item) =>
+                  item.disabled ? (
+                    <span
+                      key={item.path}
+                      aria-disabled="true"
+                      className="flex cursor-default items-center rounded-full px-3.5 py-2 text-[16px] font-[400] text-[#5a6572] opacity-30 dark:text-white/90"
+                    >
+                      {item.label}
+                    </span>
+                  ) : (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      className={`group flex items-center rounded-full px-3.5 py-2 text-[16px] no-underline transition-all duration-200 ${
+                        isActive(item.path)
+                          ? 'font-[400] text-[#5a6572] dark:text-white'
+                          : 'font-[400] text-[#5a6572] dark:text-white/90 hover:text-[#5a6572] dark:hover:text-white'
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  ),
+                )}
               </div>
             </div>
 
@@ -389,20 +392,30 @@ function Header() {
         </div>
 
         <nav className="flex flex-col gap-1" aria-label="Mobile navigation">
-          {mobileLinks.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={closeAll}
-              className={`rounded-[1rem] px-4 py-3 text-[14.5px] transition-all duration-200 ${
-                isActive(item.path)
-                  ? 'bg-[#434b54] font-[400] text-white dark:bg-white/10'
-                  : 'font-[400] text-[#5a6572] dark:text-white/70 hover:bg-[#434b54]/5 hover:text-[#5a6572] dark:hover:bg-white/10 dark:hover:text-white'
-              }`}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {mobileLinks.map((item) =>
+            item.disabled ? (
+              <span
+                key={item.path}
+                aria-disabled="true"
+                className="rounded-[1rem] px-4 py-3 text-[14.5px] font-[400] text-[#5a6572] opacity-30 dark:text-white/70"
+              >
+                {item.label}
+              </span>
+            ) : (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={closeAll}
+                className={`rounded-[1rem] px-4 py-3 text-[14.5px] transition-all duration-200 ${
+                  isActive(item.path)
+                    ? 'bg-[#434b54] font-[400] text-white dark:bg-white/10'
+                    : 'font-[400] text-[#5a6572] dark:text-white/70 hover:bg-[#434b54]/5 hover:text-[#5a6572] dark:hover:bg-white/10 dark:hover:text-white'
+                }`}
+              >
+                {item.label}
+              </Link>
+            ),
+          )}
         </nav>
 
         <div className="mt-4 grid gap-3 border-t border-[#434b54]/10 dark:border-white/10 pt-4">

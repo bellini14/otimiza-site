@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowDown, ArrowRight, BrainCircuit, GraduationCap, Stethoscope } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import SplitText from '../components/SplitText'
 import { ScrollVelocity } from '../components/ui/ScrollVelocity'
 import { client } from '../lib/sanity'
-import heroBwImage from '../../imagens/hero quem somos.png'
+import heroBwImage from '../../imagens/hero quem somos-optimized.jpg'
 import hairlineIcon from '../../imagens/icone hairline.svg'
 
 const clientLogoQuery = `*[_type == "clientLogo" && isVisible != false && showOnHome == true && defined(logo.asset)] | order(coalesce(sortOrder, 9999) asc, name asc) {
@@ -100,6 +101,8 @@ const pillars = [
 ]
 
 const pillarRevealDelays = ['[animation-delay:120ms]', '[animation-delay:240ms]', '[animation-delay:360ms]']
+const strategyRevealDelays = ['0ms', '120ms', '240ms', '360ms']
+const consultantsRevealDelays = ['100ms', '180ms', '260ms', '340ms']
 
 const strategyItems = [
   'Transformação dos modelos de negócio',
@@ -114,7 +117,8 @@ const storyParagraphs = [
   'Nosso crescimento vem da satisfação dos clientes.',
 ]
 
-function useScrollReveal(threshold = 0.18) {
+function useScrollReveal(threshold = 0.18, options = {}) {
+  const { requireFullVisibility = false, minimumIntersectionRatio = threshold } = options
   const [hasEnteredView, setHasEnteredView] = useState(() => typeof IntersectionObserver === 'undefined')
   const ref = useRef(null)
 
@@ -132,8 +136,12 @@ function useScrollReveal(threshold = 0.18) {
 
       const rect = ref.current.getBoundingClientRect()
       const viewportHeight = window.innerHeight || document.documentElement.clientHeight
+      const fullyVisible = rect.top >= 0 && rect.bottom <= viewportHeight
+      const viewportCovered = rect.height > viewportHeight && rect.top <= viewportHeight * 0.08 && rect.bottom >= viewportHeight * 0.92
+      const visibleHeight = Math.max(0, Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0))
+      const intersectionRatio = rect.height > 0 ? visibleHeight / rect.height : 0
 
-      if (rect.top <= viewportHeight * 0.78 && rect.bottom >= viewportHeight * 0.18) {
+      if (requireFullVisibility ? fullyVisible || viewportCovered : intersectionRatio >= minimumIntersectionRatio) {
         setHasEnteredView(true)
       }
     }
@@ -160,12 +168,16 @@ function useScrollReveal(threshold = 0.18) {
     if (typeof IntersectionObserver !== 'undefined') {
       observer = new IntersectionObserver(
         ([entry]) => {
-          if (entry.isIntersecting) {
+          const isVisibleEnough = requireFullVisibility
+            ? entry.isIntersecting && entry.intersectionRatio >= 0.98
+            : entry.isIntersecting && entry.intersectionRatio >= minimumIntersectionRatio
+
+          if (isVisibleEnough) {
             setHasEnteredView(true)
             observer.disconnect()
           }
         },
-        { threshold },
+        { threshold: requireFullVisibility ? 1 : threshold },
       )
 
       if (ref.current) {
@@ -179,9 +191,13 @@ function useScrollReveal(threshold = 0.18) {
       window.removeEventListener('scroll', queueCheck)
       window.removeEventListener('resize', queueCheck)
     }
-  }, [hasEnteredView, threshold])
+  }, [hasEnteredView, minimumIntersectionRatio, requireFullVisibility, threshold])
 
   return [ref, hasEnteredView]
+}
+
+function revealClass(isVisible, variant, className = '') {
+  return `qs-reveal qs-reveal--${variant} ${isVisible ? 'qs-reveal--visible' : ''} ${className}`.trim()
 }
 
 function repeatClientLogos(logos, targetCount = 12) {
@@ -229,6 +245,7 @@ function ClientLogoPill({ logo, isDecorative = false }) {
 
 function ClientLogoCarousel() {
   const [logos, setLogos] = useState(clientLogoFallbacks)
+  const [logosRef, logosVisible] = useScrollReveal(0.1)
   const logoRow = useMemo(() => buildClientLogoRow(logos), [logos])
 
   useEffect(() => {
@@ -254,11 +271,12 @@ function ClientLogoCarousel() {
 
   return (
     <section
+      ref={logosRef}
       aria-label="Clientes"
       className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden bg-[#e5e9f1] py-8 sm:py-10"
       data-testid="quem-somos-client-logo-carousel"
     >
-      <div className="relative w-full">
+      <div className={revealClass(logosVisible, 'scale-soft', 'relative w-full')}>
         <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-[18vw] bg-gradient-to-r from-[#e5e9f1] via-[#e5e9f1]/88 to-transparent" aria-hidden="true" />
         <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-[18vw] bg-gradient-to-l from-[#e5e9f1] via-[#e5e9f1]/88 to-transparent" aria-hidden="true" />
         <ScrollVelocity
@@ -314,13 +332,14 @@ function ScrollRevealText({ children, progress, startIndex, totalWords }) {
 
 function StoryRevealCopy() {
   const containerRef = useRef(null)
+  const hasCompletedRevealRef = useRef(false)
   const [progress, setProgress] = useState(0)
   const wordCounts = useMemo(() => storyParagraphs.map((paragraph) => paragraph.split(/\s+/).filter(Boolean).length), [])
   const totalWords = useMemo(() => wordCounts.reduce((total, count) => total + count, 0), [wordCounts])
 
   useEffect(() => {
     const updateProgress = () => {
-      if (!containerRef.current) {
+      if (!containerRef.current || hasCompletedRevealRef.current) {
         return
       }
 
@@ -329,8 +348,17 @@ function StoryRevealCopy() {
       const revealStart = viewportHeight * 0.75
       const revealEnd = viewportHeight * 0.25
       const revealDistance = Math.max(revealStart - revealEnd, 1)
+      const nextProgress = clamp((revealStart - rect.top) / revealDistance, 0, 1)
 
-      setProgress(clamp((revealStart - rect.top) / revealDistance, 0, 1))
+      setProgress((currentProgress) => {
+        const stableProgress = Math.max(currentProgress, nextProgress)
+
+        if (stableProgress >= 1) {
+          hasCompletedRevealRef.current = true
+        }
+
+        return stableProgress
+      })
     }
 
     updateProgress()
@@ -365,7 +393,12 @@ function QuemSomos() {
   const [activePillarIndex, setActivePillarIndex] = useState(0)
   const [pillarHoverState, setPillarHoverState] = useState({ visibleIndex: null, exitingIndex: null })
   const [pillarActiveExitIndex, setPillarActiveExitIndex] = useState(null)
-  const [pillarsRef, pillarsVisible] = useScrollReveal()
+  const [heroRef, heroVisible] = useScrollReveal(0.1)
+  const [pillarsRef, pillarsVisible] = useScrollReveal(0.58, { minimumIntersectionRatio: 0.58 })
+  const [storyRef, storyVisible] = useScrollReveal(0.16)
+  const [strategyRef, strategyVisible] = useScrollReveal(0.18)
+  const [missionRef, missionVisible] = useScrollReveal(0.52)
+  const [consultantsRef, consultantsVisible] = useScrollReveal(0.18)
   const pillarHoverTimeoutRef = useRef(null)
   const pillarHoverFadeTimeoutRef = useRef(null)
   const pillarHoverStartedAtRef = useRef(null)
@@ -441,13 +474,16 @@ function QuemSomos() {
     <div data-testid="quem-somos-page" className="-mt-32 sm:-mt-36">
       <section
         aria-label="Introdução sobre a Otimiza"
+        ref={heroRef}
+        data-testid="quem-somos-hero"
         className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden bg-[#cad2e2]"
       >
         <div className="absolute inset-0" aria-hidden="true">
           <img
             src={heroBwImage}
             alt=""
-            className="h-full w-full object-cover object-center"
+            data-testid="quem-somos-hero-background"
+            className="quem-somos-hero__photo h-full w-full object-cover object-center"
           />
           <div className="absolute inset-y-0 left-[44%] hidden w-[24%] -skew-x-[22deg] bg-gradient-to-r from-white/22 via-[#cad2e2]/18 to-transparent blur-[1px] md:block" />
           <div className="absolute inset-x-0 bottom-0 h-[34%] bg-gradient-to-t from-[#e5e9f1] via-[#e5e9f1]/72 to-transparent" />
@@ -455,16 +491,41 @@ function QuemSomos() {
 
         <div className="relative mx-auto grid min-h-[100svh] w-full max-w-[1320px] items-center gap-10 px-4 py-32 sm:px-5 sm:py-36 lg:grid-cols-[1fr_0.82fr] lg:px-0">
           <div className="max-w-[48rem]">
-            <h1 className="font-display text-[clamp(4.35rem,8.35vw,7.35rem)] font-light leading-[0.92] text-[#5a6572]">
-              Quem somos
-            </h1>
-            <p className="mt-7 max-w-[45rem] text-[clamp(1.12rem,1.72vw,1.68rem)] font-light leading-[1.2] text-[#5a6572]/90 sm:mt-9">
+            <SplitText
+              tag="h1"
+              text="Quem somos"
+              className="font-display text-[clamp(4.35rem,8.35vw,7.35rem)] font-light leading-[0.92] text-[#5a6572]"
+              delay={100}
+              duration={0.6}
+              ease="power3.out"
+              splitType="chars"
+              from={{ opacity: 0, y: 40 }}
+              to={{ opacity: 1, y: 0 }}
+              threshold={0.1}
+              rootMargin="-100px"
+              textAlign="left"
+            />
+            <p
+              className={revealClass(
+                heroVisible,
+                'fade-up',
+                'mt-7 max-w-[45rem] text-[clamp(1.12rem,1.72vw,1.68rem)] font-light leading-[1.2] text-[#5a6572]/90 sm:mt-9',
+              )}
+              style={{ '--qs-reveal-delay': '220ms' }}
+            >
               A Otimiza Consultoria nasceu em Caxias do Sul, em 1990. Através da competência em traduzir teorias de administração de empresas, que só faziam sentido nos livros acadêmicos, em práticas aplicáveis no ambiente empresarial, expandiu-se nacionalmente.
             </p>
           </div>
 
           <div className="flex justify-end">
-            <div className="relative w-full max-w-[33rem] overflow-hidden rounded-[1rem] border border-white/90 bg-[#e6ebf8]/88 px-8 py-9 shadow-[0_26px_70px_rgba(90,101,114,0.05)] backdrop-blur-md sm:px-11 sm:py-11 lg:mb-0">
+            <div
+              className={revealClass(
+                heroVisible,
+                'scale-soft',
+                'relative w-full max-w-[33rem] overflow-hidden rounded-[1rem] border border-white/90 bg-[#e6ebf8]/88 px-8 py-9 shadow-[0_26px_70px_rgba(90,101,114,0.05)] backdrop-blur-md sm:px-11 sm:py-11 lg:mb-0',
+              )}
+              style={{ '--qs-reveal-delay': '320ms' }}
+            >
               <p className="relative text-[clamp(1.38rem,2.05vw,1.95rem)] font-thin leading-[1.16] text-[#5a6572]">
                 Atualmente, conta com uma equipe multidisciplinar composta por consultores seniores de diversas áreas de atuação e especialidades.
               </p>
@@ -479,19 +540,26 @@ function QuemSomos() {
 
       <ClientLogoCarousel />
 
-      <section className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-[#e5e9f1] px-4 py-20 sm:px-5 sm:py-24 lg:px-0 lg:py-28">
-        <div className="mx-auto flex min-h-[24rem] w-full max-w-[1320px] items-center justify-start">
+      <section
+        ref={storyRef}
+        data-testid="quem-somos-story"
+        className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-[#e5e9f1] px-4 py-20 sm:px-5 sm:py-24 lg:px-0 lg:py-28"
+      >
+        <div className={revealClass(storyVisible, 'clip-rise', 'mx-auto flex min-h-[24rem] w-full max-w-[1320px] items-center justify-start')}>
           <StoryRevealCopy />
         </div>
       </section>
 
       <section
         id="tres-vertices"
-        ref={pillarsRef}
         data-testid="quem-somos-pillars"
         className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden bg-white px-4 py-24 sm:px-6 sm:py-28 lg:px-8 lg:py-36"
       >
-        <div className="mx-auto w-full max-w-[1320px]">
+        <div
+          ref={pillarsRef}
+          data-testid="quem-somos-pillars-reveal-target"
+          className="mx-auto w-full max-w-[1320px]"
+        >
           <div
             data-reveal="pillars-heading"
             className={`mx-auto mb-16 max-w-5xl text-center sm:mb-20 ${
@@ -593,36 +661,53 @@ function QuemSomos() {
         </div>
       </section>
 
-      <section className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-[#E5E9F1] px-4 py-24 sm:px-6 sm:py-28 lg:px-8 lg:py-36">
+      <section
+        id="nossa-abordagem"
+        ref={strategyRef}
+        data-testid="quem-somos-strategy"
+        className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-[#FFFFFF] px-4 py-24 sm:px-6 sm:py-28 lg:px-8 lg:py-36"
+      >
         <div className="mx-auto grid w-full max-w-[1320px] lg:grid-cols-[0.45fr_0.55fr]">
           <div className="hidden lg:block" aria-hidden="true" />
 
           <div className="w-full max-w-[700px] justify-self-end">
-            <h2 className="font-display text-5xl font-semibold tracking-tight text-[#5A6572] sm:text-[3.35rem]">
+            <h2
+              data-reveal="strategy-heading"
+              className={revealClass(strategyVisible, 'slide-left', 'font-display text-5xl font-semibold tracking-tight text-[#5A6572] sm:text-[3.35rem]')}
+            >
               Estratégia
             </h2>
-            <p className="mt-6 max-w-2xl text-lg leading-9 text-[#5A6572]/82">
+            <p
+              className={revealClass(strategyVisible, 'fade-up', 'mt-6 max-w-2xl text-lg leading-9 text-[#5A6572]/82')}
+              style={{ '--qs-reveal-delay': '80ms' }}
+            >
               Nossa orientação estratégica está baseada em:
             </p>
             <div className="mt-12 grid gap-8">
-              {strategyItems.map((item) => (
+              {strategyItems.map((item, index) => (
                 <div
                   key={item}
-                  className="flex items-start gap-7 sm:items-center"
+                  data-reveal={`strategy-item-${index}`}
+                  className={revealClass(strategyVisible, 'fade-up', 'flex items-start gap-7 sm:items-center')}
+                  style={{ '--qs-reveal-delay': strategyRevealDelays[index] }}
                 >
-                  <span className="mt-2 inline-flex h-5 w-5 shrink-0 rounded-full bg-[#5A6572] sm:mt-0" aria-hidden="true" />
+                  <span className="mt-2 inline-flex h-4 w-4 shrink-0 rounded-full bg-[#5A6572] sm:mt-0" aria-hidden="true" />
                   <p className="text-base font-semibold leading-8 text-[#5A6572] sm:text-lg">{item}</p>
                 </div>
               ))}
             </div>
 
-            <p className="mt-14 max-w-2xl text-lg leading-9 text-[#5A6572]/82">
+            <p
+              className={revealClass(strategyVisible, 'fade-up', 'mt-14 max-w-2xl text-lg leading-9 text-[#5A6572]/82')}
+              style={{ '--qs-reveal-delay': '520ms' }}
+            >
               Conte com a nossa equipe de consultores para potencializar seus projetos, permitindo assim alto desempenho na prática.
             </p>
             <Link
               to="/contato"
               aria-label="Entrar em contato sobre estratégia"
-              className="mt-9 inline-flex min-h-16 w-full items-center justify-center rounded-[0.2rem] bg-[#5A6572] px-10 text-base font-semibold text-white transition hover:bg-[#4d5661] sm:w-auto sm:min-w-[17rem]"
+              className={revealClass(strategyVisible, 'scale-soft', 'mt-9 inline-flex min-h-16 w-full items-center justify-center rounded-[0.2rem] bg-[#5A6572] px-10 text-base font-semibold text-white transition hover:bg-[#4d5661] sm:w-auto sm:min-w-[17rem]')}
+              style={{ '--qs-reveal-delay': '640ms' }}
             >
               Entre em contato
             </Link>
@@ -630,36 +715,53 @@ function QuemSomos() {
         </div>
       </section>
 
-      <section className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden bg-[#cad2e2] px-4 py-28 text-[#2F363E] sm:px-6 sm:py-32 lg:px-8 lg:py-40">
+      <section
+        ref={missionRef}
+        data-testid="quem-somos-mission"
+        className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden bg-[#cad2e2] px-4 py-28 text-[#2F363E] sm:px-6 sm:py-32 lg:px-8 lg:py-40"
+      >
         <img
           src={hairlineIcon}
           alt=""
           aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-1/2 h-auto w-[52rem] max-w-none -translate-x-1/2 -translate-y-1/2 opacity-45 sm:w-[68rem] lg:w-[84rem]"
+          className={revealClass(missionVisible, 'hero-photo', 'pointer-events-none absolute left-1/2 top-1/2 h-auto w-[52rem] max-w-none -translate-x-1/2 -translate-y-1/2 sm:w-[68rem] lg:w-[84rem]')}
+          style={{ '--qs-reveal-delay': '120ms' }}
         />
         <div className="relative mx-auto flex w-full max-w-[1180px] flex-col items-center text-center">
-          <p className="mb-7 text-sm font-semibold text-[#2F363E]/68">Nossa missão</p>
-          <blockquote className="max-w-5xl font-display text-2xl font-normal leading-[1.34] tracking-normal sm:text-[2.65rem] sm:leading-[1.24] lg:text-[3rem] lg:leading-[1.22]">
+          <p
+            className={revealClass(missionVisible, 'fade-up', 'mb-7 text-sm font-semibold text-[#2F363E]/68')}
+            style={{ '--qs-reveal-delay': '60ms' }}
+          >
+            Nossa missão
+          </p>
+          <blockquote
+            className={revealClass(missionVisible, 'fade-up', 'max-w-5xl font-display text-2xl font-normal leading-[1.34] tracking-normal sm:text-[2.65rem] sm:leading-[1.24] lg:text-[3rem] lg:leading-[1.22]')}
+            style={{ '--qs-reveal-delay': '120ms' }}
+          >
             “Contribuir para o crescimento e a solidez dos clientes, viabilizando mudanças, através de ações competentes e personalizadas, promovendo o êxito do negócio, com uma equipe inspirada e motivada”.
           </blockquote>
         </div>
       </section>
 
-      <section className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-[#E5E9F1] px-4 py-24 sm:px-6 sm:py-28 lg:px-8 lg:py-36">
+      <section
+        ref={consultantsRef}
+        data-testid="quem-somos-consultants"
+        className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-[#FFFFFF] px-4 py-24 sm:px-6 sm:py-28 lg:px-8 lg:py-36"
+      >
         <div className="mx-auto grid w-full max-w-[1320px] lg:grid-cols-2">
           <div className="w-full max-w-[700px] justify-self-start">
-            <h2 className="font-display text-5xl font-semibold tracking-tight text-[#5A6572] sm:text-[3.35rem]">Consultores</h2>
+            <h2 className={revealClass(consultantsVisible, 'fade-up', 'font-display text-5xl font-semibold tracking-tight text-[#5A6572] sm:text-[3.35rem]')}>Consultores</h2>
             <div className="mt-10 grid gap-6 text-base leading-8 text-[#5A6572]/78">
-              <p>
+              <p className={revealClass(consultantsVisible, 'fade-up')} style={{ '--qs-reveal-delay': consultantsRevealDelays[0] }}>
               Nossos consultores possuem elevadas qualificações acadêmicas e práticas. Diferentes perfis profissionais em sinergia, garantindo alto desempenho nos contextos de administração. Um grupo coeso e multidisciplinar, gerador de inteligência coletiva, orientado para e pelo seu negócio.
               </p>
-              <p>
+              <p className={revealClass(consultantsVisible, 'fade-up')} style={{ '--qs-reveal-delay': consultantsRevealDelays[1] }}>
               Nossos profissionais possuem competências lato e stricto sensu em Administração de Empresas, Automação Industrial, Psicologia, Engenharia de Produção, Engenharia Mecânica e Processamento de Dados.
               </p>
-              <p>
+              <p className={revealClass(consultantsVisible, 'fade-up')} style={{ '--qs-reveal-delay': consultantsRevealDelays[2] }}>
               Especialistas em Gestão Empresarial, Gestão de Pessoas, Gerenciamento de Projetos, Gestão de Negócios, Gestão Estratégica de Custos e Comércio Exterior.
               </p>
-              <p>
+              <p className={revealClass(consultantsVisible, 'fade-up')} style={{ '--qs-reveal-delay': consultantsRevealDelays[3] }}>
               Certificações - CBPP (Gestão de Processos de Negócio), PMP - (Gerenciamento de Projetos).
               </p>
             </div>
@@ -667,7 +769,8 @@ function QuemSomos() {
               href="https://www.linkedin.com/company/otimiza-consultoria"
               target="_blank"
               rel="noreferrer"
-              className="mt-9 inline-flex min-h-16 w-full items-center justify-center gap-2 rounded-[0.2rem] bg-[#5A6572] px-10 text-base font-semibold text-white transition hover:bg-[#4d5661] sm:w-auto sm:min-w-[17rem]"
+              className={revealClass(consultantsVisible, 'scale-soft', 'mt-9 inline-flex min-h-16 w-full items-center justify-center gap-2 rounded-[0.2rem] bg-[#5A6572] px-10 text-base font-semibold text-white transition hover:bg-[#4d5661] sm:w-auto sm:min-w-[17rem]')}
+              style={{ '--qs-reveal-delay': '480ms' }}
             >
               Acesse nosso LinkedIn
               <ArrowRight className="h-4 w-4" aria-hidden="true" />

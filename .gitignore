@@ -12,6 +12,8 @@ dist
 dist-ssr
 *.local
 .worktrees/
+.superpowers/
+test-results/
 
 # Editor directories and files
 .vscode/*

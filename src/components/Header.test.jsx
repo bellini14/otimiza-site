@@ -31,10 +31,26 @@ describe('Header', () => {
 
     expect(screen.getByRole('link', { name: 'Otimiza home' })).toBeInTheDocument()
     expect(screen.getByAltText('Otimiza')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Institucional' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Soluções' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Cases' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Inspire' })).toBeInTheDocument()
+
+    const mainNav = screen.getByRole('navigation', { name: 'Main navigation' })
+    const desktopMenuItems = within(mainNav)
+      .getAllByText(/Quem somos|Nossa abordagem|O que fazemos|Cases|Inspire/)
+      .filter((item) => ['Quem somos', 'Nossa abordagem', 'O que fazemos', 'Cases', 'Inspire'].includes(item.textContent))
+
+    expect(desktopMenuItems.map((item) => item.textContent)).toEqual([
+      'Quem somos',
+      'Nossa abordagem',
+      'O que fazemos',
+      'Cases',
+      'Inspire',
+    ])
+    expect(within(mainNav).queryByRole('link', { name: 'Nossa abordagem' })).not.toBeInTheDocument()
+    expect(within(mainNav).queryByRole('link', { name: 'O que fazemos' })).not.toBeInTheDocument()
+    expect(within(mainNav).queryByRole('link', { name: 'Cases' })).not.toBeInTheDocument()
+    expect(within(mainNav).getByText('Nossa abordagem')).toHaveClass('opacity-30')
+    expect(within(mainNav).getByText('O que fazemos')).toHaveClass('opacity-30')
+    expect(within(mainNav).getByText('Cases')).toHaveClass('opacity-30')
+    expect(screen.queryByRole('button', { name: 'Soluções' })).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Fale com a Otimiza' })).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /open menu/i }))
@@ -45,10 +61,15 @@ describe('Header', () => {
 
     expect(mobileNav.getByRole('link', { name: 'Home' })).toBeInTheDocument()
     expect(mobileNav.getByRole('link', { name: 'Quem somos' })).toBeInTheDocument()
-    expect(mobileNav.getByRole('link', { name: 'O que fazemos' })).toBeInTheDocument()
-    expect(mobileNav.getByRole('link', { name: 'Tecnologia' })).toBeInTheDocument()
-    expect(mobileNav.getByRole('link', { name: 'Academia Otimiza' })).toBeInTheDocument()
-    expect(mobileNav.getByRole('link', { name: 'Contato' })).toBeInTheDocument()
+    expect(mobileNav.queryByRole('link', { name: 'Nossa abordagem' })).not.toBeInTheDocument()
+    expect(mobileNav.queryByRole('link', { name: 'O que fazemos' })).not.toBeInTheDocument()
+    expect(mobileNav.queryByRole('link', { name: 'Cases' })).not.toBeInTheDocument()
+    expect(mobileNav.getByText('Nossa abordagem')).toHaveClass('opacity-30')
+    expect(mobileNav.getByText('O que fazemos')).toHaveClass('opacity-30')
+    expect(mobileNav.getByText('Cases')).toHaveClass('opacity-30')
+    expect(mobileNav.queryByRole('link', { name: 'Tecnologia' })).not.toBeInTheDocument()
+    expect(mobileNav.queryByRole('link', { name: 'Academia Otimiza' })).not.toBeInTheDocument()
+    expect(mobileNav.queryByRole('link', { name: 'Contato' })).not.toBeInTheDocument()
   })
 
   it('toggles the global theme manually and persists the selection', () => {

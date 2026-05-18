@@ -21,8 +21,10 @@ describe('Footer', () => {
 
     expect(screen.getByRole('img', { name: 'Otimiza' })).toBeInTheDocument()
     expect(screen.getByTestId('footer-backdrop')).toBeInTheDocument()
+    expect(screen.getByTestId('footer-backdrop').querySelector('img')).toBeInTheDocument()
+    expect(screen.getByRole('contentinfo')).toHaveClass('bg-[#F7F8FA]')
     expect(screen.getByRole('link', { name: 'Quem somos' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Tecnologia' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'O que fazemos' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Instagram' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'LinkedIn' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'X' })).toBeInTheDocument()

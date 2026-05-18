@@ -16,6 +16,21 @@ const REVEAL_DURATION = 0.7
 const EASE_COVER = [0.65, 0, 0.2, 1]
 const EASE_REVEAL = [0.4, 0, 0.15, 1]
 
+export function scrollToLocationTarget(location) {
+  const hash = location.hash?.slice(1)
+
+  if (hash) {
+    const target = document.getElementById(decodeURIComponent(hash))
+
+    if (target) {
+      target.scrollIntoView({ block: 'start', behavior: 'instant' })
+      return
+    }
+  }
+
+  window.scrollTo({ top: 0, behavior: 'instant' })
+}
+
 function PageTransition({ children }) {
   const location = useLocation()
   const [displayedLocation, setDisplayedLocation] = useState(location)
@@ -49,7 +64,7 @@ function PageTransition({ children }) {
 
     // Phase 2: Screen is fully covered — swap the page content underneath
     setDisplayedLocation(newLocation)
-    window.scrollTo({ top: 0, behavior: 'instant' })
+    window.requestAnimationFrame(() => scrollToLocationTarget(newLocation))
 
     // Brief hold so new page mounts under the curtain
     await new Promise((r) => setTimeout(r, HOLD_DURATION * 1000))
@@ -91,6 +106,7 @@ function PageTransition({ children }) {
     if (location.pathname === prevPathRef.current) {
       // Same page (query/hash change) — update immediately
       setDisplayedLocation(location)
+      window.requestAnimationFrame(() => scrollToLocationTarget(location))
       return
     }
 

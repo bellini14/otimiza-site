@@ -52,7 +52,7 @@ function FooterCurve({ mirrored = false }) {
     >
       <path
         d="M0 0H451.601C467.78 0 483.071 7.75893 491.954 21.2815C558.518 122.612 538.359 153.074 614 153H0V0Z"
-        fill="#EFEFF4"
+        fill="#F7F8FA"
       />
     </svg>
   )
@@ -62,7 +62,7 @@ function Footer() {
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer className="relative mt-0 overflow-hidden bg-[#EFEFF4] text-[#5a6572]">
+    <footer className="relative mt-0 overflow-hidden bg-[#F7F8FA] text-[#5a6572]">
       <div className="absolute inset-x-0 top-0 h-44 sm:h-52 md:h-64" data-testid="footer-backdrop">
         <img src={footerImage} alt="" className="h-full w-full object-cover grayscale" />
       </div>
@@ -70,7 +70,7 @@ function Footer() {
       <div className="relative">
         <div className="h-36 sm:h-44 md:h-56" aria-hidden="true" />
 
-        <div className="relative bg-[#EFEFF4]">
+        <div className="relative bg-[#F7F8FA]">
           <div className="absolute left-0 top-0 z-10 -translate-y-full">
             <FooterCurve />
           </div>
