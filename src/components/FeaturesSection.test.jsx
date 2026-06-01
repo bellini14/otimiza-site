@@ -94,9 +94,9 @@ describe('FeaturesSection', () => {
 
     const section = document.querySelector('#nossas-solucoes')
 
-    expect(section).toHaveClass('bg-[#EFEFF4]')
+    expect(section).toHaveClass('bg-white')
     expect(section).toHaveClass('w-screen', 'left-1/2', '-ml-[50vw]', '-mr-[50vw]')
-    expect(section.querySelector('.max-w-\\[1400px\\]')).toHaveClass('px-4', 'sm:px-6', 'lg:px-8')
+    expect(section.querySelector('.max-w-\\[1320px\\]')).toBeInTheDocument()
   })
 
   it('shows only titles in the side selector cards', () => {
@@ -108,10 +108,10 @@ describe('FeaturesSection', () => {
 
     expect(firstSelector).not.toHaveTextContent('Identifica quais processos')
     expect(firstSelector.style.backgroundImage).toBe('')
-    expect(firstSelector).toHaveClass('min-h-[7.75rem]', 'px-5', 'py-6')
-    expect(firstSelector.querySelector('h3')).toHaveClass('text-lg', 'md:text-xl')
-    expect(firstSelector.querySelector('h3')).toHaveClass('leading-tight')
-    expect(firstSelector.querySelector('.stroke-\\[2\\.6\\]')).toBeInTheDocument()
+    expect(firstSelector).toHaveClass('px-5', 'py-5', 'md:py-6')
+    expect(firstSelector.querySelector('h3')).toHaveClass('text-[15px]', 'md:text-base')
+    expect(firstSelector.querySelector('h3')).toHaveClass('leading-snug')
+    expect(firstSelector.querySelector('.stroke-\\[2\\.4\\]')).toBeInTheDocument()
     expect(firstSelector.querySelector('.text-brand-red')).toBeInTheDocument()
     expect(firstSelector).not.toHaveClass('feature-selector-card--selected')
     expect(firstSelector.querySelector('.feature-selector-card__icon')).not.toBeInTheDocument()
@@ -140,32 +140,30 @@ describe('FeaturesSection', () => {
     const activeSelector = screen.getByRole('button', {
       name: 'Diagnóstico',
     })
-    const detailsStack = document.querySelector('#nossas-solucoes .min-h-\\[15rem\\]')
+    const detailPanelShell = document.querySelector('#nossas-solucoes .feature-detail-panel-transition')
 
     expect(activeSelector).not.toHaveClass('scale-[1.01]')
     expect(activeSelector).toHaveClass('bg-white')
-    expect(activeSelector).toHaveClass('border-neutral-300')
+    expect(activeSelector).toHaveClass('border-[#5a6572]/28')
     expect(activeSelector).not.toHaveClass('lg:rounded-r-none', 'lg:border-r-0')
     expect(activeSelector.querySelector('svg.absolute')).not.toBeInTheDocument()
-    expect(activeSelector.className).not.toContain('shadow-')
-    expect(detailsStack).toBeInTheDocument()
-    expect(detailsStack).toHaveClass('lg:min-h-[15.5rem]')
+    expect(detailPanelShell).toBeInTheDocument()
+    expect(detailPanelShell).toHaveClass('lg:min-h-[540px]', 'lg:max-h-[540px]')
     expect(document.querySelector('#nossas-solucoes .lg\\:rounded-l-none')).not.toBeInTheDocument()
     expect(document.querySelector('#nossas-solucoes .lg\\:border-l-0')).not.toBeInTheDocument()
   })
 
-  it('uses stronger hover affordance on inactive selector cards', () => {
+  it('keeps inactive selector cards white without hover animation', () => {
     renderFeaturesSection()
 
     const inactiveSelector = screen.getByRole('button', {
       name: 'Gestão estratégica',
     })
 
-    expect(inactiveSelector).toHaveClass('bg-[#F4F5F8]', 'border-neutral-200')
+    expect(inactiveSelector).toHaveClass('bg-white')
     expect(inactiveSelector).not.toHaveClass('lg:w-[calc(100%-1.5rem)]')
-    expect(inactiveSelector).toHaveClass('hover:bg-white')
-    expect(inactiveSelector).toHaveClass('hover:border-neutral-300')
-    expect(inactiveSelector).toHaveClass('hover:translate-x-1')
-    expect(inactiveSelector.className).not.toContain('hover:shadow-')
+    expect(inactiveSelector.className).not.toContain('hover:')
+    expect(inactiveSelector.querySelector('.pillar-hover-fill')).not.toBeInTheDocument()
+    expect(inactiveSelector.querySelector('.pillar-hover-exit-fill')).not.toBeInTheDocument()
   })
 })

@@ -17,6 +17,15 @@ const homeClientLogoQuery = `*[_type == "clientLogo" && isVisible != false && sh
   "logoUrl": logo.asset->url
 }`
 
+const homeTestimonialsQuery = `*[_type == "customerTestimonial" && isVisible != false && defined(shortQuote)] | order(coalesce(sortOrder, 9999) asc, clientName asc) {
+  _id,
+  clientName,
+  role,
+  company,
+  shortQuote,
+  "avatarUrl": avatar.asset->url
+}`
+
 const HOME_CLIENT_LOGO_FALLBACKS = [
   {
     _id: 'fallback-banco-moneo',
@@ -187,7 +196,9 @@ function HomeClientLogo({ logo, isDecorative = false }) {
 function Home() {
   const [brandsRef, brandsVisible] = useScrollReveal(0.1)
   const [homeClientLogos, setHomeClientLogos] = useState([])
+  const [homeTestimonials, setHomeTestimonials] = useState([])
   const homeLogoRows = buildHomeLogoRows(homeClientLogos)
+  const homeTestimonialsKey = homeTestimonials.map((testimonial) => testimonial._id).join('|')
 
   useEffect(() => {
     let isMounted = true
@@ -207,6 +218,27 @@ function Home() {
     }
 
     fetchHomeClientLogos()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function fetchHomeTestimonials() {
+      try {
+        const testimonials = await client.fetch(homeTestimonialsQuery)
+        if (isMounted && Array.isArray(testimonials)) {
+          setHomeTestimonials(testimonials)
+        }
+      } catch (error) {
+        console.error('Error fetching home testimonials from Sanity:', error)
+      }
+    }
+
+    fetchHomeTestimonials()
 
     return () => {
       isMounted = false
@@ -299,7 +331,7 @@ function Home() {
 
         <FeaturesSection />
         <TechnologySection />
-        <StaggerTestimonials />
+        <StaggerTestimonials key={homeTestimonialsKey} testimonials={homeTestimonials} />
         <BlogHighlights />
       </div>
     </div>

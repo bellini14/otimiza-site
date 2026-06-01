@@ -8,12 +8,12 @@ const dropdownGroups = []
 const directLinks = [
   { path: '/quem-somos', label: 'Quem somos' },
   { path: '/quem-somos#nossa-abordagem', label: 'Nossa abordagem', disabled: true },
-  { path: '/o-que-fazemos', label: 'O que fazemos', disabled: true },
-  { path: '/cases', label: 'Cases', disabled: true },
+  { path: '/o-que-fazemos', label: 'O que fazemos' },
+  { path: '/cases', label: 'Cases' },
   { path: '/inspire', label: 'Inspire' },
 ]
 
-const disabledNavLabels = new Set(['Nossa abordagem', 'O que fazemos', 'Cases'])
+const disabledNavLabels = new Set(['Nossa abordagem'])
 
 const mobileLinks = [
   { path: '/', label: 'Home' },

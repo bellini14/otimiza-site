@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -9,7 +9,7 @@ const CARD_TRANSITION = `transform ${CARD_TRANSITION_MS}ms cubic-bezier(0.23, 1,
 const LOOP_COPIES = 3;
 const LOOP_MIDDLE_COPY = 1;
 
-const testimonials = [
+const FALLBACK_TESTIMONIALS = [
   {
     id: 0,
     testimonial: "A Otimiza trouxe uma clareza operacional que nunca tivemos. Nossos processos agora são 5x mais eficientes e escaláveis.",
@@ -72,24 +72,44 @@ const testimonials = [
   }
 ];
 
-const middleWindowIndex = Math.floor(testimonials.length / 2);
-const MIN_WINDOW_POSITION = -middleWindowIndex;
-const MAX_WINDOW_POSITION = testimonials.length - middleWindowIndex - 1;
-
-function getLoopedIndex(index) {
-  return ((index % testimonials.length) + testimonials.length) % testimonials.length;
+function getLoopedIndex(index, length) {
+  return ((index % length) + length) % length;
 }
 
-const initialActiveIndex = middleWindowIndex;
-const initialVirtualIndex = testimonials.length * LOOP_MIDDLE_COPY + initialActiveIndex;
-const virtualTestimonials = Array.from({ length: testimonials.length * LOOP_COPIES }, (_, virtualIndex) => ({
-  virtualIndex,
-  testimonial: testimonials[getLoopedIndex(virtualIndex)],
-}));
+function formatByline(testimonial) {
+  if (testimonial.by) return testimonial.by;
 
-function TestimonialCard({ position, testimonial, handleMove, cardSize, transitionEnabled }) {
+  const roleAndCompany = [testimonial.role, testimonial.company].filter(Boolean).join(' na ');
+  return [testimonial.clientName, roleAndCompany].filter(Boolean).join(', ');
+}
+
+function normalizeTestimonials(testimonials) {
+  if (!Array.isArray(testimonials) || testimonials.length === 0) {
+    return FALLBACK_TESTIMONIALS;
+  }
+
+  return testimonials.map((testimonial, index) => ({
+    id: testimonial.id ?? testimonial._id ?? index,
+    testimonial: testimonial.testimonial ?? testimonial.shortQuote,
+    by: formatByline(testimonial),
+    imgSrc:
+      testimonial.imgSrc ??
+      testimonial.avatarUrl ??
+      "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop&crop=faces&q=80",
+  })).filter((testimonial) => testimonial.testimonial && testimonial.by);
+}
+
+function TestimonialCard({
+  position,
+  testimonial,
+  handleMove,
+  cardSize,
+  transitionEnabled,
+  minWindowPosition,
+  maxWindowPosition,
+}) {
   const isCenter = position === 0;
-  const isInCarouselWindow = position >= MIN_WINDOW_POSITION && position <= MAX_WINDOW_POSITION;
+  const isInCarouselWindow = position >= minWindowPosition && position <= maxWindowPosition;
   const zIndex = Math.max(0, 20 - Math.abs(position));
 
   return (
@@ -151,7 +171,21 @@ function TestimonialCard({ position, testimonial, handleMove, cardSize, transiti
   );
 }
 
-export function StaggerTestimonials() {
+export function StaggerTestimonials({ testimonials }) {
+  const activeTestimonials = useMemo(() => normalizeTestimonials(testimonials), [testimonials]);
+  const middleWindowIndex = Math.floor(activeTestimonials.length / 2);
+  const minWindowPosition = -middleWindowIndex;
+  const maxWindowPosition = activeTestimonials.length - middleWindowIndex - 1;
+  const initialActiveIndex = middleWindowIndex;
+  const initialVirtualIndex = activeTestimonials.length * LOOP_MIDDLE_COPY + initialActiveIndex;
+  const virtualTestimonials = useMemo(
+    () =>
+      Array.from({ length: activeTestimonials.length * LOOP_COPIES }, (_, virtualIndex) => ({
+        virtualIndex,
+        testimonial: activeTestimonials[getLoopedIndex(virtualIndex, activeTestimonials.length)],
+      })),
+    [activeTestimonials],
+  );
   const [cardSize, setCardSize] = useState(365);
   const [activeVirtualIndex, setActiveVirtualIndex] = useState(initialVirtualIndex);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -163,7 +197,7 @@ export function StaggerTestimonials() {
 
     setIsAnimating(false);
     setActiveVirtualIndex((currentIndex) => {
-      const normalizedIndex = testimonials.length * LOOP_MIDDLE_COPY + getLoopedIndex(currentIndex);
+      const normalizedIndex = activeTestimonials.length * LOOP_MIDDLE_COPY + getLoopedIndex(currentIndex, activeTestimonials.length);
 
       if (normalizedIndex !== currentIndex) {
         setIsNormalizing(true);
@@ -171,7 +205,7 @@ export function StaggerTestimonials() {
 
       return normalizedIndex;
     });
-  }, [isAnimating]);
+  }, [activeTestimonials.length, isAnimating]);
 
   const handleMove = (steps) => {
     if (steps === 0 || isAnimating || isNormalizing) return;
@@ -284,6 +318,8 @@ export function StaggerTestimonials() {
               position={position}
               cardSize={cardSize}
               transitionEnabled={!isNormalizing}
+              minWindowPosition={minWindowPosition}
+              maxWindowPosition={maxWindowPosition}
             />
           );
         })}

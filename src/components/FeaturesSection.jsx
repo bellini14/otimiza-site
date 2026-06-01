@@ -96,67 +96,17 @@ const featuresData = [
 
 export default function FeaturesSection() {
   const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
-  const [featureHoverState, setFeatureHoverState] = useState({ visibleIndex: null, exitingIndex: null });
   const [featureActiveExitIndex, setFeatureActiveExitIndex] = useState(null);
   const activeFeature = featuresData[activeFeatureIndex];
   const [sectionRef, isVisible] = useScrollReveal(0.35);
-  const featureHoverTimeoutRef = useRef(null);
-  const featureHoverFadeTimeoutRef = useRef(null);
-  const featureHoverStartedAtRef = useRef(null);
   const featureActiveExitTimeoutRef = useRef(null);
 
-  const handleFeatureHoverEnter = (event, index) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-
-    window.clearTimeout(featureHoverTimeoutRef.current);
-    window.clearTimeout(featureHoverFadeTimeoutRef.current);
-    featureHoverStartedAtRef.current = window.performance.now();
-    event.currentTarget.style.setProperty('--pillar-hover-x', `${event.clientX - rect.left}px`);
-    event.currentTarget.style.setProperty('--pillar-hover-y', `${event.clientY - rect.top}px`);
-    setFeatureHoverState({ visibleIndex: index, exitingIndex: null });
-  };
-
-  const handleFeatureHoverLeave = (index) => {
-    window.clearTimeout(featureHoverTimeoutRef.current);
-    window.clearTimeout(featureHoverFadeTimeoutRef.current);
-
-    const hoverElapsed = featureHoverStartedAtRef.current
-      ? window.performance.now() - featureHoverStartedAtRef.current
-      : 1180;
-    const remainingHoverDuration = hoverElapsed < 220
-      ? 120
-      : hoverElapsed < 520
-        ? 240
-        : Math.max(0, 1180 - hoverElapsed);
-
-    setFeatureHoverState({ visibleIndex: index, exitingIndex: null });
-    featureHoverTimeoutRef.current = window.setTimeout(() => {
-      setFeatureHoverState({ visibleIndex: null, exitingIndex: index });
-
-      featureHoverFadeTimeoutRef.current = window.setTimeout(() => {
-        setFeatureHoverState((currentState) => (
-          currentState.exitingIndex === index
-            ? { visibleIndex: null, exitingIndex: null }
-            : currentState
-        ));
-      }, hoverElapsed < 220 ? 360 : 900);
-    }, remainingHoverDuration);
-  };
-
-  const handleFeatureClick = (event, index) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-
+  const handleFeatureClick = (index) => {
     if (index === activeFeatureIndex) {
       return;
     }
 
-    window.clearTimeout(featureHoverTimeoutRef.current);
-    window.clearTimeout(featureHoverFadeTimeoutRef.current);
     window.clearTimeout(featureActiveExitTimeoutRef.current);
-    featureHoverStartedAtRef.current = null;
-    event.currentTarget.style.setProperty('--pillar-hover-x', `${event.clientX - rect.left}px`);
-    event.currentTarget.style.setProperty('--pillar-hover-y', `${event.clientY - rect.top}px`);
-    setFeatureHoverState({ visibleIndex: null, exitingIndex: null });
     setFeatureActiveExitIndex(activeFeatureIndex);
     setActiveFeatureIndex(index);
 
@@ -166,8 +116,6 @@ export default function FeaturesSection() {
   };
 
   useEffect(() => () => {
-    window.clearTimeout(featureHoverTimeoutRef.current);
-    window.clearTimeout(featureHoverFadeTimeoutRef.current);
     window.clearTimeout(featureActiveExitTimeoutRef.current);
   }, []);
 
@@ -188,41 +136,29 @@ export default function FeaturesSection() {
           <div className="lg:col-span-4 flex flex-col gap-3 lg:h-[540px]">
             {featuresData.map((feature, index) => {
               const isActive = index === activeFeatureIndex;
-              const isHoverVisible = featureHoverState.visibleIndex === index;
-              const isHoverExiting = featureHoverState.exitingIndex === index;
               const isActiveExiting = featureActiveExitIndex === index;
 
               return (
                 <button
                   key={feature.id}
-                  onClick={(event) => handleFeatureClick(event, index)}
-                  onPointerEnter={isActive ? undefined : (event) => handleFeatureHoverEnter(event, index)}
-                  onPointerLeave={isActive ? undefined : () => handleFeatureHoverLeave(index)}
-                  className={`pillar-card group relative w-full overflow-hidden text-left px-5 py-5 md:px-6 md:py-6 rounded-2xl transition-[box-shadow,opacity,transform,border-color] duration-300 ease-out flex items-center flex-1 border ${
+                  onClick={() => handleFeatureClick(index)}
+                  className={`pillar-card group relative w-full overflow-hidden text-left px-5 py-5 md:px-6 md:py-6 rounded-2xl transition-[box-shadow,opacity,border-color] duration-300 ease-out flex items-center flex-1 border ${
                     isActive || isActiveExiting
-                      ? `${isActive ? 'bg-white' : 'bg-[#E3E7EF]'} border-[#5a6572]/28 shadow-[0_12px_35px_rgba(90,101,114,0.08)] dark:bg-neutral-900 dark:border-neutral-700`
-                      : 'bg-[#E3E7EF] dark:bg-neutral-900/35 border-transparent dark:border-neutral-800/60 hover:border-[#5a6572]/28 hover:shadow-[0_12px_35px_rgba(90,101,114,0.08)] dark:hover:bg-neutral-900 dark:hover:border-neutral-700 hover:translate-x-0.5'
+                      ? 'bg-white border-[#5a6572]/28 shadow-[0_12px_35px_rgba(90,101,114,0.08)] dark:bg-neutral-900 dark:border-neutral-700'
+                      : 'bg-white dark:bg-neutral-900/35 border-transparent dark:border-neutral-800/60'
                   } ${isVisible ? 'animate-enter [animation-duration:800ms]' : 'opacity-0'}`}
                   style={{
                     animationDelay: isVisible ? `${300 + index * 200}ms` : '0ms',
-                    '--pillar-hover-x': '50%',
-                    '--pillar-hover-y': '50%',
                   }}
                 >
                   {isActiveExiting ? (
                     <span aria-hidden="true" className="pillar-active-exit-fill" />
                   ) : null}
-                  {!isActive && isHoverVisible ? (
-                    <span aria-hidden="true" className="pillar-hover-fill is-visible" />
-                  ) : null}
-                  {isHoverExiting ? (
-                    <span aria-hidden="true" className="pillar-hover-exit-fill" />
-                  ) : null}
                   <div className="relative z-10 flex items-center gap-4 md:gap-5 w-full">
                     <div className={`shrink-0 w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-300 ${
                       isActive 
                         ? 'bg-red-50 dark:bg-neutral-700 text-brand-red dark:text-brand-red' 
-                        : 'bg-neutral-100 dark:bg-neutral-800/70 text-neutral-400 dark:text-neutral-500 group-hover:text-brand-red group-hover:bg-red-50/60'
+                        : 'bg-neutral-100 dark:bg-neutral-800/70 text-neutral-400 dark:text-neutral-500'
                     }`}>
                       <div className="w-[22px] h-[22px] stroke-[2.4]">
                         {feature.icon}
@@ -230,7 +166,7 @@ export default function FeaturesSection() {
                     </div>
                     <div className="flex-1 min-w-0 flex items-center">
                       <h3 className={`text-[15px] md:text-base leading-snug transition-colors duration-300 ${
-                        isActive ? 'font-bold text-neutral-900 dark:text-white' : 'font-semibold text-neutral-500 dark:text-neutral-400 group-hover:text-neutral-800 dark:group-hover:text-white'
+                        isActive ? 'font-bold text-neutral-900 dark:text-white' : 'font-semibold text-neutral-500 dark:text-neutral-400'
                       }`}>
                         {feature.title}
                       </h3>

@@ -11,6 +11,7 @@ import InspireNewsletter from './pages/InspireNewsletter'
 import OQueFazemos from './pages/OQueFazemos'
 import QuemSomos from './pages/QuemSomos'
 import Tecnologia from './pages/Tecnologia'
+import CaseDetail from './pages/CaseDetail'
 import PostDetail from './pages/PostDetail'
 import PageTransition, { useTransitionLocation } from './transitions/PageTransition'
 
@@ -24,6 +25,7 @@ function AppRoutes() {
         <Route path="/quem-somos" element={<QuemSomos />} />
         <Route path="/o-que-fazemos" element={<OQueFazemos />} />
         <Route path="/cases" element={<Cases />} />
+        <Route path="/cases/:slug" element={<CaseDetail />} />
         <Route path="/tecnologia" element={<Tecnologia />} />
         <Route path="/academia-otimiza" element={<AcademiaOtimiza />} />
         <Route path="/contato" element={<Contato />} />

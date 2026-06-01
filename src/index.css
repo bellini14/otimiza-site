@@ -124,9 +124,18 @@ html.dark .page-curtain {
     overflow-x: clip;
   }
 
+  html.oquefazemos-sticky-scroll body {
+    background: #E5E9F1;
+  }
+
+  html.cases-white-background body {
+    background: #ffffff;
+  }
+
   html.oquefazemos-sticky-scroll footer {
     position: relative;
     z-index: 80;
+    background: #f7f8fa;
   }
 
   .theme-toggle {
@@ -164,24 +173,27 @@ html.dark .page-curtain {
   }
 
   .oquefazemos-page {
+    --oquefazemos-shell-width: 1320px;
+    --oquefazemos-card-x: clamp(1rem, 4vw, 2rem);
+    --oquefazemos-card-y: clamp(5rem, 8vw, 6.6rem);
     width: 100vw;
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
     margin-top: -2rem;
-    background: #efeff4;
+    background: transparent;
     color: var(--brand-ink);
   }
 
   .oquefazemos-hero {
-    min-height: min(76svh, 46rem);
+    min-height: calc(100svh - 5.5rem);
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
-    padding: clamp(8rem, 14vw, 13rem) clamp(1.25rem, 5vw, 4.5rem) clamp(3rem, 8vw, 6rem);
-    border-bottom: 1px solid #cfd5d7;
-    background:
-      linear-gradient(135deg, rgb(255 255 255 / 0.76), rgb(239 239 244 / 0.36)),
-      #efeff4;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(4.75rem, 9vw, 7rem) clamp(1.25rem, 5vw, 4.5rem) clamp(3rem, 6vw, 5rem);
+    border-bottom: 0;
+    background: #E5E9F1;
+    text-align: center;
   }
 
   .oquefazemos-hero__eyebrow {
@@ -190,26 +202,35 @@ html.dark .page-curtain {
     font-size: 0.76rem;
     font-weight: 700;
     letter-spacing: 0.18em;
-    text-transform: uppercase;
+    text-transform: none;
   }
 
   .oquefazemos-hero__title {
+    width: 100%;
     max-width: 72rem;
-    margin: 0;
+    margin: 0 auto;
     color: var(--brand-ink);
     font-size: clamp(3.1rem, 10vw, 9.5rem);
-    font-weight: 500;
+    font-weight: 300;
     line-height: 0.94;
     letter-spacing: 0;
-    text-transform: uppercase;
+    text-transform: none;
   }
 
   .oquefazemos-hero__copy {
+    width: 100%;
     max-width: 48rem;
-    margin: clamp(1.4rem, 3vw, 2.4rem) 0 0;
+    margin: clamp(1.4rem, 3vw, 2.4rem) auto 0;
     color: rgb(90 101 114 / 0.86);
     font-size: clamp(1rem, 1.4vw, 1.25rem);
     line-height: 1.7;
+  }
+
+  @media (min-width: 768px) {
+    .oquefazemos-hero__title,
+    .oquefazemos-hero__copy {
+      transform: translateX(0.5rem);
+    }
   }
 
   .oquefazemos-stack {
@@ -221,14 +242,19 @@ html.dark .page-curtain {
 
   .oquefazemos-service-chapter {
     position: relative;
-    min-height: 380svh;
+    min-height: 300svh;
     margin-top: 0;
     isolation: isolate;
     z-index: calc(10 + var(--chapter-index));
   }
 
   .oquefazemos-service-chapter + .oquefazemos-service-chapter {
-    margin-top: -200svh;
+    margin-top: -160svh;
+  }
+
+  .oquefazemos-service-chapter--last {
+    min-height: auto !important;
+    margin-top: -80svh !important;
   }
 
   .oquefazemos-service-chapter__panel {
@@ -237,12 +263,12 @@ html.dark .page-curtain {
     height: 100svh;
     min-height: 100svh;
     overflow: hidden;
-    border-top: 1px solid #cfd5d7;
+    border-top: 0;
     background:
       linear-gradient(180deg, rgb(255 255 255 / 0.84), rgb(239 239 244 / 0.96)),
       #efeff4;
     color: var(--brand-ink);
-    box-shadow: 0 -1px 0 #cfd5d7, 0 -2rem 4rem rgb(90 101 114 / 0.08);
+    box-shadow: none;
   }
 
   .oquefazemos-service-chapter--last .oquefazemos-service-chapter__panel {
@@ -252,6 +278,10 @@ html.dark .page-curtain {
     min-height: 100svh !important;
   }
 
+  .oquefazemos-service-chapter--last .oquefazemos-service-chapter__depth-overlay {
+    display: none;
+  }
+
   .oquefazemos-service-chapter__stack {
     position: relative;
     z-index: 2;
@@ -259,11 +289,11 @@ html.dark .page-curtain {
     min-height: 100svh;
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
-    grid-template-rows: auto 1fr;
-    gap: clamp(1rem, 2vw, 2rem);
-    width: min(100%, 1420px);
+    grid-template-rows: minmax(clamp(6.2rem, 11vw, 10rem), auto) minmax(0, 1fr);
+    gap: clamp(0.9rem, 1.8vw, 1.8rem);
+    width: min(calc(100% - (var(--oquefazemos-card-x) * 2)), var(--oquefazemos-shell-width));
     margin: 0 auto;
-    padding: clamp(2rem, 5vw, 3.8rem) clamp(1.25rem, 4vw, 4.5rem) clamp(2.4rem, 6vw, 5rem);
+    padding: var(--oquefazemos-card-y) 0;
   }
 
   .oquefazemos-service-chapter__heading {
@@ -279,11 +309,12 @@ html.dark .page-curtain {
     grid-row: 1;
     margin: 0;
     color: var(--brand-ink);
-    font-size: clamp(2.4rem, 6.5vw, 6.8rem);
+    max-width: 54rem;
+    font-size: clamp(1.9rem, 3.75vw, 4.1rem);
     font-weight: 500;
-    line-height: 0.98;
+    line-height: 1.02;
     letter-spacing: 0;
-    text-transform: uppercase;
+    text-transform: none;
     text-wrap: balance;
   }
 
@@ -291,7 +322,7 @@ html.dark .page-curtain {
     grid-column: 2;
     justify-self: end;
     color: rgb(90 101 114 / 0.62);
-    font-size: clamp(2.1rem, 5.5vw, 5.8rem);
+    font-size: clamp(1.65rem, 4.2vw, 4.2rem);
     font-weight: 500;
     line-height: 1;
   }
@@ -301,18 +332,18 @@ html.dark .page-curtain {
     align-self: end;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: clamp(1.4rem, 3vw, 2.4rem);
-    padding-top: clamp(2rem, 4vw, 3.4rem);
+    gap: clamp(0.95rem, 1.8vw, 1.45rem);
+    padding-top: clamp(1.1rem, 1.9vw, 1.65rem);
     border-top: 1px solid #cfd5d7;
   }
 
   .oquefazemos-service-chapter__intro {
-    max-width: 44rem;
+    max-width: 38rem;
     margin: 0;
     color: var(--brand-ink);
-    font-size: clamp(1.55rem, 3.8vw, 4rem);
+    font-size: clamp(1.12rem, 2.15vw, 2.25rem);
     font-weight: 400;
-    line-height: 1.05;
+    line-height: 1.08;
     letter-spacing: 0;
     text-wrap: balance;
   }
@@ -320,35 +351,36 @@ html.dark .page-curtain {
   .oquefazemos-service-chapter__capabilities {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: clamp(1.25rem, 2.4vw, 2rem);
+    gap: clamp(0.95rem, 1.65vw, 1.35rem);
     align-items: start;
   }
 
   .oquefazemos-service-chapter__detail h3 {
-    margin: 0 0 0.8rem;
+    margin: 0 0 0.6rem;
     color: var(--brand-red);
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.16em;
-    text-transform: uppercase;
+    text-transform: none;
   }
 
   .oquefazemos-service-chapter__detail p {
     margin: 0;
     color: rgb(90 101 114 / 0.88);
-    font-size: clamp(0.95rem, 1.1vw, 1.08rem);
-    line-height: 1.68;
+    font-size: clamp(0.84rem, 0.88vw, 0.94rem);
+    line-height: 1.5;
   }
 
   .oquefazemos-service-chapter__cta {
     display: inline-flex;
     align-items: center;
     justify-self: start;
-    gap: 0.55rem;
-    min-height: 3.2rem;
-    padding: 0.75rem 0;
+    gap: 0.45rem;
+    min-height: 2.7rem;
+    padding: 0.55rem 0;
     border-bottom: 1px solid currentColor;
     color: var(--brand-ink);
+    font-size: 0.92rem;
     font-weight: 700;
     text-decoration: none;
     transition:
@@ -406,6 +438,10 @@ html.dark .page-curtain {
   }
 
   @media (max-width: 1024px) {
+    .oquefazemos-service-chapter__stack {
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
     .oquefazemos-service-chapter__heading {
       grid-template-columns: 1fr;
     }
@@ -426,6 +462,7 @@ html.dark .page-curtain {
 
     .oquefazemos-service-chapter__heading h2 {
       grid-row: 2;
+      font-size: clamp(2.1rem, 5.3vw, 3.75rem);
     }
 
     .oquefazemos-service-chapter__visual {
@@ -435,36 +472,74 @@ html.dark .page-curtain {
 
   @media (max-width: 767px) {
     .oquefazemos-page {
+      --oquefazemos-card-x: clamp(1rem, 5vw, 1.5rem);
+      --oquefazemos-card-y: 4.9rem;
       margin-top: -1rem;
     }
 
     .oquefazemos-hero {
-      min-height: auto;
-      padding-top: 6rem;
+      min-height: calc(100svh - 5.25rem);
+      padding-top: 4.75rem;
     }
 
     .oquefazemos-service-chapter {
-      min-height: 420svh;
+      min-height: 340svh;
     }
 
     .oquefazemos-service-chapter + .oquefazemos-service-chapter {
-      margin-top: -230svh;
+      margin-top: -190svh;
+    }
+
+    .oquefazemos-service-chapter__panel {
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+
+    .oquefazemos-service-chapter__panel::-webkit-scrollbar {
+      display: none;
     }
 
     .oquefazemos-service-chapter__stack {
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 2rem;
-      padding-top: 5.5rem;
+      gap: 1.25rem;
+      padding-top: var(--oquefazemos-card-y);
+      padding-bottom: var(--oquefazemos-card-y);
+    }
+
+    .oquefazemos-service-chapter__heading h2 {
+      font-size: clamp(1.75rem, 8.8vw, 2.85rem);
+      line-height: 1.04;
+    }
+
+    .oquefazemos-service-chapter__heading span {
+      margin-bottom: 0.4rem;
     }
 
     .oquefazemos-service-chapter__content {
       align-self: stretch;
+      gap: 0.95rem;
+      padding-top: 1rem;
+    }
+
+    .oquefazemos-service-chapter__intro {
+      font-size: clamp(1.05rem, 5.2vw, 1.65rem);
     }
 
     .oquefazemos-service-chapter__capabilities {
       grid-template-columns: 1fr;
+      gap: 0.8rem;
+    }
+
+    .oquefazemos-service-chapter__detail p {
+      font-size: 0.84rem;
+      line-height: 1.46;
+    }
+
+    .oquefazemos-service-chapter__cta {
+      min-height: 2.45rem;
+      font-size: 0.84rem;
     }
   }
 
@@ -3278,4 +3353,89 @@ html.dark .solutions-section__cta {
 /* ── Dark Mode: Testimonials Section ── */
 html.dark .testimonials-section-wrapper {
   background: var(--surface-primary) !important;
+}
+
+.client-logo-reveal {
+  animation: client-logo-cascade 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: opacity, transform;
+}
+
+.case-carousel-reveal {
+  animation: case-carousel-card-cascade 640ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 120ms;
+  will-change: opacity, transform;
+}
+
+.testimonial-scroll-reveal {
+  --testimonial-reveal-delay: 0ms;
+  opacity: 0;
+  will-change: opacity, transform;
+}
+
+.testimonial-scroll-reveal--visible.testimonial-scroll-reveal--up {
+  animation: testimonial-fade-up 760ms cubic-bezier(0.22, 1, 0.36, 1) var(--testimonial-reveal-delay) both;
+}
+
+.testimonial-scroll-reveal--visible.testimonial-scroll-reveal--right {
+  animation: testimonial-fade-right 780ms cubic-bezier(0.22, 1, 0.36, 1) var(--testimonial-reveal-delay) both;
+}
+
+@keyframes client-logo-cascade {
+  0% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes case-carousel-card-cascade {
+  0% {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes testimonial-fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes testimonial-fade-right {
+  0% {
+    opacity: 0;
+    transform: translateX(22px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .client-logo-reveal,
+  .case-carousel-reveal,
+  .testimonial-scroll-reveal,
+  .testimonial-scroll-reveal--visible.testimonial-scroll-reveal--up,
+  .testimonial-scroll-reveal--visible.testimonial-scroll-reveal--right {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }

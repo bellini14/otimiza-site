@@ -50,6 +50,9 @@ export const clientLogoType = defineType({
       name: 'logo',
       title: 'Logotipo',
       type: 'image',
+      options: {
+        hotspot: true,
+      },
       validation: (Rule) => Rule.required(),
     }),
     defineField({
@@ -81,6 +84,46 @@ export const clientLogoType = defineType({
       type: 'boolean',
       description: 'Marque para publicar este logotipo na seção principal de clientes da home.',
       initialValue: false,
+    }),
+    defineField({
+      name: 'showOnCases',
+      title: 'O logotipo aparece na página Cases',
+      type: 'boolean',
+      description: 'Marque para publicar este logotipo na página de Cases.',
+      initialValue: true,
+    }),
+    defineField({
+      name: 'caseTitle',
+      title: 'Título na página Cases',
+      type: 'string',
+      description: 'Título exibido junto ao logotipo na página de Cases.',
+      hidden: ({ parent }) => parent?.showOnCases === false,
+    }),
+    defineField({
+      name: 'caseDescription',
+      title: 'Descrição na página Cases',
+      type: 'text',
+      rows: 3,
+      description: 'Descrição curta exibida junto ao logotipo na página de Cases.',
+      hidden: ({ parent }) => parent?.showOnCases === false,
+    }),
+    defineField({
+      name: 'caseSlug',
+      title: 'Slug da página do case',
+      type: 'slug',
+      description: 'Define a URL do case, por exemplo /cases/banco-moneo.',
+      options: {
+        source: 'name',
+      },
+      hidden: ({ parent }) => parent?.showOnCases === false,
+    }),
+    defineField({
+      name: 'caseContent',
+      title: 'Conteúdo da página do case',
+      type: 'array',
+      of: [{ type: 'block' }],
+      description: 'Conteúdo completo exibido na página individual do case.',
+      hidden: ({ parent }) => parent?.showOnCases === false,
     }),
   ],
   preview: {

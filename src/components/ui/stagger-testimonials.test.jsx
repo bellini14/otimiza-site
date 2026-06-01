@@ -34,6 +34,28 @@ function getCardPositions(container) {
 }
 
 describe('StaggerTestimonials', () => {
+  it('renders testimonial cards supplied by the CMS before using fallback copy', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <StaggerTestimonials
+          testimonials={[
+            {
+              _id: 'cms-testimonial',
+              shortQuote: 'A Otimiza conectou operacao e indicadores em uma unica rotina.',
+              clientName: 'Marina Duarte',
+              role: 'Diretora de Operacoes',
+              company: 'Alpha Foods',
+              avatarUrl: 'https://cdn.sanity.io/images/demo/marina.jpg',
+            },
+          ]}
+        />
+      </MemoryRouter>,
+    )
+
+    expect(container).toHaveTextContent('A Otimiza conectou operacao e indicadores em uma unica rotina.')
+    expect(container).toHaveTextContent('Marina Duarte, Diretora de Operacoes na Alpha Foods')
+  })
+
   it('keeps the same testimonial card nodes when a border card recenters the carousel', () => {
     const { container } = render(
       <MemoryRouter>

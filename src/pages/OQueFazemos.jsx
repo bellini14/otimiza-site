@@ -172,9 +172,8 @@ function OQueFazemos() {
   return (
     <section className="oquefazemos-page" aria-labelledby="oquefazemos-title">
       <header className="oquefazemos-hero">
-        <div className="oquefazemos-hero__eyebrow">Soluções Otimiza</div>
         <h1 id="oquefazemos-title" className="oquefazemos-hero__title">
-          O que fazemos
+          O Que Fazemos
         </h1>
         <p className="oquefazemos-hero__copy">
           Unimos consultoria, tecnologia e desenvolvimento de pessoas para transformar
