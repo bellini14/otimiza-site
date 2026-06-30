@@ -93,6 +93,13 @@ export const clientLogoType = defineType({
       initialValue: true,
     }),
     defineField({
+      name: 'showOnNossaAbordagem',
+      title: 'Aparece na pÃ¡gina Nossa abordagem?',
+      type: 'boolean',
+      description: 'Marque para exibir este logotipo no carrossel da pÃ¡gina Nossa abordagem.',
+      initialValue: false,
+    }),
+    defineField({
       name: 'caseTitle',
       title: 'Título na página Cases',
       type: 'string',

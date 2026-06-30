@@ -9,6 +9,7 @@ import Contato from './pages/Contato'
 import Inspire from './pages/Inspire'
 import InspireNewsletter from './pages/InspireNewsletter'
 import OQueFazemos from './pages/OQueFazemos'
+import NossaAbordagem from './pages/NossaAbordagem'
 import QuemSomos from './pages/QuemSomos'
 import Tecnologia from './pages/Tecnologia'
 import CaseDetail from './pages/CaseDetail'
@@ -23,6 +24,7 @@ function AppRoutes() {
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/quem-somos" element={<QuemSomos />} />
+        <Route path="/nossa-abordagem" element={<NossaAbordagem />} />
         <Route path="/o-que-fazemos" element={<OQueFazemos />} />
         <Route path="/cases" element={<Cases />} />
         <Route path="/cases/:slug" element={<CaseDetail />} />

@@ -115,7 +115,12 @@ export function VelocityRow({
     const copies = [];
     for (let i = 0; i < (numCopies ?? 6); i++) {
       copies.push(
-        <div className={`shrink-0 ${className}`} key={i} ref={i === 0 ? copyRef : null}>
+        <div
+          className={`shrink-0 ${className}`}
+          key={i}
+          ref={i === 0 ? copyRef : null}
+          aria-hidden={i > 0 ? 'true' : undefined}
+        >
           {children}
         </div>
       );
@@ -138,6 +143,7 @@ export function ScrollVelocity({
   texts = [],
   velocity = 100,
   className = '',
+  containerClassName = 'space-y-6 [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]',
   damping = 50,
   stiffness = 400,
   numCopies = 6,
@@ -148,7 +154,7 @@ export function ScrollVelocity({
   scrollerStyle
 }) {
   return (
-    <div className="space-y-6 [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+    <div className={containerClassName}>
       {texts.map((content, index) => (
         <VelocityRow
           key={index}

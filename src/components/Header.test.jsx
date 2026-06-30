@@ -44,10 +44,10 @@ describe('Header', () => {
       'Cases',
       'Inspire',
     ])
-    expect(within(mainNav).queryByRole('link', { name: 'Nossa abordagem' })).not.toBeInTheDocument()
+    expect(within(mainNav).getByRole('link', { name: 'Nossa abordagem' })).toHaveAttribute('href', '/nossa-abordagem')
     expect(within(mainNav).getByRole('link', { name: 'O que fazemos' })).toHaveAttribute('href', '/o-que-fazemos')
     expect(within(mainNav).getByRole('link', { name: 'Cases' })).toHaveAttribute('href', '/cases')
-    expect(within(mainNav).getByText('Nossa abordagem')).toHaveClass('opacity-30')
+    expect(within(mainNav).getByRole('link', { name: 'Nossa abordagem' })).not.toHaveClass('opacity-30')
     expect(within(mainNav).getByRole('link', { name: 'Cases' })).not.toHaveClass('opacity-30')
     expect(screen.queryByRole('button', { name: 'Soluções' })).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Fale com a Otimiza' })).toBeInTheDocument()
@@ -60,10 +60,10 @@ describe('Header', () => {
 
     expect(mobileNav.getByRole('link', { name: 'Home' })).toBeInTheDocument()
     expect(mobileNav.getByRole('link', { name: 'Quem somos' })).toBeInTheDocument()
-    expect(mobileNav.queryByRole('link', { name: 'Nossa abordagem' })).not.toBeInTheDocument()
+    expect(mobileNav.getByRole('link', { name: 'Nossa abordagem' })).toHaveAttribute('href', '/nossa-abordagem')
     expect(mobileNav.getByRole('link', { name: 'O que fazemos' })).toHaveAttribute('href', '/o-que-fazemos')
     expect(mobileNav.getByRole('link', { name: 'Cases' })).toHaveAttribute('href', '/cases')
-    expect(mobileNav.getByText('Nossa abordagem')).toHaveClass('opacity-30')
+    expect(mobileNav.getByRole('link', { name: 'Nossa abordagem' })).not.toHaveClass('opacity-30')
     expect(mobileNav.getByRole('link', { name: 'Cases' })).not.toHaveClass('opacity-30')
     expect(mobileNav.queryByRole('link', { name: 'Tecnologia' })).not.toBeInTheDocument()
     expect(mobileNav.queryByRole('link', { name: 'Academia Otimiza' })).not.toBeInTheDocument()

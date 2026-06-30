@@ -135,7 +135,7 @@ export const sitePages = {
 
 export const siteNav = [
   { path: '/quem-somos', label: 'Quem somos' },
-  { path: '/quem-somos#nossa-abordagem', label: 'Nossa abordagem' },
+  { path: '/nossa-abordagem', label: 'Nossa abordagem' },
   { path: '/o-que-fazemos', label: 'O que fazemos' },
   { path: '/cases', label: 'Cases' },
   { path: '/inspire', label: 'Inspire' },

@@ -34,6 +34,7 @@ function SplitText({
   tag = 'p',
   textAlign = 'center',
   onLetterAnimationComplete,
+  ...restProps
 }) {
   const ref = useRef(null)
   const animationCompletedRef = useRef(false)
@@ -171,10 +172,12 @@ function SplitText({
   return (
     <Tag
       ref={ref}
+      {...restProps}
       style={{
         textAlign,
         wordWrap: 'break-word',
         willChange: 'transform, opacity',
+        ...restProps.style,
       }}
       className={`split-parent overflow-hidden inline-block whitespace-normal ${className}`.trim()}
     >

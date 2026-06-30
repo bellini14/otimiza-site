@@ -23,7 +23,7 @@ export function scrollToLocationTarget(location) {
     const target = document.getElementById(decodeURIComponent(hash))
 
     if (target) {
-      target.scrollIntoView({ block: 'start', behavior: 'instant' })
+      target.scrollIntoView({ block: 'start', behavior: 'smooth' })
       return
     }
   }

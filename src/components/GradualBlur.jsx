@@ -167,6 +167,7 @@ const GradualBlur = props => {
         maskImage: `linear-gradient(${direction}, ${gradient})`,
         WebkitMaskImage: `linear-gradient(${direction}, ${gradient})`,
         backdropFilter: `blur(${blurValue.toFixed(3)}rem)`,
+        WebkitBackdropFilter: `blur(${blurValue.toFixed(3)}rem)`,
         opacity: config.opacity,
         transition:
           config.animated && config.animated !== 'scroll'
@@ -222,11 +223,11 @@ const GradualBlur = props => {
   return (
     <div
       ref={containerRef}
-      className={`gradual-blur relative isolate ${config.target === 'page' ? 'gradual-blur-page' : 'gradual-blur-parent'} ${config.className}`}
+      className={`gradual-blur ${config.target === 'page' ? 'gradual-blur-page' : 'gradual-blur-parent'} ${config.className}`}
       style={containerStyle}
       onMouseEnter={hoverIntensity ? () => setIsHovered(true) : undefined}
       onMouseLeave={hoverIntensity ? () => setIsHovered(false) : undefined}>
-      <div className="relative w-full h-full">{blurDivs}</div>
+      <div className="gradual-blur-inner relative h-full w-full">{blurDivs}</div>
       {props.children && <div className="relative">{props.children}</div>}
     </div>
   );

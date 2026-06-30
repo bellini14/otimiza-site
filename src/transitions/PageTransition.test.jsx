@@ -15,7 +15,7 @@ describe('scrollToLocationTarget', () => {
 
     scrollToLocationTarget({ hash: '#nossa-abordagem' })
 
-    expect(target.scrollIntoView).toHaveBeenCalledWith({ block: 'start', behavior: 'instant' })
+    expect(target.scrollIntoView).toHaveBeenCalledWith({ block: 'start', behavior: 'smooth' })
     expect(window.scrollTo).not.toHaveBeenCalled()
   })
 
