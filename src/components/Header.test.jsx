@@ -97,6 +97,52 @@ describe('Header', () => {
     expect(document.documentElement).toHaveClass('dark')
   })
 
+  it('opens the language menu and persists the selected locale', () => {
+    renderHeader()
+
+    const languageTrigger = screen.getByRole('button', { name: 'Selecionar idioma' })
+
+    expect(languageTrigger).toHaveAttribute('aria-expanded', 'false')
+    expect(languageTrigger).toHaveTextContent('pt-BR')
+    expect(languageTrigger).toHaveClass('w-[7.5rem]', 'whitespace-nowrap')
+    expect(within(languageTrigger).getByTestId('flag-pt-BR')).toBeInTheDocument()
+
+    fireEvent.click(languageTrigger)
+
+    const languageMenu = screen.getByRole('menu', { name: 'Opções de idioma' })
+    expect(languageTrigger).toHaveAttribute('aria-expanded', 'true')
+    expect(languageMenu).toHaveClass('left-1/2', '-translate-x-1/2')
+    expect(within(languageMenu).queryByText('Brasil')).not.toBeInTheDocument()
+    expect(within(languageMenu).queryByText('United States')).not.toBeInTheDocument()
+    expect(within(languageMenu).getByText('en-US')).toHaveClass('whitespace-nowrap')
+    expect(within(languageMenu).getByRole('menuitemradio', { name: 'pt-BR' })).toHaveAttribute('aria-checked', 'true')
+
+    fireEvent.click(within(languageMenu).getByRole('menuitemradio', { name: 'en-US' }))
+
+    expect(languageTrigger).toHaveTextContent('en-US')
+    expect(languageTrigger).toHaveAttribute('aria-expanded', 'false')
+    expect(within(languageTrigger).getByTestId('flag-en-US')).toBeInTheDocument()
+    expect(window.localStorage.getItem('locale')).toBe('en-US')
+  })
+
+  it('restores the locale and dismisses the language menu with Escape or an outside click', () => {
+    window.localStorage.setItem('locale', 'en-US')
+    renderHeader()
+
+    const languageTrigger = screen.getByRole('button', { name: 'Selecionar idioma' })
+    expect(languageTrigger).toHaveTextContent('en-US')
+
+    fireEvent.click(languageTrigger)
+    expect(screen.getByRole('menu', { name: 'Opções de idioma' })).toBeInTheDocument()
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByRole('menu', { name: 'Opções de idioma' })).not.toBeInTheDocument()
+
+    fireEvent.click(languageTrigger)
+    fireEvent.mouseDown(document.body)
+    expect(screen.queryByRole('menu', { name: 'Opções de idioma' })).not.toBeInTheDocument()
+  })
+
   it('anchors the mobile menu animation below the docked header', () => {
     renderHeader()
 
@@ -109,6 +155,17 @@ describe('Header', () => {
 
     expect(mobileMenu).toHaveClass('top-[5.9rem]', 'sm:top-[6.15rem]', 'origin-top')
     expect(mobileMenu).toHaveClass('translate-y-0', 'opacity-100', 'scale-100')
+  })
+
+  it('scales the complete menu by two successive five-percent increases without rasterizing SVGs', () => {
+    renderHeader()
+
+    const menuSurface = screen.getByTestId('main-menu-surface')
+
+    expect(menuSurface).toHaveClass('[zoom:1.1025]')
+    expect(menuSurface).toHaveClass('w-full')
+    expect(menuSurface).not.toHaveClass('transform-gpu')
+    expect(menuSurface).toHaveClass('px-5', 'py-3')
   })
 
   it('hides the nav while scrolling down and shows it when scrolling up', () => {

@@ -295,12 +295,9 @@ function Home() {
       </section>
 
       <div className="relative z-10" data-testid="home-content">
-        <section ref={brandsRef} className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden py-16 sm:py-24 bg-[#EFEFF4]">
+        <section ref={brandsRef} className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden bg-[#EFEFF4] py-24 sm:py-32">
           <div className="mx-auto w-full max-w-[1380px] px-4 sm:px-6 lg:px-8">
             <div className="mb-16 text-center">
-              <p className={`mb-4 inline-block tracking-tight rounded-full bg-brand-red/10 px-4 py-1.5 text-[11px] font-semibold uppercase text-brand-red ${brandsVisible ? 'animate-enter' : 'opacity-0'}`}>
-                Empresas que confiam
-              </p>
               <h2 className={`mb-6 font-display text-4xl text-slate-900 sm:text-5xl lg:text-6xl ${brandsVisible ? 'animate-enter' : 'opacity-0'} [animation-delay:150ms]`}>
                 Marcas que confiam na Otimiza
               </h2>
@@ -329,10 +326,10 @@ function Home() {
           </div>
         </section>
 
-        <FeaturesSection />
+        <BlogHighlights />
         <TechnologySection />
         <StaggerTestimonials key={homeTestimonialsKey} testimonials={homeTestimonials} />
-        <BlogHighlights />
+        <FeaturesSection />
       </div>
     </div>
   )

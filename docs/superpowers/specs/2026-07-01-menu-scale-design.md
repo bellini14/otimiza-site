@@ -6,7 +6,7 @@ Ampliar visualmente o menu principal do site em 10,25% sobre o tamanho original,
 
 ## Solução
 
-Aplicar uma escala de layout uniforme de `1.1025` ao contêiner visual completo do menu. A largura-base será compensada por `100% / 1.1025`, preservando os limites laterais existentes.
+Aplicar uma escala de layout uniforme de `1.1025` ao contêiner visual completo do menu. O mecanismo de layout do `zoom` preservará a largura disponível e os limites laterais existentes.
 
 A escala será aplicada tanto ao estado superior quanto ao estado flutuante do cabeçalho, em desktop e mobile. Logo, textos, ícones, botões e espaços visuais crescerão juntos. A implementação não deverá usar composição GPU no contêiner completo, evitando a rasterização e a perda de nitidez dos SVGs.
 

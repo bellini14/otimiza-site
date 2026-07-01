@@ -30,7 +30,7 @@ export default function TechnologySection() {
   const [textRef, textVisible] = useScrollReveal(0.2)
 
   return (
-    <section className="relative w-[100vw] left-[50%] right-[50%] -ml-[50vw] -mr-[50vw] overflow-hidden bg-[#EFEFF4]">
+    <section className="relative w-[100vw] left-[50%] right-[50%] -ml-[50vw] -mr-[50vw] overflow-hidden bg-white">
       {/* Container for Text */}
       <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="max-w-[1320px] mx-auto w-full">
@@ -40,9 +40,6 @@ export default function TechnologySection() {
             
             {/* Header moved inside */}
             <div className="mb-8 sm:mb-10">
-              <p className={`mb-4 inline-block tracking-tight rounded-full bg-brand-red/10 px-4 py-1.5 text-[11px] font-semibold uppercase text-brand-red border border-brand-red/20 ${textVisible ? 'animate-enter' : 'opacity-0'}`}>
-                OTMSuite
-              </p>
               <h2 className={`mb-4 font-display text-4xl text-slate-900 sm:text-5xl lg:text-6xl ${textVisible ? 'animate-enter' : 'opacity-0'} [animation-delay:120ms]`}>
                 Nossa tecnologia
               </h2>
@@ -69,7 +66,7 @@ export default function TechnologySection() {
       {/* Right Col (Image & Effect) */}
       <div className="relative lg:absolute lg:right-0 lg:top-0 lg:bottom-0 w-full lg:w-[50vw] h-[400px] sm:h-[500px] lg:h-auto overflow-hidden bg-black z-0">
           {/* Overlay fade */}
-          <div className="absolute inset-0 bg-gradient-to-b lg:bg-gradient-to-r from-[#EFEFF4] via-[#EFEFF4]/60 to-transparent via-30% z-20 pointer-events-none"></div>
+          <div className="absolute inset-0 bg-gradient-to-b lg:bg-gradient-to-r from-white via-white/60 to-transparent via-30% z-20 pointer-events-none"></div>
           
           <div className="absolute inset-0" style={{ isolation: 'isolate' }}>
             <div className="absolute inset-0 bg-white"></div>

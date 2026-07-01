@@ -16,6 +16,7 @@ const ProjectCard = React.forwardRef(function ProjectCard(
     linkState,
     linkText = 'View Project',
     eyebrow,
+    disableHover = false,
     publishedAt,
     slug,
     ...props
@@ -23,12 +24,15 @@ const ProjectCard = React.forwardRef(function ProjectCard(
   ref,
 ) {
   const isInternalLink = typeof link === 'string' && link.startsWith('/')
+  void publishedAt
+  void slug
 
   return (
     <article
       ref={ref}
       className={cn(
-        'group relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 transition-all duration-500 ease-in-out hover:-translate-y-2',
+        'group relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900',
+        !disableHover && 'transition-all duration-500 ease-in-out hover:-translate-y-2',
         className,
       )}
       {...props}
@@ -37,7 +41,10 @@ const ProjectCard = React.forwardRef(function ProjectCard(
         <img
           src={imgSrc}
           alt={title}
-          className="h-full w-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-110"
+          className={cn(
+            'h-full w-full object-cover',
+            !disableHover && 'transition-transform duration-700 ease-in-out group-hover:scale-110',
+          )}
           loading="lazy"
         />
         {eyebrow ? (

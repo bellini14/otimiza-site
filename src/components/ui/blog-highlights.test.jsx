@@ -14,8 +14,6 @@ vi.mock('@/lib/sanity', () => ({
   },
 }))
 
-const STAGE_GAP_PX = 24
-
 beforeEach(() => {
   clearCachedInspirePosts()
   client.fetch.mockResolvedValue([])
@@ -28,12 +26,6 @@ afterEach(() => {
   vi.useRealTimers()
   cleanup()
 })
-
-function getVisibleSlideTitles() {
-  return Array.from(document.querySelectorAll('[data-testid="blog-slide"][data-visible="true"] h3')).map(
-    (heading) => heading.textContent,
-  )
-}
 
 describe('BlogHighlights', () => {
   it('renders the blog section heading and article links', () => {
@@ -50,14 +42,18 @@ describe('BlogHighlights', () => {
 
     expect(heading).toBeInTheDocument()
     expect(section?.className).toMatch(/bg-\[#EFEFF4\]/)
-    expect(screen.getByRole('button', { name: /post anterior/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /proximo post/i })).toBeInTheDocument()
+    expect(section).toHaveClass('pt-16', 'pb-32', 'sm:pt-24', 'sm:pb-40')
+    expect(section).not.toHaveClass('py-16', 'sm:py-24')
+    expect(screen.getByTestId('blog-drag-hint')).toHaveTextContent('Arrastar')
     expect(screen.getAllByRole('link', { name: /ler artigo|explorar inspire/i }).length).toBeGreaterThanOrEqual(4)
-    expect(screen.getByRole('link', { name: /explorar inspire/i })).toHaveAttribute('href', '/inspire')
-    expect(screen.getByTestId('blog-slider-stage').className).toMatch(/overflow-y-visible/)
+    expect(screen.getByTestId('blog-header-cta')).toHaveAttribute('href', '/inspire')
+    expect(screen.queryByText('Inspire', { exact: true })).not.toBeInTheDocument()
+    expect(screen.queryByText(/10 posts selecionados/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/\d{2}-\d{2}\s*\/\s*\d{2}/)).not.toBeInTheDocument()
+    expect(screen.getByTestId('blog-slider-stage')).toHaveClass('overflow-hidden')
   })
 
-  it('navigates through a larger list of posts with arrow controls', () => {
+  it('lets visitors drag the existing Inspire cards with the Cases carousel behavior', () => {
     window.innerWidth = 1440
 
     render(
@@ -66,81 +62,48 @@ describe('BlogHighlights', () => {
       </MemoryRouter>,
     )
 
-    const previousButton = screen.getByRole('button', { name: /post anterior/i })
-    const nextButton = screen.getByRole('button', { name: /proximo post/i })
+    const shell = screen.getByTestId('blog-slider-stage')
     const track = screen.getByTestId('blog-slider-track')
+    const firstArticleLink = screen.getAllByRole('link', { name: /ler artigo/i })[0]
 
-    expect(screen.getAllByTestId('blog-slide')).toHaveLength(staticBlogPosts.length)
-    expect(screen.getByTestId('blog-slider-stage')).toHaveAttribute('data-phase', 'idle')
-    expect(screen.getByTestId('blog-slider-stage')).toHaveAttribute('data-current-index', '0')
-    expect(track).toHaveAttribute('data-animating', 'false')
-    expect(previousButton).toBeDisabled()
-    expect(nextButton).not.toBeDisabled()
-
-    expect(getVisibleSlideTitles()).toEqual(staticBlogPosts.slice(0, 3).map((post) => post.title))
-    expect(getVisibleSlideTitles()).not.toContain(staticBlogPosts.at(-1).title)
-
-    fireEvent.click(nextButton)
-
-    expect(track.style.transform).toBe(`translate3d(calc(-${(1 / 3) * 100}% - ${STAGE_GAP_PX / 3}px), 0, 0)`)
-    expect(screen.getByTestId('blog-slider-stage')).toHaveAttribute('data-phase', 'animating')
-    expect(screen.getByTestId('blog-slider-stage')).toHaveAttribute('data-current-index', '1')
-    expect(track).toHaveAttribute('data-animating', 'true')
-    expect(previousButton).toBeDisabled()
-    expect(nextButton).toBeDisabled()
-    expect(getVisibleSlideTitles()).toEqual(staticBlogPosts.slice(1, 4).map((post) => post.title))
-
-    fireEvent.click(nextButton)
-    expect(screen.getByTestId('blog-slider-stage')).toHaveAttribute('data-current-index', '1')
-
-    fireEvent.transitionEnd(track, { propertyName: 'transform' })
-
-    expect(screen.getByTestId('blog-slider-stage')).toHaveAttribute('data-phase', 'idle')
-    expect(track).toHaveAttribute('data-animating', 'false')
-    expect(previousButton).not.toBeDisabled()
-    expect(nextButton).not.toBeDisabled()
-
-    const maxDesktopIndex = staticBlogPosts.length - 3
-
-    for (let step = 0; step < maxDesktopIndex - 1; step += 1) {
-      fireEvent.click(nextButton)
-      fireEvent.transitionEnd(track, { propertyName: 'transform' })
-    }
-
-    expect(getVisibleSlideTitles()).toContain(staticBlogPosts.at(-1).title)
-    expect(nextButton).toBeDisabled()
-
-    fireEvent.click(previousButton)
-
-    expect(screen.getByTestId('blog-slider-stage')).toHaveAttribute('data-phase', 'animating')
-    expect(previousButton).toBeDisabled()
-    expect(nextButton).toBeDisabled()
-
-    fireEvent.transitionEnd(track, { propertyName: 'transform' })
-    expect(getVisibleSlideTitles()).toContain(staticBlogPosts.at(-2).title)
-    expect(nextButton).not.toBeDisabled()
-  })
-
-  it('releases the animation lock via fallback timer when transitionend does not fire', () => {
-    window.innerWidth = 1440
-
-    render(
-      <MemoryRouter>
-        <BlogHighlights />
-      </MemoryRouter>,
-    )
-
-    const nextButton = screen.getByRole('button', { name: /proximo post/i })
-
-    fireEvent.click(nextButton)
-    expect(nextButton).toBeDisabled()
-
-    act(() => {
-      vi.advanceTimersByTime(500)
+    Object.defineProperties(shell, {
+      clientWidth: { configurable: true, value: 900 },
+    })
+    Object.defineProperties(track, {
+      scrollWidth: { configurable: true, value: 1800 },
     })
 
-    expect(screen.getByTestId('blog-slider-stage')).toHaveAttribute('data-phase', 'idle')
-    expect(nextButton).not.toBeDisabled()
+    expect(screen.getAllByTestId('blog-slide')).toHaveLength(staticBlogPosts.length)
+    expect(shell).toHaveClass(
+      'left-1/2',
+      'right-1/2',
+      '-ml-[50vw]',
+      '-mr-[50vw]',
+      'w-screen',
+      'overflow-hidden',
+    )
+    expect(screen.getAllByTestId('blog-carousel-fade')).toHaveLength(2)
+    expect(screen.getAllByTestId('blog-carousel-edge-spacer')).toHaveLength(2)
+    expect(track).toHaveClass('cursor-grab')
+    expect(screen.getByTestId('blog-drag-hint')).toHaveTextContent('Arrastar')
+    expect(firstArticleLink.closest('article')).not.toHaveClass('hover:-translate-y-2')
+    expect(firstArticleLink.closest('article')?.querySelector('img')).not.toHaveClass('group-hover:scale-110')
+
+    fireEvent.pointerDown(track, { pointerId: 1, clientX: 600, clientY: 180 })
+    fireEvent.pointerMove(track, { pointerId: 1, clientX: 460, clientY: 180 })
+
+    expect(track).toHaveClass('cursor-grabbing')
+    expect(track).toHaveStyle({ transform: 'translateX(-134.4px)' })
+    expect(track).toHaveStyle({ touchAction: 'pan-y', userSelect: 'none' })
+    expect(screen.getByTestId('blog-drag-arrow')).toHaveStyle({
+      transform: 'rotate(180deg) scale(1.12)',
+    })
+
+    fireEvent.pointerUp(track, { pointerId: 1 })
+    expect(track).toHaveClass('cursor-grab')
+
+    fireEvent.pointerDown(firstArticleLink, { pointerId: 2, clientX: 500, clientY: 180 })
+    expect(track).toHaveClass('cursor-grab')
   })
 
   it('stores fetched Sanity posts in the shared Inspire cache', async () => {

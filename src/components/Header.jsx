@@ -89,30 +89,168 @@ function ThemeToggle({ theme, onToggle }) {
   )
 }
 
-function LanguageSelector() {
+function BrazilFlag({ className = '' }) {
   return (
-    <button
-      className="hidden lg:inline-flex h-10 items-center gap-2.5 rounded-[1rem] bg-[#efeff4]/90 backdrop-blur-md dark:bg-white/10 px-3.5 text-[14px] font-[400] text-[#5a6572] dark:text-white/90 transition-all hover:bg-[#e2e2e8] dark:hover:bg-white/20 dark:hover:text-white ring-1 ring-[#434b54]/5 dark:ring-white/10 drop-shadow-sm"
-      aria-label="Selecionar idioma"
-    >
-      <span className="text-base leading-none drop-shadow-sm">🇧🇷</span>
-      <span>pt-BR</span>
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="h-3.5 w-3.5 opacity-50 dark:opacity-70"
-        aria-hidden="true"
+    <svg viewBox="0 0 32 32" className={className} data-testid="flag-pt-BR" aria-hidden="true">
+      <circle cx="16" cy="16" r="16" fill="#6DA544" />
+      <path d="M16 6.25 29.1 16 16 25.75 2.9 16 16 6.25Z" fill="#FFDA44" />
+      <circle cx="16" cy="16" r="5.55" fill="#0052B4" />
+      <defs>
+        <clipPath id="language-brazil-globe">
+          <circle cx="16" cy="16" r="5.55" />
+        </clipPath>
+      </defs>
+      <path d="M9.9 14.35c4.3-.95 9.05.18 12.45 3.25l-1.4 2.05c-2.95-2.75-7.1-3.72-10.85-2.85Z" fill="#F0F0F0" clipPath="url(#language-brazil-globe)" />
+    </svg>
+  )
+}
+
+function UnitedStatesFlag({ className = '' }) {
+  const stars = [
+    [5, 3], [11, 3],
+    [1, 7], [7, 7], [13, 7],
+    [3, 11], [9, 11], [15, 11],
+    [1, 15], [7, 15], [13, 15],
+  ]
+
+  return (
+    <svg viewBox="0 0 32 32" className={className} data-testid="flag-en-US" aria-hidden="true">
+      <defs>
+        <clipPath id="language-us-flag-circle">
+          <circle cx="16" cy="16" r="16" />
+        </clipPath>
+      </defs>
+      <g clipPath="url(#language-us-flag-circle)">
+        <rect width="32" height="32" fill="#F0F0F0" />
+        <path d="M0 3.5h32v4H0zm0 8h32v4H0zm0 8h32v4H0zm0 8h32v4H0z" fill="#E4002B" />
+        <path d="M0 0h16v16H0z" fill="#0052B4" />
+        {stars.map(([x, y]) => (
+          <path
+            key={`${x}-${y}`}
+            d="M0-2.15.64-.7 2.05-.66.95.27 1.27 1.7 0 .9-1.27 1.7-.95.27-2.05-.66-.64-.7Z"
+            transform={`translate(${x} ${y})`}
+            fill="#F0F0F0"
+          />
+        ))}
+      </g>
+    </svg>
+  )
+}
+
+const languages = [
+  { locale: 'pt-BR', Flag: BrazilFlag },
+  { locale: 'en-US', Flag: UnitedStatesFlag },
+]
+
+function getInitialLocale() {
+  if (typeof window === 'undefined') return 'pt-BR'
+
+  const savedLocale = window.localStorage.getItem('locale')
+  return languages.some(({ locale }) => locale === savedLocale) ? savedLocale : 'pt-BR'
+}
+
+function LanguageSelector() {
+  const [locale, setLocale] = useState(getInitialLocale)
+  const [isOpen, setIsOpen] = useState(false)
+  const selectorRef = useRef(null)
+  const selectedLanguage = languages.find((language) => language.locale === locale) ?? languages[0]
+  const SelectedFlag = selectedLanguage.Flag
+
+  useEffect(() => {
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setIsOpen(false)
+    }
+    const closeOnOutsideClick = (event) => {
+      if (!selectorRef.current?.contains(event.target)) setIsOpen(false)
+    }
+
+    document.addEventListener('keydown', closeOnEscape)
+    document.addEventListener('mousedown', closeOnOutsideClick)
+    return () => {
+      document.removeEventListener('keydown', closeOnEscape)
+      document.removeEventListener('mousedown', closeOnOutsideClick)
+    }
+  }, [])
+
+  const selectLanguage = (nextLocale) => {
+    setLocale(nextLocale)
+    window.localStorage.setItem('locale', nextLocale)
+    setIsOpen(false)
+  }
+
+  return (
+    <div ref={selectorRef} className="relative hidden lg:block">
+      <button
+        type="button"
+        className="inline-flex h-10 w-[7.5rem] items-center justify-center gap-2.5 whitespace-nowrap rounded-[1rem] bg-[#efeff4]/90 px-3.5 text-[14px] font-[400] text-[#5a6572] ring-1 ring-[#434b54]/5 drop-shadow-sm backdrop-blur-md transition-all hover:bg-[#e2e2e8] dark:bg-white/10 dark:text-white/90 dark:ring-white/10 dark:hover:bg-white/20 dark:hover:text-white"
+        aria-label="Selecionar idioma"
+        aria-haspopup="menu"
+        aria-controls="language-options"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((current) => !current)}
       >
-        <path d="m6 9 6 6 6-6" />
-      </svg>
-    </button>
+        <SelectedFlag className="h-[18px] w-[18px] shrink-0 drop-shadow-sm" />
+        <span>{selectedLanguage.locale}</span>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={`h-3.5 w-3.5 opacity-50 transition-transform dark:opacity-70 ${isOpen ? 'rotate-180' : ''}`}
+          aria-hidden="true"
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div
+          id="language-options"
+          role="menu"
+          aria-label="Opções de idioma"
+          className="absolute left-1/2 top-full mt-2.5 w-[9.5rem] -translate-x-1/2 rounded-[1.2rem] border border-[#434b54]/10 bg-white/95 p-2 shadow-[0_20px_50px_rgba(67,75,84,0.14)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#131b24]/95 dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+        >
+          {languages.map(({ locale: optionLocale, Flag }) => {
+            const isSelected = optionLocale === locale
+            const OptionFlag = Flag
+            return (
+              <button
+                key={optionLocale}
+                type="button"
+                role="menuitemradio"
+                aria-label={optionLocale}
+                aria-checked={isSelected}
+                onClick={() => selectLanguage(optionLocale)}
+                className={`flex w-full items-center gap-2.5 rounded-[0.9rem] px-3 py-2.5 text-left transition-colors ${
+                  isSelected
+                    ? 'bg-[#434b54]/[0.08] text-[#434b54] dark:bg-white/10 dark:text-white'
+                    : 'text-[#5a6572] hover:bg-[#434b54]/5 dark:text-white/70 dark:hover:bg-white/5 dark:hover:text-white'
+                }`}
+              >
+                <OptionFlag className="h-6 w-6 shrink-0 drop-shadow-sm" />
+                <span className="min-w-0 flex-1 whitespace-nowrap text-[13.5px] font-[500] leading-tight">{optionLocale}</span>
+                {isSelected && (
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-4 w-4 shrink-0 opacity-70"
+                    aria-hidden="true"
+                  >
+                    <path d="m5 12 4 4L19 6" />
+                  </svg>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -195,8 +333,9 @@ function Header() {
         role="navigation"
         aria-label="Main navigation"
       >
-        <div 
-          className={`mx-auto w-full transform-gpu transition-[max-width,border-radius,padding,transform] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] relative z-10 ${
+        <div
+          data-testid="main-menu-surface"
+          className={`mx-auto w-full [zoom:1.1025] transition-[max-width,border-radius,padding] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] relative z-10 ${
             isTop
               ? 'max-w-full rounded-none bg-transparent px-5 py-3 sm:px-7 lg:px-10'
               : 'max-w-[1320px] rounded-[1.25rem] px-4 py-2.5 sm:px-5'

@@ -54,6 +54,43 @@ describe('Home', () => {
     expect(screen.getByTestId('home-content')).not.toHaveClass('-mt-10')
   })
 
+  it('renders Inspire before Nossas Soluções', () => {
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>,
+    )
+
+    const inspireHeading = screen.getByRole('heading', { name: 'Inspire para quem opera no longo prazo' })
+    const solutionsHeading = screen.getByRole('heading', { name: 'Nossas Soluções' })
+
+    expect(inspireHeading.compareDocumentPosition(solutionsHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('does not render section eyebrow labels', () => {
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>,
+    )
+
+    expect(screen.queryByText('Empresas que confiam', { exact: true })).not.toBeInTheDocument()
+    expect(screen.queryByText('OTMSuite', { exact: true })).not.toBeInTheDocument()
+    expect(screen.queryByText('Cases', { exact: true })).not.toBeInTheDocument()
+  })
+
+  it('gives the brands section generous vertical spacing', () => {
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>,
+    )
+
+    const brandsSection = screen.getByRole('heading', { name: 'Marcas que confiam na Otimiza' }).closest('section')
+    expect(brandsSection).toHaveClass('py-24', 'sm:py-32')
+    expect(brandsSection).not.toHaveClass('py-16', 'sm:py-24')
+  })
+
   it('renders the rebuilt hero with centered copy, email field and CTA', () => {
     render(
       <MemoryRouter>
