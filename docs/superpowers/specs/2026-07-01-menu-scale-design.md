@@ -2,20 +2,20 @@
 
 ## Objetivo
 
-Ampliar visualmente o menu principal do site em 5%, preservando suas proporções atuais.
+Ampliar visualmente o menu principal do site em 10,25% sobre o tamanho original, preservando suas proporções atuais. O valor corresponde a dois aumentos sucessivos de 5% (`1,05 × 1,05 = 1,1025`).
 
 ## Solução
 
-Aplicar uma escala uniforme de `1.05` ao contêiner visual completo do menu. A origem da transformação ficará no centro superior para preservar o alinhamento horizontal e a posição junto ao topo.
+Aplicar uma escala de layout uniforme de `1.1025` ao contêiner visual completo do menu. A largura-base será compensada por `100% / 1.1025`, preservando os limites laterais existentes.
 
-A escala será aplicada tanto ao estado superior quanto ao estado flutuante do cabeçalho, em desktop e mobile. Logo, textos, ícones, botões e espaços visuais crescerão juntos.
+A escala será aplicada tanto ao estado superior quanto ao estado flutuante do cabeçalho, em desktop e mobile. Logo, textos, ícones, botões e espaços visuais crescerão juntos. A implementação não deverá usar composição GPU no contêiner completo, evitando a rasterização e a perda de nitidez dos SVGs.
 
 ## Restrições
 
 - Não alterar valores existentes de `margin`, `padding`, `gap` ou posicionamento.
 - Não redimensionar elementos internos individualmente.
 - Preservar abertura do menu mobile, troca de tema, navegação e comportamento de ocultação durante a rolagem.
-- Evitar que a transformação de escala interfira nas transformações usadas para esconder e exibir a navegação.
+- Preservar a renderização vetorial nítida do logo e dos ícones SVG.
 
 ## Verificação
 
