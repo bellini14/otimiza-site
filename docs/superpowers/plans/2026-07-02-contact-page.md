@@ -210,3 +210,40 @@ Expected: all focused tests pass, lint exits `0`, and the production build succe
 - [ ] **Step 6: Inspect desktop and mobile**
 
 Verify the desktop gradient/map split, interactive map controls, menu-aligned margins, mobile stacking, and absence of horizontal overflow in the local browser.
+
+### Task 5: Horizontal Leaflet zoom controls
+
+**Files:**
+- Create: `src/components/ContactMap.jsx`
+- Create: `src/components/ContactMap.test.jsx`
+- Modify: `src/pages/Contato.jsx`
+- Modify: `src/pages/Contato.test.jsx`
+- Modify: `src/index.css`
+- Modify: `package.json`
+- Modify: `package-lock.json`
+
+- [ ] **Step 1: Write the failing map component test**
+
+Mock Leaflet and assert that the component creates a map without native zoom controls, renders “Diminuir zoom” and “Aumentar zoom” buttons in one horizontal group, and forwards clicks to `zoomOut()` and `zoomIn()`.
+
+- [ ] **Step 2: Run the test and verify failure**
+
+Run: `npm test -- src/components/ContactMap.test.jsx`
+
+Expected: FAIL because `ContactMap.jsx` does not exist.
+
+- [ ] **Step 3: Install and implement Leaflet**
+
+Install `leaflet`, create the map once in an effect, add OpenStreetMap tiles and the Otimiza marker, clean up on unmount, and expose custom zoom buttons.
+
+- [ ] **Step 4: Replace the hero iframe**
+
+Render `ContactMap` inside `contact-hero__map` and update the page test to assert the accessible map region instead of an iframe.
+
+- [ ] **Step 5: Style the custom controls**
+
+Place the control group at the bottom right, use a horizontal flex row, preserve the page visual language, and ensure it remains usable over the map.
+
+- [ ] **Step 6: Verify**
+
+Run focused tests, lint, production build, and browser checks for actual zoom behavior and desktop/mobile placement.
