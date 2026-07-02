@@ -6,25 +6,23 @@ Substituir a página genérica de contato por uma experiência completa, alinhad
 
 ## Direção visual
 
-A composição aprovada é editorial em camadas:
+A composição revisada é limpa e concentrada em duas áreas:
 
-1. abertura com o título “Contato” e uma chamada curta;
-2. painel vermelho com informações institucionais ao lado do formulário branco;
-3. mapa interativo em largura total abaixo do conjunto;
-4. cabeçalho, transições e rodapé globais preservados.
+1. hero com o título “Contato” e uma chamada à esquerda;
+2. mapa interativo ocupando o lado direito do hero;
+3. degradê horizontal entre o fundo claro do texto e o mapa;
+4. formulário amplo em uma única superfície branca abaixo;
+5. cabeçalho, transições e rodapé globais preservados.
 
-A página utiliza Elza, vermelho `#e02020`, cinza `#5a6572`, superfícies claras e espaçamentos compatíveis com as páginas atuais. A entrada dos blocos deve ser discreta e respeitar `prefers-reduced-motion`.
+O texto auxiliar “Fale com a Otimiza” é removido. O mapa deixa de existir como seção independente abaixo do formulário.
 
-Em telas pequenas, a ordem é título, informações de contato, formulário e mapa. Campos e ações devem ocupar a largura disponível sem rolagem horizontal.
+O hero e o formulário usam a mesma largura máxima e as mesmas margens laterais externas da caixa branca do menu. A página utiliza Elza, cinza `#5a6572`, superfícies claras e detalhes vermelhos pontuais. A entrada dos blocos deve ser discreta e respeitar `prefers-reduced-motion`.
+
+Em telas pequenas, o título aparece antes do mapa e o formulário ocupa toda a largura disponível, sem rolagem horizontal.
 
 ## Conteúdo
 
-O painel de contato contém:
-
-- Frei Pacífico 260, São José, 95032-380, Caxias do Sul - RS;
-- `otm@otm.com.br`;
-- `+55 54 3211.6045`;
-- Instagram, X e LinkedIn já utilizados pelo rodapé.
+O painel vermelho e as informações de endereço, e-mail, telefone e redes sociais são removidos desta versão. Essas informações serão reposicionadas em uma etapa futura.
 
 O formulário contém:
 
@@ -39,7 +37,7 @@ Todos os campos visíveis são obrigatórios. Os rótulos permanecem visíveis e
 
 ## Mapa
 
-O mapa usa incorporação do OpenStreetMap para permanecer interativo sem exigir chave de API. Deve apresentar título acessível, carregamento tardio e link externo para abrir a localização em uma aplicação de mapas.
+O mapa usa incorporação do OpenStreetMap para permanecer interativo sem exigir chave de API. Ele ocupa o lado direito do hero e continua utilizável nessa área. Um degradê sobreposto, sem capturar eventos de ponteiro, faz a transição do fundo claro para o mapa. O mapa apresenta título acessível e carregamento tardio.
 
 ## Envio de mensagens
 
