@@ -37,7 +37,9 @@ Todos os campos visíveis são obrigatórios. Os rótulos permanecem visíveis e
 
 ## Mapa
 
-O mapa usa incorporação do OpenStreetMap para permanecer interativo sem exigir chave de API. Ele ocupa o lado direito do hero e continua utilizável nessa área. Um degradê sobreposto, sem capturar eventos de ponteiro, faz a transição do fundo claro para o mapa. O mapa apresenta título acessível e carregamento tardio.
+O mapa usa Leaflet com tiles do OpenStreetMap para permanecer interativo sem exigir chave de API. Ele ocupa o lado direito do hero e continua utilizável nessa área. Um degradê sobreposto, sem capturar eventos de ponteiro, faz a transição do fundo claro para o mapa.
+
+Os controles nativos verticais são desabilitados. A página oferece controles próprios de zoom, organizados horizontalmente na parte inferior direita do mapa, na ordem “diminuir” e “aumentar”. Os botões possuem nomes acessíveis e acionam o zoom real do mapa.
 
 ## Envio de mensagens
 
