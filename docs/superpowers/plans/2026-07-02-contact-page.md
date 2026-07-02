@@ -169,3 +169,44 @@ Expected: all tests pass, ESLint exits `0`, and Vite produces `dist`.
 Run: `git diff --check` and `git diff --stat`.
 
 Expected: no whitespace errors and only contact-related files plus documentation changed by this work.
+
+### Task 4: Revised map hero and simplified form
+
+**Files:**
+- Modify: `src/pages/Contato.jsx`
+- Modify: `src/pages/Contato.test.jsx`
+- Modify: `src/index.css`
+
+- [ ] **Step 1: Update the page test first**
+
+Assert that the hero contains the interactive map, the “Fale com a Otimiza” eyebrow is absent, the contact-details panel and lower map section are absent, and the form remains available in a single full-width panel.
+
+- [ ] **Step 2: Run the test and verify failure**
+
+Run: `npm test -- src/pages/Contato.test.jsx`
+
+Expected: FAIL because the current markup still renders the eyebrow, red contact panel, and lower map.
+
+- [ ] **Step 3: Revise the markup**
+
+Move the map iframe into the hero, remove the address/social content and remove the lower map section. Keep the existing form behavior unchanged.
+
+- [ ] **Step 4: Revise contact styles**
+
+Use a `1320px` shell with the same outer gutter as the header. Position the map on the right half of the hero with a pointer-transparent gradient overlay. Expand the white form panel to the full shell width and stack the hero on mobile.
+
+- [ ] **Step 5: Run focused verification**
+
+Run:
+
+```powershell
+npm test -- src/pages/Contato.test.jsx api/contact.test.js api/_lib/smtp2go.test.js
+npx eslint src/pages/Contato.jsx src/pages/Contato.test.jsx
+npm run build
+```
+
+Expected: all focused tests pass, lint exits `0`, and the production build succeeds.
+
+- [ ] **Step 6: Inspect desktop and mobile**
+
+Verify the desktop gradient/map split, interactive map controls, menu-aligned margins, mobile stacking, and absence of horizontal overflow in the local browser.
