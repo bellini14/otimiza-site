@@ -46,7 +46,7 @@ Expected: FAIL because `touchMode="direct"` and `geometryKey` are not supported.
 
 For direct touch, release after a known final movement, advance mocked animation frames, and assert normal `0.18` release velocity with `0.965` friction and no snap even when the current position is between slide targets. Repeat one drag with `pointerType: 'mouse'` to protect existing mouse behavior and elastic bounds.
 
-For geometry reconciliation, drag to `-250px`, change the mocked track width so the new minimum is `-100px`, rerender with a new `geometryKey`, advance one animation frame, and expect exactly `translateX(-100px)`. Start inertia before rerendering and spy on `cancelAnimationFrame` so the test proves reconciliation cancels the active motion before clamping after layout.
+For geometry reconciliation, drag to `-250px`, change the mocked track width so the new minimum is `-100px`, rerender with a new `geometryKey`, advance one animation frame, and expect exactly `translateX(-100px)`. Start inertia before rerendering and spy on `cancelAnimationFrame` so the test proves reconciliation cancels the active motion before clamping after layout. Add a race test that changes `geometryKey`, fires pointer-down before the pending reconciliation frame, advances frames, and proves the pending clamp was cancelled and cannot move the actively dragged track.
 
 - [ ] **Step 4: Implement the hook options and clamp mechanism**
 
@@ -61,7 +61,7 @@ const nextTranslate = dragRef.current.pointerType === 'touch' && !usesDirectTouc
 
 For direct touch, call `preventDefault` and capture the pointer on pointer-down, matching the current Cases implementation. Release capture in `endDrag`.
 
-Add `geometryKey` to the hook options and import `useLayoutEffect`. On a `geometryKey` change, cancel active inertia and schedule one animation frame so CSS layout is measured after render. Clamp with:
+Add `geometryKey` to the hook options, import `useLayoutEffect`, and add `reconciliationFrameRef`. On a `geometryKey` change, cancel active inertia and any previous reconciliation before scheduling one animation frame so CSS layout is measured after render. Clamp with:
 
 ```js
 useLayoutEffect(() => {
@@ -70,22 +70,32 @@ useLayoutEffect(() => {
     animationRef.current = null
   }
 
-  const reconciliationFrame = requestAnimationFrame(() => {
+  if (reconciliationFrameRef.current) {
+    cancelAnimationFrame(reconciliationFrameRef.current)
+  }
+
+  reconciliationFrameRef.current = requestAnimationFrame(() => {
     const minTranslate = getMinTranslate()
     updateTranslate(Math.max(minTranslate, Math.min(0, translateRef.current)))
+    reconciliationFrameRef.current = null
   })
 
-  return () => cancelAnimationFrame(reconciliationFrame)
+  return () => {
+    if (reconciliationFrameRef.current) {
+      cancelAnimationFrame(reconciliationFrameRef.current)
+      reconciliationFrameRef.current = null
+    }
+  }
 }, [geometryKey])
 ```
 
-Keep the effect intentionally keyed only by the primitive `geometryKey`; do not add unstable local function identities to its dependency array. The existing unmount cleanup remains responsible for cancelling inertia when the keyed Cases child changes modes.
+`onPointerDown` must also cancel and clear `reconciliationFrameRef` before establishing drag state, preventing a pending resize clamp from racing a new gesture. The unmount cleanup cancels inertia, hint animation, and reconciliation. Keep the layout effect intentionally keyed only by the primitive `geometryKey`; do not add unstable local function identities to its dependency array.
 
 - [ ] **Step 5: Run the focused hook test and verify GREEN**
 
 Run: `npm test -- src/hooks/useDragCarousel.test.jsx`
 
-Expected: PASS for scaled touch, direct compatibility touch, pointer capture, legacy release/no-snap behavior, elastic bounds, and post-layout clamping.
+Expected: PASS for scaled touch, direct compatibility touch, pointer capture, legacy release/no-snap behavior, elastic bounds, post-layout clamping, and reconciliation/gesture race cancellation.
 
 - [ ] **Step 6: Run the Home Inspire regression tests**
 
@@ -151,6 +161,8 @@ Reset `window.innerWidth` to its original value in `afterEach` so this suite can
 At 767px, start a drag and release to create an active animation. Change to 768px, dispatch `resize`, and assert that the keyed child produces a new track at `translateX(0px)` and the prior animation was cancelled during unmount. Separately resize within mobile mode after changing mocked dimensions, advance the reconciliation frame, and assert the offset clamps to the new minimum.
 
 At 1024px, perform touch and mouse drags. Assert touch moves at direct `0.96` response, capture/release occurs, release remains non-snapping after advancing frames, and mouse retains its existing response and elastic bounds.
+
+At 390px, mock the shell/track dimensions and at least two case slides' `offsetLeft` and `offsetWidth`. Perform a horizontal touch drag and release, advance animation frames to settlement, and assert the track lands on the nearest measured slide target. At 640px and 767px, exercise fallback snapping with unmeasured slides and assert the computed step is `((min(viewportWidth, 1380) - 48 - 32) / 2) + 32`, proving that the active `sm` slide width plus the 32px gap is passed as a positive snap step.
 
 - [ ] **Step 4: Add failing CSS breakpoint tests**
 
