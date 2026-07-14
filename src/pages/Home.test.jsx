@@ -1,10 +1,33 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import Home from './Home'
+
+const { sanityFetchMock } = vi.hoisted(() => ({
+  sanityFetchMock: vi.fn(async (query) => {
+    if (query.includes('showOnCases == true')) {
+      return [
+        {
+          _id: 'cms-sulmaq',
+          name: 'Sulmaq',
+          sector: 'Indústria',
+          logoAlt: 'Logo Sulmaq',
+          logoUrl: 'https://cdn.sanity.io/images/demo/sulmaq.png',
+          caseSlug: 'sulmaq',
+          caseDescription: 'Descrição longa do case Sulmaq.',
+        },
+      ]
+    }
+    return []
+  }),
+}))
+
+vi.mock('../lib/sanity', () => ({
+  client: { fetch: sanityFetchMock },
+}))
 
 const testDir = path.dirname(fileURLToPath(import.meta.url))
 const homeCss = fs.readFileSync(path.resolve(testDir, '../index.css'), 'utf8')
@@ -12,6 +35,7 @@ const htmlEntry = fs.readFileSync(path.resolve(testDir, '../../index.html'), 'ut
 
 afterEach(() => {
   cleanup()
+  sanityFetchMock.mockClear()
 })
 
 describe('Home', () => {
@@ -54,7 +78,7 @@ describe('Home', () => {
     expect(screen.getByTestId('home-content')).not.toHaveClass('-mt-10')
   })
 
-  it('renders Inspire before Nossas Soluções', () => {
+  it('renders Inspire immediately after the hero and before the brands section', () => {
     render(
       <MemoryRouter>
         <Home />
@@ -62,9 +86,9 @@ describe('Home', () => {
     )
 
     const inspireHeading = screen.getByRole('heading', { name: 'Inspire para quem opera no longo prazo' })
-    const solutionsHeading = screen.getByRole('heading', { name: 'Nossas Soluções' })
+    const brandsHeading = screen.getByRole('heading', { name: 'Marcas que confiam na Otimiza' })
 
-    expect(inspireHeading.compareDocumentPosition(solutionsHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(inspireHeading.compareDocumentPosition(brandsHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('does not render section eyebrow labels', () => {
@@ -79,7 +103,7 @@ describe('Home', () => {
     expect(screen.queryByText('Cases', { exact: true })).not.toBeInTheDocument()
   })
 
-  it('gives the brands section generous vertical spacing', () => {
+  it('uses tighter mobile spacing for the brands section while preserving desktop spacing', () => {
     render(
       <MemoryRouter>
         <Home />
@@ -87,21 +111,127 @@ describe('Home', () => {
     )
 
     const brandsSection = screen.getByRole('heading', { name: 'Marcas que confiam na Otimiza' }).closest('section')
-    expect(brandsSection).toHaveClass('py-24', 'sm:py-32')
-    expect(brandsSection).not.toHaveClass('py-16', 'sm:py-24')
+    const brandsIntro = screen.getByRole('heading', { name: 'Marcas que confiam na Otimiza' }).parentElement
+    expect(brandsSection).toHaveClass('pt-14', 'pb-24', 'sm:py-32')
+    expect(brandsSection).not.toHaveClass('py-24', 'py-14', 'pb-14', 'sm:py-24')
+    expect(brandsIntro).toHaveClass('mb-10', 'sm:mb-16')
+    expect(brandsIntro).not.toHaveClass('mb-16')
   })
 
-  it('renders the rebuilt hero with centered copy, email field and CTA', () => {
+  it('aligns home content shells to the responsive menu width', () => {
     render(
       <MemoryRouter>
         <Home />
       </MemoryRouter>,
     )
 
-    expect(screen.getAllByRole('heading', { name: 'Criar o atemporal.' }).length).toBeGreaterThan(0)
-    expect(screen.getAllByText(/junte-se as mais de 400 empresas/i).length).toBeGreaterThan(0)
-    expect(screen.getAllByPlaceholderText('Seu email').length).toBeGreaterThan(0)
-    expect(screen.getByRole('button', { name: 'Quero fazer parte' })).toBeInTheDocument()
+    const alignedShells = screen.getAllByTestId('home-menu-aligned-shell')
+    expect(alignedShells).toHaveLength(6)
+
+    alignedShells.forEach((shell) => {
+      expect(shell).toHaveClass('home-menu-shell')
+    })
+
+    expect(homeCss).toMatch(/\.home-menu-shell\s*\{[\s\S]*max-width:\s*1320px;/)
+    expect(homeCss).toMatch(/\.home-menu-shell\s*\{[\s\S]*padding-inline:\s*1\.5rem;/)
+    expect(homeCss).toMatch(
+      /@media\s*\(min-width:\s*640px\)\s*\{[\s\S]*\.home-menu-shell\s*\{[\s\S]*padding-inline:\s*2rem;/,
+    )
+    expect(homeCss).toMatch(
+      /@media\s*\(min-width:\s*1024px\)\s*\{[\s\S]*\.home-menu-shell\s*\{[\s\S]*padding-inline:\s*2\.5rem;/,
+    )
+  })
+
+  it('uses the same responsive side margin on the hero text section', () => {
+    expect(homeCss).toMatch(/:root\s*\{[\s\S]*--home-menu-inline:\s*1\.5rem;/)
+    expect(homeCss).toMatch(/:root\s*\{[\s\S]*--home-hero-text-inline:\s*var\(--home-menu-inline\);/)
+    expect(homeCss).toMatch(/\.home-menu-shell\s*\{[\s\S]*padding-inline:\s*var\(--home-menu-inline\);/)
+    expect(homeCss).toMatch(
+      /@media\s*\(min-width:\s*771px\)\s*\{[\s\S]*:root\s*\{[\s\S]*--home-hero-text-inline:\s*calc\(1\.5rem\s*\+\s*\(2\.5\s*\*\s*clamp\(0\.72rem,\s*calc\(0\.328rem\s*\+\s*0\.81455vw\),\s*1rem\)\)\);/,
+    )
+    expect(homeCss).toMatch(
+      /@media\s*\(min-width:\s*1024px\)\s*\{[\s\S]*:root\s*\{[\s\S]*--home-hero-text-inline:\s*calc\(2rem\s*\+\s*\(2\.5\s*\*\s*clamp\(0\.72rem,\s*calc\(0\.328rem\s*\+\s*0\.81455vw\),\s*1rem\)\)\);/,
+    )
+    expect(homeCss).toMatch(/\.home-hero__left\s*\{[\s\S]*padding:\s*6rem\s+var\(--home-hero-text-inline\)\s+4\.5rem;/)
+    expect(homeCss).toMatch(
+      /@media\s*\(max-width:\s*768px\)\s*\{[\s\S]*\.home-hero__left\s*\{[\s\S]*padding:\s*8rem\s+var\(--home-hero-text-inline\)\s+3rem;/,
+    )
+  })
+
+  it('renders the hero copy as one light heading with two bold phrases', () => {
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>,
+    )
+
+    const heroHeading = screen.getByRole('heading', {
+      name: 'Transformamos visão em método, cultura em capacidade e estratégia em operação.',
+    })
+    expect(heroHeading).toBeInTheDocument()
+    expect(heroHeading.querySelectorAll('.home-hero__title-strong')).toHaveLength(2)
+    expect(heroHeading.querySelectorAll('.home-hero__title-strong')[0]).toHaveTextContent('visão em método,')
+    expect(heroHeading.querySelectorAll('.home-hero__title-strong')[0]).toHaveClass(
+      'home-hero__title-strong--spaced',
+    )
+    expect(heroHeading.querySelectorAll('.home-hero__title-strong')[1]).toHaveTextContent('estratégia em operação.')
+    expect(screen.queryByText(/junte-se as mais de 400 empresas/i)).not.toBeInTheDocument()
+  })
+
+  it('uses a compact responsive scale for the longer hero heading', () => {
+    expect(homeCss).toMatch(
+      /\.home-hero__title\s*\{[\s\S]*?font-size:\s*clamp\(2\.25rem,\s*3\.8vw,\s*3\.7rem\)/,
+    )
+    expect(homeCss).toMatch(
+      /@media \(max-width:\s*768px\)[\s\S]*?\.home-hero__title\s*\{[\s\S]*?font-size:\s*clamp\(2rem,\s*7\.2vw,\s*2\.65rem\)/,
+    )
+  })
+
+  it('does not render the email form over the hero image', () => {
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>,
+    )
+
+    expect(screen.queryByPlaceholderText('Seu email')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Quero fazer parte' })).not.toBeInTheDocument()
+  })
+
+  it('loads the same ordered case-logo records used by the Cases page', async () => {
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('img', { name: 'Logo Sulmaq' })).toHaveAttribute(
+        'src',
+        'https://cdn.sanity.io/images/demo/sulmaq.png',
+      )
+    })
+
+    const caseQuery = sanityFetchMock.mock.calls
+      .map(([query]) => query)
+      .find((query) => query.includes('showOnCases == true'))
+
+    expect(caseQuery).toContain('isVisible != false')
+    expect(caseQuery).toContain('defined(logo.asset)')
+    expect(caseQuery).toContain('order(coalesce(sortOrder, 9999) asc, name asc)')
+    expect(caseQuery).toContain('name')
+    expect(caseQuery).toContain('sector')
+    expect(caseQuery).toContain('caseDescription')
+    expect(caseQuery).toContain('"caseSlug": caseSlug.current')
+    expect(caseQuery).toContain('"logoUrl": logo.asset->url')
+  })
+
+  it('renders the rebuilt hero with centered copy', () => {
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>,
+    )
 
     const stage = screen.getByTestId('hero-stage')
     const background = screen.getByTestId('hero-gradient-blinds')

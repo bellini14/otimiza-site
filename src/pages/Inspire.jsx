@@ -3,7 +3,7 @@ import { Search, Share2 } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { client } from '../lib/sanity'
 import { staticBlogPosts } from '../data/blogPosts'
-import { deriveCategoryOptions, sortByDate } from '../lib/blogFilters'
+import { deriveCategoryOptions, matchesInspireCategory, sortByDate } from '../lib/blogFilters'
 import { getCachedInspirePosts, setCachedInspirePosts } from '../lib/inspirePostCache'
 import PostLikeButton from '../components/PostLikeButton'
 
@@ -11,7 +11,26 @@ const INITIAL_POST_COUNT = 15
 const POSTS_PER_BATCH = 5
 const STATIC_FALLBACK_POSTS = sortByDate(staticBlogPosts)
 const INITIAL_FALLBACK_POSTS = STATIC_FALLBACK_POSTS.slice(0, INITIAL_POST_COUNT)
+const INSPIRE_FILTERS = [
+  { key: 'all', label: 'Tudo', category: null },
+  { key: 'articles', label: 'Artigos', category: 'Artigos' },
+  { key: 'editorial', label: 'Editorial', category: 'Editorial' },
+  { key: 'reading-tip', label: 'Dica de leitura', category: 'Dica de Leitura' },
+  { key: 'watch-tip', label: 'Dica para assistir', category: 'Dica para assistir' },
+  { key: 'analytical-lens', label: 'Lente analítica', category: 'Lente Analítica' },
+]
 const POSTS_QUERY = `*[_type == "post"] | order(publishedAt desc) [$start...$end] {
+  title,
+  description,
+  "imgSrc": mainImage.asset->url,
+  "slug": slug.current,
+  "link": "/inspire/" + slug.current,
+  eyebrow,
+  publishedAt,
+  "linkText": "Ler artigo"
+}`
+
+const CATEGORY_POSTS_QUERY = `*[_type == "post" && eyebrow == $category] | order(publishedAt desc) [$start...$end] {
   title,
   description,
   "imgSrc": mainImage.asset->url,
@@ -54,42 +73,114 @@ function formatStoryDate(value) {
   })
 }
 
-function deriveStoryStats(post, index) {
+function deriveStoryStats(post) {
   const readTime = Math.max(3, Math.round(((post.description ?? '').length + post.title.length) / 42))
 
   return { readTime }
 }
 
-async function fetchPostBatch(start, end) {
+async function fetchPostBatch(start, end, category = null) {
+  if (category) {
+    return client.fetch(CATEGORY_POSTS_QUERY, { category, start, end })
+  }
+
   return client.fetch(POSTS_QUERY, { start, end })
 }
 
 function Inspire() {
   const [searchParams] = useSearchParams()
   const searchQuery = searchParams.get('q') || ''
+  const cachedPosts = useMemo(() => getCachedInspirePosts(), [])
 
-  const [posts, setPosts] = useState(() => {
-    const cachedPosts = getCachedInspirePosts()
-    return cachedPosts.length > 0 ? cachedPosts : INITIAL_FALLBACK_POSTS
-  })
+  const [allFeed, setAllFeed] = useState(() => ({
+    posts: cachedPosts.length > 0 ? cachedPosts : INITIAL_FALLBACK_POSTS,
+    nextOffset: cachedPosts.length > 0 ? cachedPosts.length : INITIAL_FALLBACK_POSTS.length,
+    hasMore: cachedPosts.length >= INITIAL_POST_COUNT,
+  }))
+  const [categoryFeed, setCategoryFeed] = useState({ posts: [], nextOffset: 0, hasMore: false })
   const [sidebarPosts, setSidebarPosts] = useState(() => {
-    const cachedPosts = getCachedInspirePosts()
     return cachedPosts.length > 0 ? cachedPosts : INITIAL_FALLBACK_POSTS
   })
   const [searchResults, setSearchResults] = useState([])
   const [searchLoading, setSearchLoading] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [categoryLoading, setCategoryLoading] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [hasMore, setHasMore] = useState(() => getCachedInspirePosts().length >= INITIAL_POST_COUNT)
-  const [activeTab, setActiveTab] = useState('for-you')
-  const [usingStaticFallback, setUsingStaticFallback] = useState(() => getCachedInspirePosts().length === 0)
-  const [nextOffset, setNextOffset] = useState(() => {
-    const cachedPosts = getCachedInspirePosts()
-    return cachedPosts.length > 0 ? cachedPosts.length : INITIAL_FALLBACK_POSTS.length
-  })
+  const [activeFilterKey, setActiveFilterKey] = useState('all')
+  const [sourceStatus, setSourceStatus] = useState(cachedPosts.length > 0 ? 'sanity' : 'pending')
   const [loadMoreError, setLoadMoreError] = useState('')
   const loadMoreSentinelRef = useRef(null)
   const searchTimerRef = useRef(null)
+  const activeFilterRef = useRef(INSPIRE_FILTERS[0])
+  const requestVersionRef = useRef(0)
+
+  const activeFilter = useMemo(
+    () => INSPIRE_FILTERS.find((filter) => filter.key === activeFilterKey) ?? INSPIRE_FILTERS[0],
+    [activeFilterKey],
+  )
+  const visibleFeed = activeFilter.category ? categoryFeed : allFeed
+
+  const loadCategoryFirstBatch = useCallback(async (filter, confirmedSource) => {
+    if (!filter.category || confirmedSource === 'pending') {
+      return
+    }
+
+    const requestVersion = ++requestVersionRef.current
+    setCategoryLoading(true)
+    setLoadMoreError('')
+
+    try {
+      const nextPosts = confirmedSource === 'fallback'
+        ? STATIC_FALLBACK_POSTS.filter((post) => matchesInspireCategory(post, filter.category))
+        : sortByDate(await fetchPostBatch(0, INITIAL_POST_COUNT, filter.category) || [])
+      const firstBatch = confirmedSource === 'fallback'
+        ? nextPosts.slice(0, INITIAL_POST_COUNT)
+        : nextPosts
+
+      if (requestVersion !== requestVersionRef.current) {
+        return
+      }
+
+      setCategoryFeed({
+        posts: firstBatch,
+        nextOffset: firstBatch.length,
+        hasMore: confirmedSource === 'fallback'
+          ? nextPosts.length > firstBatch.length
+          : firstBatch.length === INITIAL_POST_COUNT,
+      })
+    } catch (error) {
+      console.error('Error fetching category posts from Sanity:', error)
+
+      if (requestVersion === requestVersionRef.current) {
+        setCategoryFeed({ posts: [], nextOffset: 0, hasMore: false })
+        setLoadMoreError('Não foi possível carregar esta categoria agora.')
+      }
+    } finally {
+      if (requestVersion === requestVersionRef.current) {
+        setCategoryLoading(false)
+      }
+    }
+  }, [])
+
+  const selectFilter = useCallback((filter) => {
+    activeFilterRef.current = filter
+    setActiveFilterKey(filter.key)
+    setLoadMoreError('')
+    setLoadingMore(false)
+    ++requestVersionRef.current
+
+    if (!filter.category) {
+      setCategoryLoading(false)
+      return
+    }
+
+    if (sourceStatus === 'pending') {
+      setCategoryLoading(true)
+      return
+    }
+
+    loadCategoryFirstBatch(filter, sourceStatus)
+  }, [loadCategoryFirstBatch, sourceStatus])
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -99,33 +190,51 @@ function Inspire() {
         if (dynamicPosts && dynamicPosts.length > 0) {
           const sortedPosts = sortByDate(dynamicPosts)
           setCachedInspirePosts(sortedPosts)
-          setUsingStaticFallback(false)
-          setPosts(sortedPosts)
+          setSourceStatus('sanity')
+          setAllFeed({
+            posts: sortedPosts,
+            nextOffset: sortedPosts.length,
+            hasMore: dynamicPosts.length === INITIAL_POST_COUNT,
+          })
           setSidebarPosts(sortedPosts)
-          setNextOffset(sortedPosts.length)
-          setHasMore(dynamicPosts.length === INITIAL_POST_COUNT)
+
+          if (activeFilterRef.current.category) {
+            loadCategoryFirstBatch(activeFilterRef.current, 'sanity')
+          }
         } else {
-          setUsingStaticFallback(true)
-          setPosts(INITIAL_FALLBACK_POSTS)
+          setSourceStatus('fallback')
+          setAllFeed({
+            posts: INITIAL_FALLBACK_POSTS,
+            nextOffset: INITIAL_FALLBACK_POSTS.length,
+            hasMore: STATIC_FALLBACK_POSTS.length > INITIAL_FALLBACK_POSTS.length,
+          })
           setSidebarPosts(INITIAL_FALLBACK_POSTS)
-          setNextOffset(INITIAL_FALLBACK_POSTS.length)
-          setHasMore(STATIC_FALLBACK_POSTS.length > INITIAL_FALLBACK_POSTS.length)
+
+          if (activeFilterRef.current.category) {
+            loadCategoryFirstBatch(activeFilterRef.current, 'fallback')
+          }
         }
       } catch (error) {
         console.error('Error fetching posts from Sanity:', error)
 
-        setUsingStaticFallback(true)
-        setPosts(INITIAL_FALLBACK_POSTS)
+        setSourceStatus('fallback')
+        setAllFeed({
+          posts: INITIAL_FALLBACK_POSTS,
+          nextOffset: INITIAL_FALLBACK_POSTS.length,
+          hasMore: STATIC_FALLBACK_POSTS.length > INITIAL_FALLBACK_POSTS.length,
+        })
         setSidebarPosts(INITIAL_FALLBACK_POSTS)
-        setNextOffset(INITIAL_FALLBACK_POSTS.length)
-        setHasMore(STATIC_FALLBACK_POSTS.length > INITIAL_FALLBACK_POSTS.length)
+
+        if (activeFilterRef.current.category) {
+          loadCategoryFirstBatch(activeFilterRef.current, 'fallback')
+        }
       } finally {
         setLoading(false)
       }
     }
 
     fetchPosts()
-  }, [])
+  }, [loadCategoryFirstBatch])
 
   /* ── Search: query Sanity for ALL matching posts ── */
   useEffect(() => {
@@ -145,7 +254,7 @@ function Inspire() {
       try {
         const term = `${searchQuery}*`
 
-        if (usingStaticFallback) {
+        if (sourceStatus === 'fallback') {
           const q = searchQuery.toLowerCase()
           const filtered = STATIC_FALLBACK_POSTS.filter((post) => {
             const title = (post.title || '').toLowerCase()
@@ -161,7 +270,7 @@ function Inspire() {
       } catch (error) {
         console.error('Search error:', error)
         const q = searchQuery.toLowerCase()
-        const localFiltered = posts.filter((post) => {
+        const localFiltered = allFeed.posts.filter((post) => {
           const title = (post.title || '').toLowerCase()
           const description = (post.description || '').toLowerCase()
           const eyebrow = (post.eyebrow || '').toLowerCase()
@@ -178,48 +287,96 @@ function Inspire() {
         clearTimeout(searchTimerRef.current)
       }
     }
-  }, [searchQuery, usingStaticFallback, posts])
+  }, [allFeed.posts, searchQuery, sourceStatus])
 
   const loadMorePosts = useCallback(async () => {
-    if (loading || loadingMore || !hasMore) {
+    if (loading || categoryLoading || loadingMore || !visibleFeed.hasMore || sourceStatus === 'pending') {
       return
     }
 
     setLoadingMore(true)
     setLoadMoreError('')
+    const requestVersion = requestVersionRef.current
+    const category = activeFilter.category
 
     try {
       let nextBatch = []
+      let fallbackCollection = []
 
-      if (usingStaticFallback) {
-        nextBatch = STATIC_FALLBACK_POSTS.slice(nextOffset, nextOffset + POSTS_PER_BATCH)
+      if (sourceStatus === 'fallback') {
+        fallbackCollection = category
+          ? STATIC_FALLBACK_POSTS.filter((post) => matchesInspireCategory(post, category))
+          : STATIC_FALLBACK_POSTS
+        nextBatch = fallbackCollection.slice(
+          visibleFeed.nextOffset,
+          visibleFeed.nextOffset + POSTS_PER_BATCH,
+        )
       } else {
-        nextBatch = await fetchPostBatch(nextOffset, nextOffset + POSTS_PER_BATCH)
+        nextBatch = await fetchPostBatch(
+          visibleFeed.nextOffset,
+          visibleFeed.nextOffset + POSTS_PER_BATCH,
+          category,
+        )
       }
 
       const sortedBatch = sortByDate(nextBatch)
 
-      setPosts((currentPosts) => {
-        const mergedPosts = [...currentPosts, ...sortedBatch]
+      if (requestVersion !== requestVersionRef.current) {
+        return
+      }
 
-        if (!usingStaticFallback) {
+      const updateFeed = (currentFeed) => {
+        const mergedPosts = [...currentFeed.posts, ...sortedBatch]
+        const nextOffset = currentFeed.nextOffset + sortedBatch.length
+
+        if (!category && sourceStatus === 'sanity') {
           setCachedInspirePosts(mergedPosts)
         }
 
-        return mergedPosts
-      })
-      setNextOffset((currentOffset) => currentOffset + sortedBatch.length)
-      setHasMore(sortedBatch.length === POSTS_PER_BATCH)
+        return {
+          posts: mergedPosts,
+          nextOffset,
+          hasMore: sourceStatus === 'fallback'
+            ? nextOffset < fallbackCollection.length
+            : sortedBatch.length === POSTS_PER_BATCH,
+        }
+      }
+
+      if (category) {
+        setCategoryFeed(updateFeed)
+      } else {
+        setAllFeed(updateFeed)
+      }
     } catch (error) {
-      console.error('Error fetching more posts from Sanity:', error)
-      setLoadMoreError('Não foi possível carregar mais histórias agora.')
+      if (requestVersion === requestVersionRef.current) {
+        console.error('Error fetching more posts from Sanity:', error)
+        setLoadMoreError('Não foi possível carregar mais histórias agora.')
+      }
     } finally {
-      setLoadingMore(false)
+      if (requestVersion === requestVersionRef.current) {
+        setLoadingMore(false)
+      }
     }
-  }, [hasMore, loading, loadingMore, nextOffset, usingStaticFallback])
+  }, [activeFilter.category, categoryLoading, loading, loadingMore, sourceStatus, visibleFeed])
+
+  const retryCurrentFeed = useCallback(() => {
+    if (activeFilter.category && categoryFeed.posts.length === 0) {
+      loadCategoryFirstBatch(activeFilter, sourceStatus)
+      return
+    }
+
+    loadMorePosts()
+  }, [activeFilter, categoryFeed.posts.length, loadCategoryFirstBatch, loadMorePosts, sourceStatus])
 
   useEffect(() => {
-    if (loading || loadingMore || !hasMore || activeTab !== 'for-you' || !loadMoreSentinelRef.current) {
+    if (
+      loading ||
+      categoryLoading ||
+      loadingMore ||
+      !visibleFeed.hasMore ||
+      searchQuery ||
+      !loadMoreSentinelRef.current
+    ) {
       return undefined
     }
 
@@ -232,19 +389,15 @@ function Inspire() {
     observer.observe(loadMoreSentinelRef.current)
 
     return () => observer.disconnect()
-  }, [activeTab, hasMore, loadMorePosts, loading, loadingMore])
+  }, [categoryLoading, loadMorePosts, loading, loadingMore, searchQuery, visibleFeed.hasMore])
 
   const visiblePosts = useMemo(() => {
     if (searchQuery) {
       return searchResults
     }
 
-    if (activeTab === 'featured') {
-      return posts.slice(0, 6)
-    }
-
-    return posts
-  }, [activeTab, posts, searchQuery, searchResults])
+    return visibleFeed.posts
+  }, [searchQuery, searchResults, visibleFeed.posts])
 
   const staffPicks = useMemo(() => sidebarPosts.slice(0, 3), [sidebarPosts])
 
@@ -290,28 +443,30 @@ function Inspire() {
 
   return (
     <div className="inspire-page">
+      <h1 className="sr-only">Inspire: conteúdos sobre gestão e processos</h1>
       <div className="inspire-page__grid">
         <section className="inspire-page__feed">
           {!isSearching && (
-            <div className="inspire-page__tabs" role="tablist" aria-label="Seções do Inspire">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeTab === 'for-you'}
-                className={`inspire-page__tab ${activeTab === 'for-you' ? 'is-active' : ''}`.trim()}
-                onClick={() => setActiveTab('for-you')}
-              >
-                Para você
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeTab === 'featured'}
-                className={`inspire-page__tab ${activeTab === 'featured' ? 'is-active' : ''}`.trim()}
-                onClick={() => setActiveTab('featured')}
-              >
-                Em destaque
-              </button>
+            <div
+              className="inspire-page__tabs"
+              role="group"
+              aria-label="Filtrar artigos por categoria"
+            >
+              {INSPIRE_FILTERS.map((filter) => {
+                const isActive = activeFilterKey === filter.key
+
+                return (
+                  <button
+                    key={filter.key}
+                    type="button"
+                    aria-pressed={isActive}
+                    className={`inspire-page__tab ${isActive ? 'is-active' : ''}`.trim()}
+                    onClick={() => selectFilter(filter)}
+                  >
+                    {filter.label}
+                  </button>
+                )
+              })}
             </div>
           )}
 
@@ -328,7 +483,7 @@ function Inspire() {
             </div>
           )}
 
-          {(loading || (isSearching && searchLoading)) ? (
+          {(loading || categoryLoading || (isSearching && searchLoading)) ? (
             <div className="inspire-page__loading" aria-hidden="true">
               {Array.from({ length: 4 }).map((_, index) => (
                 <div key={index} className="inspire-page__loading-row" />
@@ -337,13 +492,13 @@ function Inspire() {
           ) : (
             <div className="inspire-page__stories">
               {visiblePosts.map((post, index) => {
-                const stats = deriveStoryStats(post, index)
+                const stats = deriveStoryStats(post)
 
                 return (
                   <article key={post.slug || `${post.title}-${index}`} className="inspire-story">
                     <div className="inspire-story__content">
-                      <p className="inspire-story__kicker">
-                        {post.eyebrow || 'Otimiza Editorial'}
+                      <p className="inspire-category-label inspire-story__kicker">
+                        {post.inspireCategory || post.eyebrow || 'Otimiza Editorial'}
                       </p>
 
                       <Link
@@ -396,19 +551,23 @@ function Inspire() {
                 )
               })}
 
-              {!isSearching && activeTab === 'for-you' && (loadingMore || loadMoreError || hasMore) && (
+              {!isSearching && !loadMoreError && visiblePosts.length === 0 && (
+                <p className="inspire-page__empty">Nenhum artigo encontrado nesta categoria.</p>
+              )}
+
+              {!isSearching && (loadingMore || loadMoreError || visibleFeed.hasMore) && (
                 <div className="inspire-page__load-more-state">
                   {loadingMore && <div className="inspire-page__load-more-indicator" aria-hidden="true" />}
                   {!loadingMore && loadMoreError && (
                     <button
                       type="button"
                       className="inspire-page__load-more-retry"
-                      onClick={loadMorePosts}
+                      onClick={retryCurrentFeed}
                     >
                       Tentar carregar novamente
                     </button>
                   )}
-                  {!loadingMore && !loadMoreError && hasMore && (
+                  {!loadingMore && !loadMoreError && visibleFeed.hasMore && (
                     <div ref={loadMoreSentinelRef} className="inspire-page__sentinel" aria-hidden="true" />
                   )}
                 </div>

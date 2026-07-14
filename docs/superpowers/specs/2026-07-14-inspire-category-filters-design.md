@@ -28,7 +28,7 @@ The UI uses stable internal keys separate from visible labels:
 | --- | --- | --- |
 | `all` | Tudo | no restriction |
 | `articles` | Artigos | Artigos |
-| `reading-tip` | Dica de leitura | Dica de leitura |
+| `reading-tip` | Dica de leitura | Dica de Leitura |
 | `watch-tip` | Dica para assistir | Dica para assistir |
 | `analytical-lens` | Lente analítica | Lente Analítica |
 

@@ -14,30 +14,61 @@ import QuemSomos from './pages/QuemSomos'
 import Tecnologia from './pages/Tecnologia'
 import CaseDetail from './pages/CaseDetail'
 import PostDetail from './pages/PostDetail'
-import PageTransition, { useTransitionLocation } from './transitions/PageTransition'
+import PageTransition from './transitions/PageTransition'
+import { useTransitionLocation } from './transitions/transitionLocationContext'
+import SeoHead from './seo/SeoHead'
+import { buildCanonicalUrl, staticPageMetadata } from './seo/siteMetadata'
+import defaultSocialImage from './assets/hero-bw.jpg'
+import { buildStructuredData } from './seo/structuredData'
 
 function AppRoutes() {
   const displayedLocation = useTransitionLocation()
+  const routeMetadata = staticPageMetadata[displayedLocation.pathname]
+  const fallbackTitle = displayedLocation.pathname.startsWith('/cases/')
+    ? 'Case de consultoria e melhoria de processos | Otimiza'
+    : displayedLocation.pathname.startsWith('/inspire/')
+      ? 'Conteúdo sobre gestão e processos | Otimiza'
+      : 'Página não encontrada | Otimiza'
+  const configuredSiteOrigin = import.meta.env.VITE_SITE_URL || window.location.origin
+  const canonicalUrl = buildCanonicalUrl(displayedLocation.pathname, configuredSiteOrigin)
+  const defaultSocialImageUrl = new URL(defaultSocialImage, canonicalUrl).toString()
+  const structuredData = buildStructuredData(displayedLocation.pathname, {
+    canonicalUrl,
+    title: routeMetadata?.title || fallbackTitle,
+    description: routeMetadata?.description || 'Conteúdo da Otimiza.',
+  })
 
   return (
-    <Routes location={displayedLocation}>
-      <Route element={<Layout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/quem-somos" element={<QuemSomos />} />
-        <Route path="/nossa-abordagem" element={<NossaAbordagem />} />
-        <Route path="/o-que-fazemos" element={<OQueFazemos />} />
-        <Route path="/cases" element={<Cases />} />
-        <Route path="/cases/:slug" element={<CaseDetail />} />
-        <Route path="/tecnologia" element={<Tecnologia />} />
-        <Route path="/academia-otimiza" element={<AcademiaOtimiza />} />
-        <Route path="/contato" element={<Contato />} />
-      </Route>
-      <Route element={<InspireLayout />}>
-        <Route path="/inspire" element={<Inspire />} />
-        <Route path="/inspire/newsletter" element={<InspireNewsletter />} />
-        <Route path="/inspire/:slug" element={<PostDetail />} />
-      </Route>
-    </Routes>
+    <div
+      className="page-transition-route"
+      key={displayedLocation.pathname}
+    >
+      <SeoHead
+        title={routeMetadata?.title || fallbackTitle}
+        description={routeMetadata?.description}
+        canonicalUrl={canonicalUrl}
+        imageUrl={defaultSocialImageUrl}
+        structuredData={structuredData}
+      />
+      <Routes location={displayedLocation}>
+        <Route element={<Layout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/quem-somos" element={<QuemSomos />} />
+          <Route path="/nossa-abordagem" element={<NossaAbordagem />} />
+          <Route path="/o-que-fazemos" element={<OQueFazemos />} />
+          <Route path="/cases" element={<Cases />} />
+          <Route path="/cases/:slug" element={<CaseDetail />} />
+          <Route path="/tecnologia" element={<Tecnologia />} />
+          <Route path="/academia-otimiza" element={<AcademiaOtimiza />} />
+          <Route path="/contato" element={<Contato />} />
+        </Route>
+        <Route element={<InspireLayout />}>
+          <Route path="/inspire" element={<Inspire />} />
+          <Route path="/inspire/newsletter" element={<InspireNewsletter />} />
+          <Route path="/inspire/:slug" element={<PostDetail />} />
+        </Route>
+      </Routes>
+    </div>
   )
 }
 

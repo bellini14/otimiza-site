@@ -3,6 +3,10 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SplitText as GSAPSplitText } from 'gsap/SplitText'
 import { useGSAP } from '@gsap/react'
+import {
+  isPageTransitionActive,
+  PAGE_TRANSITION_COMPLETE_EVENT,
+} from '../transitions/transitionState'
 
 gsap.registerPlugin(ScrollTrigger, GSAPSplitText, useGSAP)
 
@@ -42,6 +46,16 @@ function SplitText({
   const [fontsLoaded, setFontsLoaded] = useState(() => (
     typeof document === 'undefined' || !document.fonts || document.fonts.status === 'loaded'
   ))
+  const [transitionReady, setTransitionReady] = useState(() => !isPageTransitionActive())
+
+  useEffect(() => {
+    if (transitionReady) return undefined
+
+    const handleTransitionComplete = () => setTransitionReady(true)
+    document.addEventListener(PAGE_TRANSITION_COMPLETE_EVENT, handleTransitionComplete, { once: true })
+
+    return () => document.removeEventListener(PAGE_TRANSITION_COMPLETE_EVENT, handleTransitionComplete)
+  }, [transitionReady])
 
   useEffect(() => {
     onCompleteRef.current = onLetterAnimationComplete
@@ -66,7 +80,7 @@ function SplitText({
 
   useGSAP(
     () => {
-      if (!ref.current || !text || !fontsLoaded || animationCompletedRef.current) {
+      if (!ref.current || !text || !fontsLoaded || !transitionReady || animationCompletedRef.current) {
         return undefined
       }
 
@@ -162,6 +176,7 @@ function SplitText({
         threshold,
         rootMargin,
         fontsLoaded,
+        transitionReady,
       ],
       scope: ref,
     },
@@ -177,6 +192,7 @@ function SplitText({
         textAlign,
         wordWrap: 'break-word',
         willChange: 'transform, opacity',
+        visibility: transitionReady ? undefined : 'hidden',
         ...restProps.style,
       }}
       className={`split-parent overflow-hidden inline-block whitespace-normal ${className}`.trim()}

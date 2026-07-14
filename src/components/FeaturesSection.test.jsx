@@ -54,6 +54,46 @@ beforeEach(() => {
   vi.useFakeTimers()
 })
 
+describe('FeaturesSection mobile navigation', () => {
+  it('uses footer mobile controls to navigate between solution cards', () => {
+    renderFeaturesSection()
+
+    const detailPanel = document.querySelector('#nossas-solucoes .feature-detail-panel-transition')
+    const detailHeader = document.querySelector('#nossas-solucoes .feature-detail-transition__header')
+    const mobileNavigation = screen.getByTestId('features-mobile-card-navigation')
+
+    expect(mobileNavigation).toHaveClass('lg:hidden')
+    expect(mobileNavigation).toHaveClass('feature-detail-mobile-footer-nav')
+    expect(detailPanel).toContainElement(mobileNavigation)
+    expect(mobileNavigation.compareDocumentPosition(detailHeader) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy()
+    expect(mobileNavigation).toHaveTextContent('1 / 4')
+    expect(mobileNavigation.compareDocumentPosition(document.querySelector('#nossas-solucoes a.btn-primary')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Proxima solucao' }))
+
+    expect(getDetailCardTitle()).toMatch(/^Gest/)
+    expect(screen.getByTestId('features-mobile-card-navigation')).toHaveTextContent('2 / 4')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Solucao anterior' }))
+
+    expect(getDetailCardTitle()).toMatch(/^Diagn/)
+  })
+
+  it('places the detail icon beside enlarged title and subtitle on mobile', () => {
+    renderFeaturesSection()
+
+    const detailHeader = document.querySelector('#nossas-solucoes .feature-detail-transition__header')
+    const title = detailHeader.querySelector('h3')
+    const subtitle = detailHeader.querySelector('p')
+    const icon = detailHeader.querySelector('.feature-detail-mobile-icon')
+
+    expect(detailHeader).toHaveClass('flex', 'items-center', 'gap-4')
+    expect(icon).toHaveClass('mb-0')
+    expect(title).toHaveClass('text-2xl', 'md:text-3xl')
+    expect(subtitle).toHaveClass('text-base')
+  })
+})
+
 afterEach(() => {
   cleanup()
   vi.useRealTimers()

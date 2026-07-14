@@ -15,6 +15,27 @@ export function normalizeCategory(eyebrow) {
   return eyebrow.trim().toLowerCase()
 }
 
+export function normalizeInspireCategory(value) {
+  if (!value || typeof value !== 'string') {
+    return ''
+  }
+
+  return value
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+}
+
+export function matchesInspireCategory(post, category) {
+  if (!category) {
+    return true
+  }
+
+  return normalizeInspireCategory(post.inspireCategory ?? post.eyebrow) ===
+    normalizeInspireCategory(category)
+}
+
 /**
  * Derive unique year options from post dates, newest first.
  * Each option is { key: 'YYYY', label: '2026' }.

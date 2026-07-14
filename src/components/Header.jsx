@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import logoOtimiza from '../assets/logo-otimiza.svg'
-import { siteNav } from '../data/sitePages'
 
 const dropdownGroups = []
 
@@ -16,76 +15,32 @@ const directLinks = [
 const disabledNavLabels = new Set()
 
 const mobileLinks = [
-  { path: '/', label: 'Home' },
-  ...siteNav.map((item) => ({
+  ...directLinks.map((item) => ({
     ...item,
     disabled: disabledNavLabels.has(item.label),
   })),
+  { path: '/contato', label: 'Contato', disabled: disabledNavLabels.has('Contato') },
 ]
 
-function getInitialTheme() {
-  if (typeof window === 'undefined') {
-    return 'light'
-  }
-
-  return window.localStorage.getItem('theme') === 'dark' ? 'dark' : 'light'
-}
-
-function ThemeToggle({ theme, onToggle }) {
-  const isDarkTheme = theme === 'dark'
-  const nextThemeLabel = isDarkTheme ? 'Ativar tema claro' : 'Ativar tema escuro'
+function AnimatedMobileMenuLabel({ label }) {
+  const tokens = Array.from(label.matchAll(/\S+|\s+/g))
 
   return (
-    <button
-      type="button"
-      aria-label={nextThemeLabel}
-      aria-pressed={isDarkTheme}
-      data-theme-icon={isDarkTheme ? 'sun' : 'moon'}
-      onClick={onToggle}
-      className="hidden lg:inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#efeff4]/90 backdrop-blur-md dark:bg-white/10 text-[#5a6572] dark:text-white/90 transition-all hover:bg-[#e2e2e8] dark:hover:bg-white/20 dark:hover:text-white ring-1 ring-[#434b54]/5 dark:ring-white/10 drop-shadow-sm"
-    >
-      <span key={theme} className="theme-toggle__icon" aria-hidden="true">
-        {isDarkTheme ? (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-4 w-4"
-          >
-            <circle cx="12" cy="12" r="4" />
-            <path d="M12 2v2" />
-            <path d="M12 20v2" />
-            <path d="m4.93 4.93 1.41 1.41" />
-            <path d="m17.66 17.66 1.41 1.41" />
-            <path d="M2 12h2" />
-            <path d="M20 12h2" />
-            <path d="m6.34 17.66-1.41 1.41" />
-            <path d="m19.07 4.93-1.41 1.41" />
-          </svg>
-        ) : (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-4 w-4"
-          >
-            <path d="M12 3a6 6 0 1 0 9 9 9 9 0 1 1-9-9" />
-          </svg>
-        )}
-      </span>
-    </button>
+    <>
+      {tokens.map((tokenMatch) => {
+        const token = tokenMatch[0]
+        const tokenStart = tokenMatch.index
+
+        if (/^\s+$/.test(token)) return token
+
+        return (
+          <span key={`${token}-${tokenStart}`} className="mobile-menu-link-word" aria-hidden="true">
+            {token}
+          </span>
+        )
+      })}
+      <span className="sr-only">{label}</span>
+    </>
   )
 }
 
@@ -179,10 +134,10 @@ function LanguageSelector() {
   }
 
   return (
-    <div ref={selectorRef} className="relative hidden lg:block">
+    <div ref={selectorRef} className="header-desktop-only header-language-selector relative">
       <button
         type="button"
-        className="inline-flex h-10 w-[7.5rem] items-center justify-center gap-2.5 whitespace-nowrap rounded-[1rem] bg-[#efeff4]/90 px-3.5 text-[14px] font-[400] text-[#5a6572] ring-1 ring-[#434b54]/5 drop-shadow-sm backdrop-blur-md transition-all hover:bg-[#e2e2e8] dark:bg-white/10 dark:text-white/90 dark:ring-white/10 dark:hover:bg-white/20 dark:hover:text-white"
+        className="header-language-trigger inline-flex h-10 w-[7.5rem] items-center justify-center gap-2.5 whitespace-nowrap rounded-[1rem] bg-[#efeff4]/90 px-3.5 text-[14px] font-[400] text-[#5a6572] ring-1 ring-[#434b54]/5 drop-shadow-sm backdrop-blur-md transition-all hover:bg-[#e2e2e8] dark:bg-white/10 dark:text-white/90 dark:ring-white/10 dark:hover:bg-white/20 dark:hover:text-white"
         aria-label="Selecionar idioma"
         aria-haspopup="menu"
         aria-controls="language-options"
@@ -190,7 +145,7 @@ function LanguageSelector() {
         onClick={() => setIsOpen((current) => !current)}
       >
         <SelectedFlag className="h-[18px] w-[18px] shrink-0 drop-shadow-sm" />
-        <span>{selectedLanguage.locale}</span>
+        <span className="header-language-label">{selectedLanguage.locale}</span>
         <svg
           viewBox="0 0 24 24"
           fill="none"
@@ -198,7 +153,7 @@ function LanguageSelector() {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className={`h-3.5 w-3.5 opacity-50 transition-transform dark:opacity-70 ${isOpen ? 'rotate-180' : ''}`}
+          className={`header-language-chevron h-3.5 w-3.5 opacity-50 transition-transform dark:opacity-70 ${isOpen ? 'rotate-180' : ''}`}
           aria-hidden="true"
         >
           <path d="m6 9 6 6 6-6" />
@@ -257,7 +212,7 @@ function LanguageSelector() {
 function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [openDropdown, setOpenDropdown] = useState(null)
-  const [theme, setTheme] = useState(getInitialTheme)
+  const [mobileLocale, setMobileLocale] = useState(getInitialLocale)
   const lastScrollYRef = useRef(0)
   
   // Animation states
@@ -265,16 +220,14 @@ function Header() {
   const [isNavHidden, setIsNavHidden] = useState(false)
   
   const location = useLocation()
-  const isDarkTheme = theme === 'dark'
 
   const isActive = (path) => location.pathname === path
   const isGroupActive = (items) => items.some((item) => isActive(item.path))
-  const mobileMenuPosition = isTop ? 'top-[4.9rem] sm:top-[5.2rem]' : 'top-[5.9rem] sm:top-[6.15rem]'
 
-  const closeAll = () => {
+  const closeAll = useCallback(() => {
     setMenuOpen(false)
     setOpenDropdown(null)
-  }
+  }, [])
 
   const toggleMenu = () => {
     setMenuOpen((current) => !current)
@@ -284,14 +237,35 @@ function Header() {
     setOpenDropdown((current) => (current === label ? null : label))
   }
 
-  const toggleTheme = () => {
-    setTheme((current) => (current === 'dark' ? 'light' : 'dark'))
+  const inactiveMobileLocale = mobileLocale === 'pt-BR' ? 'en-US' : 'pt-BR'
+
+  const selectInactiveMobileLocale = () => {
+    setMobileLocale(inactiveMobileLocale)
+    window.localStorage.setItem('locale', inactiveMobileLocale)
   }
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDarkTheme)
-    window.localStorage.setItem('theme', theme)
-  }, [isDarkTheme, theme])
+    document.documentElement.classList.remove('dark')
+    window.localStorage.removeItem('theme')
+  }, [])
+
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : ''
+    document.documentElement.style.overflow = menuOpen ? 'hidden' : ''
+    return () => {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+    }
+  }, [menuOpen])
+
+  useEffect(() => {
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') closeAll()
+    }
+
+    document.addEventListener('keydown', closeOnEscape)
+    return () => document.removeEventListener('keydown', closeOnEscape)
+  }, [closeAll])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -325,36 +299,49 @@ function Header() {
   return (
     <>
       <nav
-        className={`fixed inset-x-0 top-0 z-40 transition-[padding,transform,opacity] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        className={`fixed inset-x-0 top-0 transition-[padding,transform,opacity] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          menuOpen ? 'z-[60]' : 'z-40'
+        } ${
           isTop ? 'px-0 pt-0 sm:px-0 lg:px-0' : 'px-4 pt-3 sm:px-6 lg:px-8'
         } ${
           shouldHideNav ? '-translate-y-[115%] opacity-0' : 'translate-y-0 opacity-100'
-        }`}
+        } header-main-nav`}
         role="navigation"
         aria-label="Main navigation"
       >
         <div
           data-testid="main-menu-surface"
-          className={`mx-auto w-full [zoom:1.1025] transition-[max-width,border-radius,padding] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] relative z-10 ${
+          className={`header-menu-surface header-responsive-scale mx-auto w-full transition-[max-width,border-radius,padding] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] relative z-10 ${
             isTop
               ? 'max-w-full rounded-none bg-transparent px-5 py-3 sm:px-7 lg:px-10'
               : 'max-w-[1320px] rounded-[1.25rem] px-4 py-2.5 sm:px-5'
           }`}
         >
           <div
-            className={`absolute inset-0 rounded-[1.25rem] border border-[#434b54]/10 bg-white/95 shadow-[0_14px_42px_rgba(67,75,84,0.08)] backdrop-blur-2xl transition-[opacity,transform,box-shadow] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] dark:border-white/10 dark:bg-[#0f172a]/90 dark:shadow-[0_14px_42px_rgba(0,0,0,0.48)] ${
+            className={`header-menu-capsule absolute inset-0 rounded-[1.25rem] border border-[#434b54]/10 bg-white/95 shadow-[0_14px_42px_rgba(67,75,84,0.08)] backdrop-blur-2xl transition-[opacity,transform,box-shadow] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] dark:border-white/10 dark:bg-[#0f172a]/90 dark:shadow-[0_14px_42px_rgba(0,0,0,0.48)] ${
               isTop ? 'opacity-0 scale-[0.985]' : 'opacity-100 scale-100'
             }`}
             aria-hidden="true"
           />
 
-          <div className="relative z-10 flex items-center justify-between gap-5">
-            <div className="flex items-center gap-5 lg:gap-7">
-              <Link to="/" aria-label="Otimiza home" className="z-50 flex items-center" onClick={closeAll}>
-                <img src={logoOtimiza} alt="Otimiza" className="-mt-[2px] h-11 w-auto sm:h-12 md:h-[3.25rem] dark:drop-shadow-[0_0_12px_rgba(255,255,255,0.15)]" />
+          <div className="header-menu-row relative z-10 flex items-center justify-between gap-5">
+            <div className="header-menu-primary flex items-center gap-5 lg:gap-7">
+              <Link
+                to="/"
+                aria-label="Otimiza home"
+                className={`header-logo-link flex items-center ${menuOpen ? 'z-[60]' : 'z-50'}`}
+                onClick={closeAll}
+              >
+                <img
+                  src={logoOtimiza}
+                  alt="Otimiza"
+                  className={`header-logo header-logo--mobile-large -mt-[2px] w-auto dark:drop-shadow-[0_0_12px_rgba(255,255,255,0.15)] ${
+                    menuOpen ? 'header-logo--menu-open' : ''
+                  }`}
+                />
               </Link>
 
-              <div className="hidden items-center gap-1 lg:flex">
+              <div data-testid="desktop-menu-links" className="header-desktop-only header-desktop-links items-center gap-1 whitespace-nowrap">
                 {dropdownGroups.map((group) => (
                   <div
                     key={group.id}
@@ -447,73 +434,49 @@ function Header() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <ThemeToggle theme={theme} onToggle={toggleTheme} />
+            <div className="header-secondary-actions flex items-center gap-3">
               <LanguageSelector />
 
               <Link
                 to="/contato"
-                className="hidden lg:flex h-10 items-center justify-center rounded-[1rem] bg-[#efeff4]/90 backdrop-blur-md dark:bg-white/10 px-4 text-[14.5px] font-[400] text-[#5a6572] dark:text-white/90 transition-all hover:bg-[#e2e2e8] dark:hover:bg-white/20 dark:hover:text-white ring-1 ring-[#434b54]/5 dark:ring-white/10 drop-shadow-sm"
+                aria-label="Fale com a Otimiza"
+                className="header-desktop-only header-contact-link h-10 items-center justify-center whitespace-nowrap rounded-[1rem] bg-[#efeff4]/90 backdrop-blur-md dark:bg-white/10 px-4 text-[14.5px] font-[400] text-[#5a6572] dark:text-white/90 transition-all hover:bg-[#e2e2e8] dark:hover:bg-white/20 dark:hover:text-white ring-1 ring-[#434b54]/5 dark:ring-white/10 drop-shadow-sm"
               >
-                Fale com a Otimiza
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="header-contact-icon h-[1.125rem] w-[1.125rem]"
+                  data-testid="contact-icon"
+                  aria-hidden="true"
+                >
+                  <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z" />
+                  <path d="M8 9h8M8 13h5" />
+                </svg>
+                <span className="header-contact-label">Fale com a Otimiza</span>
               </Link>
 
               <button
                 type="button"
                 onClick={toggleMenu}
-                className="z-50 flex h-10 w-10 items-center justify-center rounded-[0.85rem] bg-[#434b54]/90 backdrop-blur-md dark:bg-white/10 text-white dark:text-white/90 lg:hidden transition-all hover:bg-[#364048] dark:hover:bg-white/20 dark:hover:text-white ring-1 ring-[#434b54]/5 dark:ring-white/10 drop-shadow-sm"
-                aria-label="Open menu"
+                className={`header-mobile-only z-50 h-12 min-w-[5.25rem] items-center justify-center rounded-full px-5 text-[19px] font-[500] tracking-[0.08em] transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 ${
+                  menuOpen
+                    ? 'text-white hover:text-white focus-visible:outline-white/50'
+                    : 'text-[#5a6572] hover:text-[#5a6572] focus-visible:outline-[#5a6572]/35'
+                }`}
+                aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
                 aria-expanded={menuOpen}
                 aria-controls="site-mobile-menu"
               >
-                {menuOpen ? (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-5 w-5"
-                    aria-hidden="true"
-                  >
-                    <path d="M18 6 6 18" />
-                    <path d="m6 6 12 12" />
-                  </svg>
-                ) : (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-5 w-5"
-                    aria-hidden="true"
-                  >
-                    <path d="M4 5h16" />
-                    <path d="M4 12h16" />
-                    <path d="M4 19h16" />
-                  </svg>
-                )}
+                {menuOpen ? 'Fechar' : 'Menu'}
               </button>
             </div>
           </div>
         </div>
       </nav>
-
-      <div
-        className={`fixed inset-0 z-30 bg-[#434b54]/14 backdrop-blur-sm transition-opacity duration-200 ${
-          menuOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
-        }`}
-        onClick={closeAll}
-      />
 
       <section
         id="site-mobile-menu"
@@ -521,50 +484,49 @@ function Header() {
         aria-modal="true"
         aria-label="Menu principal"
         aria-hidden={!menuOpen}
-        className={`fixed inset-x-4 z-40 origin-top rounded-[1.75rem] border border-[#434b54]/12 dark:border-white/10 bg-white/95 dark:bg-[#131b24]/95 p-4 shadow-[0_28px_80px_rgba(67,75,84,0.12)] dark:shadow-[0_28px_80px_rgba(0,0,0,0.6)] backdrop-blur-2xl transition-all duration-300 sm:inset-x-6 lg:hidden ${mobileMenuPosition} ${
-          menuOpen ? 'pointer-events-auto translate-y-0 opacity-100 scale-100' : 'pointer-events-none -translate-y-2 opacity-0 scale-95'
+        className={`header-mobile-only mobile-menu-panel fixed inset-0 z-50 min-h-svh origin-top bg-[#1B1B1B] px-5 pb-8 pt-5 ${
+          menuOpen ? 'mobile-menu-panel--open pointer-events-auto' : 'pointer-events-none'
         }`}
       >
-        <div className="mb-4 border-b border-[#434b54]/10 dark:border-white/10 pb-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#5a6572]/52 dark:text-white/40">Navegacao</p>
-          <p className="mt-2 text-sm text-[#5a6572]/74 dark:text-white/60">Acesse as principais areas da Otimiza.</p>
-        </div>
+        <div className="mobile-menu-content flex min-h-svh w-full flex-col justify-between gap-8 px-5 pb-[3.875rem]">
+          <nav className="flex flex-col px-0 pt-20" aria-label="Mobile navigation">
+            {mobileLinks.map((item, index) =>
+              item.disabled ? (
+                <span
+                  key={item.path}
+                  aria-disabled="true"
+                  className="mobile-menu-link block w-fit max-w-full py-1 text-[clamp(1.9rem,9vw,3.1rem)] font-[300] leading-[1.18] text-white"
+                  style={{ '--mobile-menu-link-index': String(index) }}
+                >
+                  <AnimatedMobileMenuLabel label={item.label} />
+                </span>
+              ) : (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={closeAll}
+                  style={{ '--mobile-menu-link-index': String(index) }}
+                  className={`mobile-menu-link block w-fit max-w-full py-1 text-[clamp(1.9rem,9vw,3.1rem)] font-[300] leading-[1.18] tracking-[0] no-underline transition-colors duration-200 hover:text-white ${
+                    isActive(item.path)
+                      ? 'text-white'
+                      : 'text-white'
+                  }`}
+                >
+                  <AnimatedMobileMenuLabel label={item.label} />
+                </Link>
+              ),
+            )}
+          </nav>
 
-        <nav className="flex flex-col gap-1" aria-label="Mobile navigation">
-          {mobileLinks.map((item) =>
-            item.disabled ? (
-              <span
-                key={item.path}
-                aria-disabled="true"
-                className="rounded-[1rem] px-4 py-3 text-[14.5px] font-[400] text-[#5a6572] opacity-30 dark:text-white/70"
-              >
-                {item.label}
-              </span>
-            ) : (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={closeAll}
-                className={`rounded-[1rem] px-4 py-3 text-[14.5px] transition-all duration-200 ${
-                  isActive(item.path)
-                    ? 'bg-[#434b54] font-[400] text-white dark:bg-white/10'
-                    : 'font-[400] text-[#5a6572] dark:text-white/70 hover:bg-[#434b54]/5 hover:text-[#5a6572] dark:hover:bg-white/10 dark:hover:text-white'
-                }`}
-              >
-                {item.label}
-              </Link>
-            ),
-          )}
-        </nav>
-
-        <div className="mt-4 grid gap-3 border-t border-[#434b54]/10 dark:border-white/10 pt-4">
-          <Link
-            to="/contato"
-            onClick={closeAll}
-            className="rounded-[0.9rem] bg-[#434b54] dark:bg-white/10 px-5 py-3 text-center text-[14.5px] font-[400] text-white dark:text-white transition hover:bg-[#364048] dark:hover:bg-white/20 ring-1 ring-transparent dark:ring-white/5"
-          >
-            Fale com a Otimiza
-          </Link>
+          <footer className="mobile-menu-footer flex w-full items-center text-[15px] font-[300] leading-relaxed text-white">
+            <button
+              type="button"
+              onClick={selectInactiveMobileLocale}
+              className="text-left text-white transition-colors hover:text-white"
+            >
+              {inactiveMobileLocale}
+            </button>
+          </footer>
         </div>
       </section>
     </>

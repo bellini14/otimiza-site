@@ -1,89 +1,89 @@
-import { createContext, useContext, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useLocation } from 'react-router-dom'
-import { motion, useAnimationControls } from 'framer-motion'
-
-/* ─── Context: exposes the "displayed" location to Routes ─── */
-const TransitionLocationContext = createContext(null)
-
-export function useTransitionLocation() {
-  return useContext(TransitionLocationContext)
-}
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { motion as Motion, useAnimationControls } from 'framer-motion'
+import {
+  finishPageTransition,
+  startPageTransition,
+} from './transitionState'
+import { PAGE_TRANSITION_TIMING } from './transitionTiming'
+import { getInternalNavigationTarget } from './navigationInterception'
+import { TransitionLocationContext } from './transitionLocationContext'
+import { scrollToLocationTarget, shouldAnimatePageTransition } from './transitionViewport'
 
 /* ─── Timing ─── */
-const COVER_DURATION = 0.8
-const HOLD_DURATION = 0.18
-const REVEAL_DURATION = 0.7
-const EASE_COVER = [0.65, 0, 0.2, 1]
-const EASE_REVEAL = [0.4, 0, 0.15, 1]
-
-export function scrollToLocationTarget(location) {
-  const hash = location.hash?.slice(1)
-
-  if (hash) {
-    const target = document.getElementById(decodeURIComponent(hash))
-
-    if (target) {
-      target.scrollIntoView({ block: 'start', behavior: 'smooth' })
-      return
-    }
-  }
-
-  window.scrollTo({ top: 0, behavior: 'instant' })
-}
+const EASE_COVER = [0.3, 0, 0.2, 1]
+const EASE_REVEAL = [0.28, 0, 0.18, 1]
 
 function PageTransition({ children }) {
   const location = useLocation()
+  const navigate = useNavigate()
   const [displayedLocation, setDisplayedLocation] = useState(location)
   const prevPathRef = useRef(location.pathname)
   const isAnimatingRef = useRef(false)
   const pendingLocationRef = useRef(null)
+  const runTransitionRef = useRef(null)
 
   const curtainControls = useAnimationControls()
   const iconControls = useAnimationControls()
 
-  const runTransition = useCallback(async (newLocation) => {
+  const runTransition = useCallback(async (newLocation, commitNavigation = null) => {
+    if (!shouldAnimatePageTransition()) {
+      flushSync(() => {
+        setDisplayedLocation(newLocation)
+        prevPathRef.current = newLocation.pathname
+        commitNavigation?.()
+      })
+      window.requestAnimationFrame(() => scrollToLocationTarget(newLocation))
+      return
+    }
+
     if (isAnimatingRef.current) {
-      pendingLocationRef.current = newLocation
+      pendingLocationRef.current = { location: newLocation, commitNavigation }
       return
     }
 
     isAnimatingRef.current = true
+    startPageTransition()
 
     // Phase 1: Curtain slides UP from below to cover the screen
     // Old page remains fully visible underneath as the curtain covers it
     await Promise.all([
       curtainControls.start({
         y: '0%',
-        transition: { duration: COVER_DURATION, ease: EASE_COVER },
+        transition: { duration: PAGE_TRANSITION_TIMING.cover, ease: EASE_COVER },
       }),
       iconControls.start({
         y: '0%',
-        transition: { duration: COVER_DURATION, ease: EASE_COVER },
+        transition: { duration: PAGE_TRANSITION_TIMING.cover, ease: EASE_COVER },
       }),
     ])
 
-    // Phase 2: Screen is fully covered — swap the page content underneath
-    setDisplayedLocation(newLocation)
+    // Phase 2: Swap the route synchronously while the curtain covers the viewport.
+    flushSync(() => {
+      setDisplayedLocation(newLocation)
+      prevPathRef.current = newLocation.pathname
+      commitNavigation?.()
+    })
     window.requestAnimationFrame(() => scrollToLocationTarget(newLocation))
 
-    // Brief hold so new page mounts under the curtain
-    await new Promise((r) => setTimeout(r, HOLD_DURATION * 1000))
+    // Give the mounted route one short frame to prepare under the curtain.
+    await new Promise((r) => setTimeout(r, PAGE_TRANSITION_TIMING.hold * 1000))
 
-    // Phase 3: Curtain slides UP to exit — reveals new page like a curtain lifting
+    // Phase 3: Reveal the already-mounted next route with the second pass.
     await Promise.all([
       curtainControls.start({
         y: '-100%',
-        transition: { duration: REVEAL_DURATION, ease: EASE_REVEAL },
+        transition: { duration: PAGE_TRANSITION_TIMING.reveal, ease: EASE_REVEAL },
       }),
       iconControls.start({
         y: '75%',
-        transition: { duration: REVEAL_DURATION, ease: EASE_REVEAL },
+        transition: { duration: PAGE_TRANSITION_TIMING.reveal, ease: EASE_REVEAL },
       }),
     ])
 
-    // Phase 4: Reset curtain back to starting position (below screen)
-    curtainControls.set({ y: '100%' })
-    iconControls.set({ y: '75%' })
+    // Release page animations only after the second pass has completed.
+    finishPageTransition()
 
     isAnimatingRef.current = false
 
@@ -91,22 +91,63 @@ function PageTransition({ children }) {
     if (pendingLocationRef.current) {
       const next = pendingLocationRef.current
       pendingLocationRef.current = null
-      runTransition(next)
+      curtainControls.set({ y: '100%' })
+      window.requestAnimationFrame(() => {
+        runTransitionRef.current?.(next.location, next.commitNavigation)
+      })
+      return
     }
+
+    window.requestAnimationFrame(() => {
+      curtainControls.set({ y: '100%' })
+    })
   }, [curtainControls, iconControls])
 
+  useLayoutEffect(() => {
+    runTransitionRef.current = runTransition
+  }, [runTransition])
+
+  useLayoutEffect(() => {
+    const handleInternalLinkClick = (event) => {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return
+      }
+
+      const anchor = event.target.closest?.('a[href]')
+      const target = getInternalNavigationTarget(anchor, window.location.href)
+      if (!target) return
+
+      event.preventDefault()
+      runTransition(target.location, () => navigate(target.href, { flushSync: true }))
+    }
+
+    document.addEventListener('click', handleInternalLinkClick, true)
+    return () => document.removeEventListener('click', handleInternalLinkClick, true)
+  }, [navigate, runTransition])
+
   // Initialize curtain position
-  useEffect(() => {
+  useLayoutEffect(() => {
     curtainControls.set({ y: '100%' })
     iconControls.set({ y: '75%' })
+
+    return () => finishPageTransition()
   }, [curtainControls, iconControls])
 
   // Watch for route changes
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (location.pathname === prevPathRef.current) {
       // Same page (query/hash change) — update immediately
-      setDisplayedLocation(location)
-      window.requestAnimationFrame(() => scrollToLocationTarget(location))
+      window.requestAnimationFrame(() => {
+        setDisplayedLocation(location)
+        scrollToLocationTarget(location)
+      })
       return
     }
 
@@ -121,13 +162,13 @@ function PageTransition({ children }) {
       {children}
 
       {/* Curtain — always mounted, positioned off-screen when idle */}
-      <motion.div
+      <Motion.div
         className="page-curtain"
         initial={{ y: '100%' }}
         animate={curtainControls}
         aria-hidden="true"
       >
-        <motion.div
+        <Motion.div
           className="page-curtain__inner"
           initial={{ y: '75%' }}
           animate={iconControls}
@@ -150,8 +191,8 @@ function PageTransition({ children }) {
               d="M108.4,85.6c-4,5.5-6.4,13-7,21.5,0,.3,0,.6,0,.9,0,.3,0,.6,0,.9v.2c0,.3,0,.6,0,.9,0,1.2,0,2.4,0,3.5v.6c0,.3,0,.6,0,.8,0,1.7.2,3.5.4,5.3,0,.5,0,1,.2,1.5,0,.2,0,.5.1.8,0,.3,0,.5,0,.8.1.8.2,1.6.4,2.4,2.1,12.1,6.7,25.3,13.9,38.1,9.8,17.4,22.6,31,35.4,39,.9.6,1.7,1.1,2.6,1.6l1,.6c.3.2.7.4,1,.6.7.3,1.3.7,2,1,.6.3,1.3.6,1.9.9h0c.6.3,1.3.6,1.9.8.3.1.6.2.9.4,5.1,1.8,10,2.7,14.6,2.5h.6c4-.2,7.8-1.3,11.2-3.2,4.2-2.4,7.6-5.9,10-10.4-11.6-8.1-19.2-21.4-19.5-36.5-1-1-2-2-3-3-30.8-30.8-51-63.2-52.9-82.4h0c20.1-3.7,47.7,15.3,65.5,46.9,1.1,2,2.1,3.9,3.1,5.9t0,0c8.3-8.7,20.1-14.2,33.1-14.2h.2c-.8-.9-1.7-1.7-2.6-2.6-40.1-40.2-83.1-62.3-95.9-49.4l-19.2,23.5Z"
             />
           </svg>
-        </motion.div>
-      </motion.div>
+        </Motion.div>
+      </Motion.div>
     </TransitionLocationContext.Provider>
   )
 }

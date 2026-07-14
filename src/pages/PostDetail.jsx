@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { PortableText } from '@portabletext/react'
-import { ArrowLeft, Calendar, Share2, Tag } from 'lucide-react'
+import { ArrowLeft, Calendar, Share2 } from 'lucide-react'
 import { client, urlFor } from '../lib/sanity'
 import PostLikeButton from '../components/PostLikeButton'
+import SeoHead from '../seo/SeoHead'
+import { getPageDescription, getPageTitle } from '../seo/siteMetadata'
 
 function getPreviewPost(locationState) {
   if (!locationState?.postPreview) {
@@ -72,21 +74,6 @@ function PostDetail() {
         setPost(resolvedPost)
         setMorePosts(resolvedMore)
 
-        if (resolvedPost) {
-          document.title = `${resolvedPost.title} | Otimiza`
-
-          let metaOgImage = document.querySelector('meta[property="og:image"]')
-          if (!metaOgImage) {
-            metaOgImage = document.createElement('meta')
-            metaOgImage.setAttribute('property', 'og:image')
-            document.head.appendChild(metaOgImage)
-          }
-
-          if (resolvedPost.mainImage) {
-            const imageUrl = urlFor(resolvedPost.mainImage).width(1200).url()
-            metaOgImage.setAttribute('content', imageUrl)
-          }
-        }
       } catch (error) {
         console.error('Error fetching post details from Sanity:', error)
 
@@ -109,16 +96,22 @@ function PostDetail() {
   }, [location.state, slug])
 
   const isShellLoading = loading && !post
+  const postSocialImage = post?.mainImage
+    ? urlFor(post.mainImage).width(1200).url()
+    : post?.imgSrc
 
   if (!post && !isShellLoading) {
     return (
-      <div className="mx-auto max-w-4xl py-24 text-center text-[#5A6572]">
+      <>
+        <SeoHead title={getPageTitle()} description={getPageDescription()} />
+        <div className="mx-auto max-w-4xl py-24 text-center text-[#5A6572]">
         <h1 className="text-3xl font-bold text-[#5A6572]">Post nao encontrado</h1>
         <p className="mt-4 text-[#5A6572]">O artigo que voce esta procurando nao existe ou foi removido.</p>
         <Link to="/inspire" className="mt-8 inline-flex items-center gap-2 font-semibold text-[#5A6572] hover:underline">
           <ArrowLeft className="h-4 w-4" /> Voltar para Inspire
         </Link>
-      </div>
+        </div>
+      </>
     )
   }
 
@@ -156,6 +149,15 @@ function PostDetail() {
   }
 
   return (
+    <>
+      {post ? (
+        <SeoHead
+          title={getPageTitle(post.title)}
+          description={getPageDescription(post.description)}
+          imageUrl={postSocialImage}
+          ogType="article"
+        />
+      ) : null}
     <article className="relative w-full px-6 pb-14 md:px-12 lg:pb-20">
       <div className="relative z-10 mx-auto w-full max-w-[1380px]">
         <header className="mb-12 border-b border-[#ececec] pb-10 pt-32 sm:pt-40">
@@ -185,9 +187,7 @@ function PostDetail() {
             <>
               <div className="mb-6 flex flex-wrap items-center gap-4 text-[#5A6572]">
                 {post.eyebrow && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/60 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#5A6572] backdrop-blur">
-                    <Tag className="h-3 w-3" /> {post.eyebrow}
-                  </span>
+                  <span className="inspire-category-label">{post.eyebrow}</span>
                 )}
                 {post.publishedAt && (
                   <span className="inline-flex items-center gap-1.5 rounded-md bg-white/40 px-2 py-1 text-xs font-semibold text-[#5A6572] backdrop-blur">
@@ -307,6 +307,7 @@ function PostDetail() {
         )}
       </div>
     </article>
+    </>
   )
 }
 

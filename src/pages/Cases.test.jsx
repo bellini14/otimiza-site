@@ -3,10 +3,11 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import Cases from './Cases'
+import Cases, { CaseTestimonialsSection } from './Cases'
 import { client } from '../lib/sanity'
 
 const styles = readFileSync(resolve('src/index.css'), 'utf8')
+const originalWindowInnerWidth = window.innerWidth
 
 const splitTextMock = vi.hoisted(() => vi.fn(({ tag, text, className }) => {
   const SplitTag = tag || 'div'
@@ -49,11 +50,194 @@ vi.mock('../components/SplitText', () => ({
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
+  vi.restoreAllMocks()
   vi.useRealTimers()
   document.documentElement.classList.remove('cases-white-background')
+  Object.defineProperty(window, 'innerWidth', {
+    configurable: true,
+    writable: true,
+    value: originalWindowInnerWidth,
+  })
 })
 
 describe('Cases', () => {
+  it('defines the same responsive mobile carousel geometry used by Home Inspire', () => {
+    expect(styles).toMatch(/\.cases-carousel-fade\s*{[^}]*display:\s*none;/)
+    expect(styles).toMatch(/\.cases-carousel-edge-spacer\s*{[^}]*width:\s*var\(--home-menu-inline\);/)
+    expect(styles).toMatch(/\.cases-carousel-item\s*{[^}]*width:\s*calc\(100vw - \(2 \* var\(--home-menu-inline\)\)\);/)
+    expect(styles).toMatch(/@media \(min-width:\s*640px\)[\s\S]*?\.cases-carousel-fade\s*{[^}]*display:\s*block;/)
+    expect(styles).toMatch(/@media \(min-width:\s*640px\)[\s\S]*?\.cases-carousel-edge-spacer\s*{[^}]*width:\s*12rem;/)
+    expect(styles).toMatch(/@media \(min-width:\s*640px\)[\s\S]*?\.cases-carousel-item\s*{[^}]*width:\s*calc\(\(min\(100vw, 1380px\) - 3rem - 32px\) \/ 2\);/)
+    expect(styles).toMatch(/@media \(min-width:\s*768px\)[\s\S]*?\.cases-carousel-item\s*{[^}]*width:\s*20rem;/)
+    expect(styles).toMatch(/@media \(min-width:\s*1024px\)[\s\S]*?\.cases-carousel-edge-spacer\s*{[^}]*width:\s*13rem;/)
+    expect(styles).toMatch(/@media \(min-width:\s*1024px\)[\s\S]*?\.cases-carousel-item\s*{[^}]*width:\s*22rem;/)
+  })
+
+  it('preserves every selected case field and order in the mobile carousel', async () => {
+    window.innerWidth = 390
+    const caseLogos = [
+      {
+        _id: 'primeiro',
+        name: 'Cliente primeiro',
+        sector: 'Bancos',
+        logo: { assetUrl: 'https://cdn.sanity.io/images/prod/primeiro.svg' },
+        logoAlt: 'Logo primeiro',
+        caseTitle: 'Primeiro case',
+        caseDescription: 'Descricao primeiro',
+        caseSlug: 'primeiro',
+      },
+      {
+        _id: 'segundo',
+        name: 'Cliente segundo',
+        sector: 'Industria',
+        logo: { assetUrl: 'https://cdn.sanity.io/images/prod/segundo.svg' },
+        logoAlt: 'Logo segundo',
+        caseTitle: 'Segundo case',
+        caseDescription: 'Descricao segundo',
+        caseSlug: 'segundo',
+      },
+    ]
+    client.fetch.mockResolvedValue({ caseLogos, caseTestimonials: [], clientLogos: [] })
+
+    render(
+      <MemoryRouter>
+        <Cases />
+      </MemoryRouter>,
+    )
+
+    const carousel = await screen.findByTestId('cases-carousel')
+    const items = screen.getAllByTestId('case-carousel-item')
+    const cards = caseLogos.map((logo) => screen.getByTestId(`case-client-card-${logo._id}`))
+
+    expect(carousel).toHaveAttribute('data-mobile-snap', 'true')
+    expect(carousel).toHaveStyle({ touchAction: 'pan-y' })
+    expect(screen.getByTestId('cases-carousel-shell')).toHaveClass('overflow-hidden', 'md:overflow-visible')
+    expect(items.map((item) => within(item).getByRole('heading').textContent)).toEqual(['Primeiro case', 'Segundo case'])
+    items.forEach((item) => {
+      expect(item).toHaveClass('cases-carousel-item')
+      expect(item).toHaveAttribute('data-carousel-snap-slide', 'true')
+    })
+    screen.getAllByTestId('case-carousel-edge-spacer').forEach((spacer) => {
+      expect(spacer).toHaveClass('cases-carousel-edge-spacer')
+    })
+    screen.getAllByTestId('cases-carousel-fade').forEach((fade) => {
+      expect(fade).toHaveClass('cases-carousel-fade')
+    })
+    caseLogos.forEach((logo, index) => {
+      expect(within(items[index]).getByRole('img', { name: logo.logoAlt })).toHaveAttribute('src', logo.logo.assetUrl)
+      expect(within(items[index]).getByText(logo.caseDescription)).toBeInTheDocument()
+      expect(within(items[index]).getByRole('link', { name: 'Ler mais' })).toHaveAttribute('href', `/cases/${logo.caseSlug}`)
+      expect(cards[index]).toHaveClass('w-full')
+      expect(cards[index]).not.toHaveClass('w-72', 'sm:w-80', 'lg:w-[22rem]')
+    })
+  })
+
+  it.each([639, 640, 767])('keeps mobile snap enabled at %ipx', async (viewportWidth) => {
+    window.innerWidth = viewportWidth
+    client.fetch.mockResolvedValue({
+      caseLogos: [{ _id: 'case-mobile', name: 'Case mobile', logo: { assetUrl: 'case-mobile.svg' } }],
+      caseTestimonials: [],
+      clientLogos: [],
+    })
+
+    render(<MemoryRouter><Cases /></MemoryRouter>)
+
+    expect(await screen.findByTestId('cases-carousel')).toHaveAttribute('data-mobile-snap', 'true')
+  })
+
+  it('keeps the existing non-snapping carousel mode from 768px upward', async () => {
+    window.innerWidth = 768
+    client.fetch.mockResolvedValue({
+      caseLogos: [{ _id: 'case-desktop', name: 'Case desktop', logo: { assetUrl: 'case-desktop.svg' } }],
+      caseTestimonials: [],
+      clientLogos: [],
+    })
+
+    render(<MemoryRouter><Cases /></MemoryRouter>)
+
+    expect(await screen.findByTestId('cases-carousel')).toHaveAttribute('data-mobile-snap', 'false')
+  })
+
+  it('snaps mobile Cases to the nearest measured card like Home Inspire', async () => {
+    window.innerWidth = 390
+    client.fetch.mockResolvedValue({
+      caseLogos: [
+        { _id: 'case-1', name: 'Case 1', logo: { assetUrl: 'case-1.svg' } },
+        { _id: 'case-2', name: 'Case 2', logo: { assetUrl: 'case-2.svg' } },
+      ],
+      caseTestimonials: [],
+      clientLogos: [],
+    })
+
+    render(<MemoryRouter><Cases /></MemoryRouter>)
+    const track = await screen.findByTestId('cases-carousel')
+    vi.useFakeTimers()
+    const shell = screen.getByTestId('cases-carousel-shell')
+    const slides = screen.getAllByTestId('case-carousel-item')
+    Object.defineProperties(shell, {
+      clientWidth: { configurable: true, value: 390 },
+    })
+    Object.defineProperties(track, {
+      scrollWidth: { configurable: true, value: 1600 },
+    })
+    Object.defineProperties(slides[0], {
+      offsetLeft: { configurable: true, value: 24 },
+      offsetWidth: { configurable: true, value: 342 },
+    })
+    Object.defineProperties(slides[1], {
+      offsetLeft: { configurable: true, value: 398 },
+      offsetWidth: { configurable: true, value: 342 },
+    })
+
+    fireEvent.pointerDown(track, { pointerId: 21, pointerType: 'touch', clientX: 310, clientY: 220 })
+    fireEvent.pointerMove(track, { pointerId: 21, pointerType: 'touch', clientX: 190, clientY: 220 })
+    fireEvent.pointerUp(track, { pointerId: 21, pointerType: 'touch' })
+    act(() => {
+      vi.advanceTimersByTime(3000)
+    })
+
+    expect(track).toHaveStyle({ transform: 'translateX(-374px)' })
+  })
+
+  it('cancels mobile inertia and resets position when resizing across 768px', async () => {
+    window.innerWidth = 767
+    client.fetch.mockResolvedValue({
+      caseLogos: [
+        { _id: 'case-1', name: 'Case 1', logo: { assetUrl: 'case-1.svg' } },
+        { _id: 'case-2', name: 'Case 2', logo: { assetUrl: 'case-2.svg' } },
+      ],
+      caseTestimonials: [],
+      clientLogos: [],
+    })
+
+    render(<MemoryRouter><Cases /></MemoryRouter>)
+    const mobileTrack = await screen.findByTestId('cases-carousel')
+    vi.useFakeTimers()
+    const cancelAnimationFrameSpy = vi.spyOn(window, 'cancelAnimationFrame')
+    const shell = screen.getByTestId('cases-carousel-shell')
+    Object.defineProperties(shell, {
+      clientWidth: { configurable: true, value: 600 },
+    })
+    Object.defineProperties(mobileTrack, {
+      scrollWidth: { configurable: true, value: 900 },
+    })
+
+    fireEvent.pointerDown(mobileTrack, { pointerId: 22, pointerType: 'touch', clientX: 500, clientY: 220 })
+    fireEvent.pointerMove(mobileTrack, { pointerId: 22, pointerType: 'touch', clientX: 300, clientY: 220 })
+    fireEvent.pointerUp(mobileTrack, { pointerId: 22, pointerType: 'touch' })
+
+    window.innerWidth = 768
+    act(() => {
+      window.dispatchEvent(new Event('resize'))
+    })
+    const desktopTrack = screen.getByTestId('cases-carousel')
+
+    expect(desktopTrack).not.toBe(mobileTrack)
+    expect(desktopTrack).toHaveAttribute('data-mobile-snap', 'false')
+    expect(desktopTrack).toHaveStyle({ transform: 'translateX(0px)' })
+    expect(cancelAnimationFrameSpy).toHaveBeenCalled()
+  })
+
   it('animates client filter logos with slide-up fade only', () => {
     const cascadeAnimation = styles.match(/\.client-logo-reveal[\s\S]*?@media/)?.[0] || ''
 
@@ -90,6 +274,61 @@ describe('Cases', () => {
     expect(testimonialAnimation).not.toContain('translateY(-20px)')
     expect(testimonialAnimation).not.toContain('blur(')
     expect(testimonialAnimation).not.toContain('filter:')
+  })
+
+  it('shows every client category as a paginated two-column grid on mobile', async () => {
+    window.innerWidth = 390
+    const bankLogos = Array.from({ length: 10 }, (_, index) => ({
+      _id: `banco-${index + 1}`,
+      name: `Banco ${index + 1}`,
+      sector: 'Bancos',
+      logo: { assetUrl: `banco-${index + 1}.svg` },
+    }))
+    const distributorLogos = Array.from({ length: 9 }, (_, index) => ({
+      _id: `distribuidora-${index + 1}`,
+      name: `Distribuidora ${index + 1}`,
+      sector: 'Comércio e Distribuidoras',
+      logo: { assetUrl: `distribuidora-${index + 1}.svg` },
+    }))
+
+    client.fetch.mockResolvedValue({
+      caseLogos: [],
+      caseTestimonials: [],
+      clientLogos: [...bankLogos, ...distributorLogos],
+    })
+
+    render(
+      <MemoryRouter>
+        <Cases />
+      </MemoryRouter>,
+    )
+
+    const mobileGroups = await screen.findByTestId('mobile-client-groups')
+    const sectors = within(mobileGroups).getAllByTestId('client-sector')
+
+    expect(within(mobileGroups).queryByRole('button', { name: 'Todos' })).not.toBeInTheDocument()
+    expect(sectors).toHaveLength(2)
+    expect(within(sectors[0]).getByRole('heading', { name: 'Bancos' })).toHaveClass('text-slate-600')
+    expect(within(sectors[0]).getByRole('heading', { name: 'Bancos' })).not.toHaveClass('text-slate-950')
+    expect(within(sectors[1]).getByRole('heading', { name: 'Comércio e Distribuidoras' })).toHaveClass('text-slate-600')
+
+    const bankGrid = within(sectors[0]).getByTestId('mobile-client-logo-grid')
+    const distributorGrid = within(sectors[1]).getByTestId('mobile-client-logo-grid')
+
+    expect(bankGrid).toHaveClass('grid-cols-2')
+    expect(distributorGrid).toHaveClass('grid-cols-2')
+    expect(within(bankGrid).getAllByRole('img')).toHaveLength(8)
+    expect(within(distributorGrid).getAllByRole('img')).toHaveLength(8)
+
+    fireEvent.click(within(sectors[0]).getByRole('button', { name: 'Ver mais clientes de Bancos' }))
+
+    expect(within(bankGrid).getAllByRole('img')).toHaveLength(10)
+    expect(within(distributorGrid).getAllByRole('img')).toHaveLength(8)
+    expect(within(sectors[0]).queryByRole('button', { name: 'Ver mais clientes de Bancos' })).not.toBeInTheDocument()
+
+    fireEvent.click(within(sectors[1]).getByRole('button', { name: 'Ver mais clientes de Comércio e Distribuidoras' }))
+
+    expect(within(distributorGrid).getAllByRole('img')).toHaveLength(9)
   })
 
   it('renders selected case logos first and all client logos grouped by sector after', async () => {
@@ -215,17 +454,9 @@ describe('Cases', () => {
     expect(within(casesSection).getByRole('img', { name: 'Marca Banco Azul' })).not.toHaveClass('w-full')
     expect(within(casesSection).queryByRole('img', { name: 'Distribuidora Alfa' })).not.toBeInTheDocument()
 
-    const testimonialsSection = screen.getByTestId('cases-testimonials-section')
-    expect(within(testimonialsSection).queryByText('Testemunhais')).not.toBeInTheDocument()
-    expect(within(testimonialsSection).getByText('Depoimentos completos de clientes que transformaram processos, indicadores e rotinas com a Otimiza.')).toHaveClass('text-2xl', 'sm:text-4xl')
-    expect(within(testimonialsSection).getByText(/A parceria com a Otimiza reduziu o retrabalho/)).toBeInTheDocument()
-    expect(within(testimonialsSection).getAllByText('Ana Costa').length).toBeGreaterThan(0)
-    expect(within(testimonialsSection).getAllByText('Diretora de Operacoes').length).toBeGreaterThan(0)
-    expect(within(testimonialsSection).getByText('320h')).toBeInTheDocument()
-    expect(within(testimonialsSection).getByText('-45%')).toBeInTheDocument()
+    expect(screen.queryByTestId('cases-testimonials-section')).not.toBeInTheDocument()
 
     const clientsSection = screen.getByTestId('all-client-logos-section')
-    expect(testimonialsSection.compareDocumentPosition(clientsSection) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(clientsSection).toHaveClass('mx-auto', 'max-w-[1320px]')
     expect(within(clientsSection).queryByRole('textbox')).not.toBeInTheDocument()
     expect(within(clientsSection).queryByRole('searchbox')).not.toBeInTheDocument()
@@ -355,7 +586,7 @@ describe('Cases', () => {
   })
 
   it('shows testimonial cards as a full-width continuous carousel with the active card highlighted', async () => {
-    client.fetch.mockResolvedValue({
+    const testimonialResponse = {
       caseLogos: [],
       caseTestimonials: [
         {
@@ -390,15 +621,9 @@ describe('Cases', () => {
         },
       ],
       clientLogos: [],
-    })
+    }
 
-    render(
-      <MemoryRouter>
-        <Cases />
-      </MemoryRouter>,
-    )
-
-    await screen.findByRole('heading', { name: 'Cases' })
+    render(<CaseTestimonialsSection testimonials={testimonialResponse.caseTestimonials} />)
 
     const shell = screen.getByTestId('cases-testimonials-carousel-shell')
     const carousel = screen.getByTestId('cases-testimonials-carousel')
@@ -458,7 +683,7 @@ describe('Cases', () => {
     }
 
     globalThis.IntersectionObserver = ControlledIntersectionObserver
-    client.fetch.mockResolvedValue({
+    const testimonialResponse = {
       caseLogos: [],
       caseTestimonials: [
         {
@@ -473,15 +698,9 @@ describe('Cases', () => {
         },
       ],
       clientLogos: [],
-    })
+    }
 
-    render(
-      <MemoryRouter>
-        <Cases />
-      </MemoryRouter>,
-    )
-
-    await screen.findByRole('heading', { name: 'Cases' })
+    render(<CaseTestimonialsSection testimonials={testimonialResponse.caseTestimonials} />)
 
     const section = screen.getByTestId('cases-testimonials-section')
     const revealTarget = screen.getByTestId('cases-testimonials-reveal-target')
@@ -675,7 +894,7 @@ describe('Cases', () => {
     expect(settledEndTranslate).toBeGreaterThan(-301.2)
 
     expect(screen.getAllByRole('link', { name: 'Ler mais' })[1]).toHaveAttribute('href', '/cases/case-2')
-    expect(screen.getByTestId('cases-testimonials-section')).toHaveTextContent('Sulmaq Casting')
+    expect(screen.queryByTestId('cases-testimonials-section')).not.toBeInTheDocument()
   })
 })
 

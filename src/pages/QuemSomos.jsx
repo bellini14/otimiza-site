@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowDown, ArrowRight, BrainCircuit, GraduationCap, Stethoscope } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import SplitText from '../components/SplitText'
+import { pageTitleMotion } from '../components/pageTitleMotion'
 import { ScrollVelocity } from '../components/ui/ScrollVelocity'
 import { client } from '../lib/sanity'
 import heroBwImage from '../../imagens/hero quem somos-optimized.jpg'
@@ -208,12 +209,32 @@ function repeatClientLogos(logos, targetCount = 12) {
   return Array.from({ length: targetCount }, (_, index) => logos[index % logos.length])
 }
 
-function buildClientLogoRow(logos) {
-  return repeatClientLogos(logos).map((logo, index) => ({
-    instanceKey: `${logo._id || logo.name}-${index}`,
-    isDecorative: index >= logos.length,
-    logo,
-  }))
+function buildClientLogoRows(logos) {
+  if (logos.length === 0) {
+    return []
+  }
+
+  const rows = [
+    logos.filter((_, index) => index % 2 === 0),
+    logos.filter((_, index) => index % 2 === 1),
+  ].map((row) => (row.length > 0 ? row : logos))
+  const logosPerRow = Math.max(12, ...rows.map((row) => row.length))
+  const accessibleLogoKeys = new Set()
+
+  return rows.map((row) =>
+    repeatClientLogos(row, logosPerRow).map((logo, index) => {
+      const logoKey = logo._id || logo.name
+      const isDecorative = accessibleLogoKeys.has(logoKey)
+
+      accessibleLogoKeys.add(logoKey)
+
+      return {
+        instanceKey: `${logoKey}-${index}`,
+        isDecorative,
+        logo,
+      }
+    }),
+  )
 }
 
 function ClientLogoPill({ logo, isDecorative = false }) {
@@ -221,7 +242,7 @@ function ClientLogoPill({ logo, isDecorative = false }) {
     <img
       src={logo.logoUrl}
       alt={isDecorative ? '' : logo.logoAlt || logo.name}
-      className="max-h-11 w-auto max-w-[10rem] object-contain grayscale transition duration-300 group-hover/logo:grayscale-0"
+      className="max-h-6 w-auto max-w-[5.75rem] object-contain grayscale transition duration-300 group-hover/logo:grayscale-0 sm:max-h-11 sm:max-w-[10rem]"
       loading="eager"
       decoding="async"
     />
@@ -229,7 +250,7 @@ function ClientLogoPill({ logo, isDecorative = false }) {
 
   return (
     <div
-      className="group/logo flex h-20 w-[16rem] shrink-0 items-center justify-center rounded-full border border-[#5a6572]/58 bg-white/34 px-10 shadow-[inset_0_0_0_1px_rgba(90,101,114,0.28)] backdrop-blur-sm"
+      className="group/logo flex h-12 w-[9rem] shrink-0 items-center justify-center rounded-full border border-[#5a6572]/58 bg-white/34 px-4 shadow-[inset_0_0_0_1px_rgba(90,101,114,0.28)] backdrop-blur-sm sm:h-20 sm:w-[16rem] sm:px-10"
       aria-hidden={isDecorative ? 'true' : undefined}
     >
       {logo.website ? (
@@ -246,7 +267,7 @@ function ClientLogoPill({ logo, isDecorative = false }) {
 function ClientLogoCarousel() {
   const [logos, setLogos] = useState(clientLogoFallbacks)
   const [logosRef, logosVisible] = useScrollReveal(0.1)
-  const logoRow = useMemo(() => buildClientLogoRow(logos), [logos])
+  const logoRows = useMemo(() => buildClientLogoRows(logos), [logos])
 
   useEffect(() => {
     let isMounted = true
@@ -273,7 +294,7 @@ function ClientLogoCarousel() {
     <section
       ref={logosRef}
       aria-label="Clientes"
-      className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden bg-[#e5e9f1] py-8 sm:py-10"
+      className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden bg-[#e5e9f1] pt-5 pb-12 sm:py-10"
       data-testid="quem-somos-client-logo-carousel"
     >
       <div className={revealClass(logosVisible, 'scale-soft', 'relative w-full')}>
@@ -282,13 +303,13 @@ function ClientLogoCarousel() {
         <ScrollVelocity
           velocity={38}
           numCopies={5}
-          texts={[
-            <div key="clientes" className="flex items-center gap-9 pr-9">
+          texts={logoRows.map((logoRow, rowIndex) => (
+            <div key={`clientes-${rowIndex}`} className="flex items-center gap-4 pr-4 sm:gap-9 sm:pr-9">
               {logoRow.map(({ instanceKey, isDecorative, logo }) => (
                 <ClientLogoPill key={instanceKey} logo={logo} isDecorative={isDecorative} />
               ))}
-            </div>,
-          ]}
+            </div>
+          ))}
         />
       </div>
     </section>
@@ -374,7 +395,7 @@ function StoryRevealCopy() {
   return (
     <div
       ref={containerRef}
-      className="grid w-full max-w-[1320px] gap-8 text-justify text-[clamp(1.8rem,2.8vw,3.2rem)] font-light leading-[1.26] text-[#5a6572] [text-align-last:left]"
+      className="quem-somos-story-copy grid w-full gap-8 font-light text-[#5a6572]"
     >
       {storyParagraphs.map((paragraph, index) => {
         const startIndex = wordCounts.slice(0, index).reduce((total, count) => total + count, 0)
@@ -485,31 +506,28 @@ function QuemSomos() {
             data-testid="quem-somos-hero-background"
             className="quem-somos-hero__photo h-full w-full object-cover object-center"
           />
+          <div className="quem-somos-hero__wash absolute inset-0 bg-white/70 lg:hidden" />
           <div className="absolute inset-y-0 left-[44%] hidden w-[24%] -skew-x-[22deg] bg-gradient-to-r from-white/22 via-[#cad2e2]/18 to-transparent blur-[1px] md:block" />
           <div className="absolute inset-x-0 bottom-0 h-[34%] bg-gradient-to-t from-[#e5e9f1] via-[#e5e9f1]/72 to-transparent" />
         </div>
 
-        <div className="relative mx-auto grid min-h-[100svh] w-full max-w-[1320px] items-center gap-10 px-4 py-32 sm:px-5 sm:py-36 lg:grid-cols-[1fr_0.82fr] lg:px-0">
-          <div className="max-w-[48rem]">
+        <div
+          className="quem-somos-hero__shell home-menu-shell relative grid"
+          data-testid="quem-somos-menu-aligned-shell"
+        >
+          <div className="quem-somos-hero__copy max-w-[48rem]">
             <SplitText
               tag="h1"
               text="Quem somos"
-              className="font-display text-[clamp(4.35rem,8.35vw,7.35rem)] font-light leading-[0.92] text-[#5a6572]"
-              delay={100}
-              duration={0.6}
-              ease="power3.out"
-              splitType="chars"
-              from={{ opacity: 0, y: 40 }}
-              to={{ opacity: 1, y: 0 }}
-              threshold={0.1}
-              rootMargin="-100px"
-              textAlign="left"
+              className="quem-somos-hero__title internal-page-title font-display font-light text-[#5a6572]"
+              {...pageTitleMotion}
+              textAlign="inherit"
             />
             <p
               className={revealClass(
                 heroVisible,
                 'fade-up',
-                'mt-7 max-w-[45rem] text-[clamp(1.12rem,1.72vw,1.68rem)] font-light leading-[1.2] text-[#5a6572]/90 sm:mt-9',
+                'quem-somos-hero__intro text-[clamp(1.12rem,1.72vw,1.68rem)] font-light text-[#5a6572]/90',
               )}
               style={{ '--qs-reveal-delay': '220ms' }}
             >
@@ -517,12 +535,12 @@ function QuemSomos() {
             </p>
           </div>
 
-          <div className="flex justify-end">
+          <div className="quem-somos-hero__card-wrap">
             <div
               className={revealClass(
                 heroVisible,
                 'scale-soft',
-                'relative w-full max-w-[33rem] overflow-hidden rounded-[1rem] border border-white/90 bg-[#e6ebf8]/88 px-8 py-9 shadow-[0_26px_70px_rgba(90,101,114,0.05)] backdrop-blur-md sm:px-11 sm:py-11 lg:mb-0',
+                'quem-somos-hero__card relative w-full overflow-hidden rounded-[1rem] border border-white/90 bg-[#e6ebf8]/88 shadow-[0_26px_70px_rgba(90,101,114,0.05)] backdrop-blur-md',
               )}
               style={{ '--qs-reveal-delay': '320ms' }}
             >
@@ -531,10 +549,10 @@ function QuemSomos() {
               </p>
             </div>
           </div>
-        </div>
 
-        <div className="pointer-events-none absolute bottom-8 left-1/2 z-10 -translate-x-1/2 text-[#5a6572]/78 sm:bottom-10" aria-hidden="true">
-          <ArrowDown className="h-8 w-8 animate-scroll-cue" strokeWidth={1.4} />
+          <div className="quem-somos-hero__scroll pointer-events-none z-10 text-[#5a6572]/78" aria-hidden="true">
+            <ArrowDown className="h-8 w-8 animate-scroll-cue" strokeWidth={1.4} />
+          </div>
         </div>
       </section>
 
@@ -543,9 +561,12 @@ function QuemSomos() {
       <section
         ref={storyRef}
         data-testid="quem-somos-story"
-        className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-[#e5e9f1] px-4 py-20 sm:px-5 sm:py-24 lg:px-0 lg:py-28"
+        className="quem-somos-story quem-somos-mobile-section relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-[#e5e9f1]"
       >
-        <div className={revealClass(storyVisible, 'clip-rise', 'mx-auto flex min-h-[24rem] w-full max-w-[1320px] items-center justify-start')}>
+        <div
+          className={revealClass(storyVisible, 'clip-rise', 'quem-somos-story__content home-menu-shell flex items-center')}
+          data-testid="quem-somos-menu-aligned-shell"
+        >
           <StoryRevealCopy />
         </div>
       </section>
@@ -553,26 +574,26 @@ function QuemSomos() {
       <section
         id="tres-vertices"
         data-testid="quem-somos-pillars"
-        className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden bg-white px-4 py-24 sm:px-6 sm:py-28 lg:px-8 lg:py-36"
+        className="quem-somos-pillars quem-somos-mobile-section relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden bg-white"
       >
         <div
           ref={pillarsRef}
           data-testid="quem-somos-pillars-reveal-target"
-          className="mx-auto w-full max-w-[1320px]"
+          className="home-menu-shell"
         >
           <div
             data-reveal="pillars-heading"
-            className={`mx-auto mb-16 max-w-5xl text-center sm:mb-20 ${
+            className={`quem-somos-pillars__heading mx-auto ${
               pillarsVisible ? 'animate-enter' : 'opacity-0'
             }`}
           >
             <p className="mb-4 text-sm font-semibold text-[#5a6572]">Somos sustentados por três vértices de atuação</p>
-            <h2 className="font-display text-4xl font-medium leading-tight tracking-tight text-[#5a6572] sm:text-6xl">
+            <h2 className="quem-somos-section-title font-display font-medium leading-tight tracking-tight text-[#5a6572]">
               Consultoria, tecnologia e academia trabalhando juntas.
             </h2>
           </div>
 
-          <div className="flex gap-4 overflow-x-auto pb-1 sm:grid sm:grid-cols-3 sm:gap-6 sm:overflow-visible sm:pb-0 lg:gap-8">
+          <div className="quem-somos-pillars__rail flex">
             {pillars.map((pillar, index) => {
               const PillarIcon = pillar.icon
               const isActive = activePillarIndex === index
@@ -590,7 +611,7 @@ function QuemSomos() {
                   onPointerLeave={isActive ? undefined : () => handlePillarHoverLeave(index)}
                   data-reveal={`pillars-card-${index}`}
                   style={{ '--pillar-hover-x': '50%', '--pillar-hover-y': '50%' }}
-                  className={`pillar-card group relative flex min-w-[13rem] shrink-0 items-center justify-start gap-4 overflow-hidden rounded-xl border px-5 py-4 text-left transition-[box-shadow,opacity,transform] duration-300 sm:min-w-0 sm:flex-col sm:items-center sm:justify-center sm:gap-6 sm:px-8 sm:py-12 sm:text-center lg:py-14 ${
+                  className={`quem-somos-pillars__card pillar-card group relative flex shrink-0 items-center justify-start gap-4 overflow-hidden rounded-xl border px-5 py-4 text-left transition-[box-shadow,opacity,transform] duration-300 sm:flex-col sm:items-center sm:justify-center sm:gap-6 sm:px-8 sm:py-12 sm:text-center lg:py-14 ${
                     isActive || isActiveExiting
                       ? `${isActive ? 'bg-white' : 'bg-[#E5E9F1]'} border-[#5a6572]/28 shadow-[0_12px_35px_rgba(90,101,114,0.08)]`
                       : 'border-transparent bg-[#E5E9F1] hover:border-[#5a6572]/28'
@@ -631,13 +652,14 @@ function QuemSomos() {
 
           <div
             data-reveal="pillars-panel"
-            className={`mt-14 border-t border-[#5a6572]/18 pt-12 sm:mt-16 sm:pt-14 ${
+            data-testid="quem-somos-pillars-panel"
+            className={`quem-somos-pillars__panel border-t border-[#5a6572]/18 ${
               pillarsVisible ? 'animate-enter' : 'opacity-0'
             } [animation-delay:420ms]`}
           >
             <div
               key={activePillar.title}
-              className="pillar-panel-copy grid gap-10 md:grid-cols-[0.92fr_1.08fr] md:items-start lg:gap-20"
+              className="pillar-panel-copy grid gap-10"
             >
               <div className="flex flex-col gap-7">
                 <h3 className="text-3xl font-semibold leading-tight tracking-tight text-[#5a6572] sm:text-4xl">
@@ -645,7 +667,7 @@ function QuemSomos() {
                 </h3>
                 <Link
                   to="/contato"
-                  className="inline-flex self-start items-center gap-2 rounded-lg border border-[#5a6572]/24 bg-white px-5 py-2.5 text-sm font-medium text-[#5a6572] transition hover:bg-[#F7F8FA]"
+                  className="quem-somos-mobile-action inline-flex self-start items-center justify-center gap-2 rounded-lg border border-[#5a6572]/24 bg-white px-5 py-2.5 text-sm font-medium text-[#5a6572] transition hover:bg-[#F7F8FA]"
                 >
                   Entre em contato
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -665,15 +687,18 @@ function QuemSomos() {
         id="nossa-abordagem"
         ref={strategyRef}
         data-testid="quem-somos-strategy"
-        className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-[#FFFFFF] px-4 py-24 sm:px-6 sm:py-28 lg:px-8 lg:py-36"
+        className="quem-somos-strategy quem-somos-mobile-section relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-[#FFFFFF]"
       >
-        <div className="mx-auto grid w-full max-w-[1320px] lg:grid-cols-[0.45fr_0.55fr]">
+        <div
+          className="home-menu-shell grid lg:grid-cols-[0.45fr_0.55fr]"
+          data-testid="quem-somos-menu-aligned-shell"
+        >
           <div className="hidden lg:block" aria-hidden="true" />
 
-          <div className="w-full max-w-[700px] justify-self-end">
+          <div className="quem-somos-strategy__content w-full justify-self-end">
             <h2
               data-reveal="strategy-heading"
-              className={revealClass(strategyVisible, 'slide-left', 'font-display text-5xl font-semibold tracking-tight text-[#5A6572] sm:text-[3.35rem]')}
+              className={revealClass(strategyVisible, 'slide-left', 'quem-somos-section-title font-display font-semibold tracking-tight text-[#5A6572]')}
             >
               Estratégia
             </h2>
@@ -683,15 +708,15 @@ function QuemSomos() {
             >
               Nossa orientação estratégica está baseada em:
             </p>
-            <div className="mt-12 grid gap-8">
+            <div className="quem-somos-strategy__items mt-12 grid">
               {strategyItems.map((item, index) => (
                 <div
                   key={item}
                   data-reveal={`strategy-item-${index}`}
-                  className={revealClass(strategyVisible, 'fade-up', 'flex items-start gap-7 sm:items-center')}
+                  className={revealClass(strategyVisible, 'fade-up', 'quem-somos-strategy__item flex items-start sm:items-center')}
                   style={{ '--qs-reveal-delay': strategyRevealDelays[index] }}
                 >
-                  <span className="mt-2 inline-flex h-4 w-4 shrink-0 rounded-full bg-[#5A6572] sm:mt-0" aria-hidden="true" />
+                  <span className="quem-somos-strategy__marker mt-2 inline-flex shrink-0 rounded-full bg-[#5A6572] sm:mt-0" aria-hidden="true" />
                   <p className="text-base font-semibold leading-8 text-[#5A6572] sm:text-lg">{item}</p>
                 </div>
               ))}
@@ -706,7 +731,7 @@ function QuemSomos() {
             <Link
               to="/contato"
               aria-label="Entrar em contato sobre estratégia"
-              className={revealClass(strategyVisible, 'scale-soft', 'mt-9 inline-flex min-h-16 w-full items-center justify-center rounded-[0.2rem] bg-[#5A6572] px-10 text-base font-semibold text-white transition hover:bg-[#4d5661] sm:w-auto sm:min-w-[17rem]')}
+              className={revealClass(strategyVisible, 'scale-soft', 'quem-somos-mobile-action mt-9 inline-flex min-h-16 items-center justify-center rounded-[0.2rem] bg-[#5A6572] px-10 text-base font-semibold text-white transition hover:bg-[#4d5661] sm:min-w-[17rem]')}
               style={{ '--qs-reveal-delay': '640ms' }}
             >
               Entre em contato
@@ -718,7 +743,7 @@ function QuemSomos() {
       <section
         ref={missionRef}
         data-testid="quem-somos-mission"
-        className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden bg-[#cad2e2] px-4 py-28 text-[#2F363E] sm:px-6 sm:py-32 lg:px-8 lg:py-40"
+        className="quem-somos-mission quem-somos-mobile-section relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden bg-[#cad2e2] text-[#2F363E]"
       >
         <img
           src={hairlineIcon}
@@ -727,7 +752,10 @@ function QuemSomos() {
           className={revealClass(missionVisible, 'hero-photo', 'pointer-events-none absolute left-1/2 top-1/2 h-auto w-[52rem] max-w-none -translate-x-1/2 -translate-y-1/2 sm:w-[68rem] lg:w-[84rem]')}
           style={{ '--qs-reveal-delay': '120ms' }}
         />
-        <div className="relative mx-auto flex w-full max-w-[1180px] flex-col items-center text-center">
+        <div
+          className="quem-somos-mission__content home-menu-shell relative flex flex-col items-center text-center"
+          data-testid="quem-somos-menu-aligned-shell"
+        >
           <p
             className={revealClass(missionVisible, 'fade-up', 'mb-7 text-sm font-semibold text-[#2F363E]/68')}
             style={{ '--qs-reveal-delay': '60ms' }}
@@ -735,7 +763,7 @@ function QuemSomos() {
             Nossa missão
           </p>
           <blockquote
-            className={revealClass(missionVisible, 'fade-up', 'max-w-5xl font-display text-2xl font-normal leading-[1.34] tracking-normal sm:text-[2.65rem] sm:leading-[1.24] lg:text-[3rem] lg:leading-[1.22]')}
+            className={revealClass(missionVisible, 'fade-up', 'quem-somos-mission__quote font-display font-normal tracking-normal')}
             style={{ '--qs-reveal-delay': '120ms' }}
           >
             “Contribuir para o crescimento e a solidez dos clientes, viabilizando mudanças, através de ações competentes e personalizadas, promovendo o êxito do negócio, com uma equipe inspirada e motivada”.
@@ -746,12 +774,15 @@ function QuemSomos() {
       <section
         ref={consultantsRef}
         data-testid="quem-somos-consultants"
-        className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-[#FFFFFF] px-4 py-24 sm:px-6 sm:py-28 lg:px-8 lg:py-36"
+        className="quem-somos-consultants quem-somos-mobile-section relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-[#FFFFFF]"
       >
-        <div className="mx-auto grid w-full max-w-[1320px] lg:grid-cols-2">
-          <div className="w-full max-w-[700px] justify-self-start">
-            <h2 className={revealClass(consultantsVisible, 'fade-up', 'font-display text-5xl font-semibold tracking-tight text-[#5A6572] sm:text-[3.35rem]')}>Consultores</h2>
-            <div className="mt-10 grid gap-6 text-base leading-8 text-[#5A6572]/78">
+        <div
+          className="home-menu-shell grid lg:grid-cols-2"
+          data-testid="quem-somos-menu-aligned-shell"
+        >
+          <div className="quem-somos-consultants__content w-full justify-self-start">
+            <h2 className={revealClass(consultantsVisible, 'fade-up', 'quem-somos-section-title font-display font-semibold tracking-tight text-[#5A6572]')}>Consultores</h2>
+            <div className="quem-somos-consultants__copy mt-10 grid text-base text-[#5A6572]/78">
               <p className={revealClass(consultantsVisible, 'fade-up')} style={{ '--qs-reveal-delay': consultantsRevealDelays[0] }}>
               Nossos consultores possuem elevadas qualificações acadêmicas e práticas. Diferentes perfis profissionais em sinergia, garantindo alto desempenho nos contextos de administração. Um grupo coeso e multidisciplinar, gerador de inteligência coletiva, orientado para e pelo seu negócio.
               </p>
@@ -769,7 +800,7 @@ function QuemSomos() {
               href="https://www.linkedin.com/company/otimiza-consultoria"
               target="_blank"
               rel="noreferrer"
-              className={revealClass(consultantsVisible, 'scale-soft', 'mt-9 inline-flex min-h-16 w-full items-center justify-center gap-2 rounded-[0.2rem] bg-[#5A6572] px-10 text-base font-semibold text-white transition hover:bg-[#4d5661] sm:w-auto sm:min-w-[17rem]')}
+              className={revealClass(consultantsVisible, 'scale-soft', 'quem-somos-mobile-action mt-9 inline-flex min-h-16 items-center justify-center gap-2 rounded-[0.2rem] bg-[#5A6572] px-10 text-base font-semibold text-white transition hover:bg-[#4d5661] sm:min-w-[17rem]')}
               style={{ '--qs-reveal-delay': '480ms' }}
             >
               Acesse nosso LinkedIn

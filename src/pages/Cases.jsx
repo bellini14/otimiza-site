@@ -6,6 +6,7 @@ import { groupClientsBySector } from '../data/clientSectors'
 import { sitePages } from '../data/sitePages'
 import Silk from '../components/Silk'
 import SplitText from '../components/SplitText'
+import { useDragCarousel } from '../hooks/useDragCarousel'
 
 const CAROUSEL_DRAG_RESPONSE = 0.96
 const CAROUSEL_RELEASE_VELOCITY = 0.18
@@ -14,6 +15,10 @@ const CAROUSEL_EDGE_MAX_BOUNCE = 92
 const CAROUSEL_EDGE_RESISTANCE = 250
 const CAROUSEL_EDGE_SPRING = 0.16
 const CAROUSEL_EDGE_DAMPING = 0.6
+const SHOW_CASE_TESTIMONIALS = false
+const CASES_CAROUSEL_GAP = 32
+const MOBILE_CLIENT_INITIAL_LOGOS = 8
+const MOBILE_CLIENT_LOAD_MORE_LOGOS = 6
 
 const clientLogoFields = `{
   _id,
@@ -117,6 +122,24 @@ function getElasticTranslateX(translateX, minTranslateX) {
   return translateX
 }
 
+function getViewportWidth() {
+  return typeof window === 'undefined' ? 1024 : window.innerWidth
+}
+
+function getHomeInlinePx(viewportWidth) {
+  if (viewportWidth >= 1024) return 40
+  if (viewportWidth >= 640) return 32
+  return 24
+}
+
+function getCasesSlideStep(viewportWidth) {
+  if (viewportWidth < 640) {
+    return viewportWidth - getHomeInlinePx(viewportWidth) * 2 + CASES_CAROUSEL_GAP
+  }
+
+  return ((Math.min(viewportWidth, 1380) - 48 - CASES_CAROUSEL_GAP) / 2) + CASES_CAROUSEL_GAP
+}
+
 function testimonialRevealClass(isVisible, direction, className = '') {
   return [
     'testimonial-scroll-reveal',
@@ -126,7 +149,7 @@ function testimonialRevealClass(isVisible, direction, className = '') {
   ].filter(Boolean).join(' ')
 }
 
-function ClientLogoCard({ logo, variant = 'client', className = '', testId }) {
+function ClientLogoCard({ logo, variant = 'client', className = '', testId, fluid = false }) {
   const logoSrc = logo.logo ? urlFor(logo.logo).ignoreImageParams().width(420).fit('max').url() : logo.logoUrl
   const logoImage = (
     <img
@@ -149,7 +172,9 @@ function ClientLogoCard({ logo, variant = 'client', className = '', testId }) {
       data-testid={testId || `case-client-card-${logo._id || logo.name}`}
       className={[
         'flex h-full flex-col rounded-lg bg-white p-4 text-center',
-        isCaseCard ? 'min-h-[25rem] w-72 select-none rounded-xl bg-[#DDE4EF] px-6 py-6 sm:w-80 lg:w-[22rem]' : '',
+        isCaseCard
+          ? `min-h-[25rem] select-none rounded-xl bg-[#DDE4EF] px-6 py-6 ${fluid ? 'w-full' : 'w-72 sm:w-80 lg:w-[22rem]'}`
+          : '',
         className,
       ]
         .filter(Boolean)
@@ -192,7 +217,7 @@ function ClientLogoCard({ logo, variant = 'client', className = '', testId }) {
   )
 }
 
-function CasesCarousel({ caseLogos }) {
+function DesktopCasesCarousel({ caseLogos }) {
   const shellRef = useRef(null)
   const carouselRef = useRef(null)
   const animationFrameRef = useRef(null)
@@ -439,6 +464,7 @@ function CasesCarousel({ caseLogos }) {
       <div
         ref={carouselRef}
         data-testid="cases-carousel"
+        data-mobile-snap="false"
         className={[
           'flex w-max gap-8 pb-4 pt-1',
           isDragging ? 'cursor-grabbing' : 'cursor-grab',
@@ -478,6 +504,187 @@ function CasesCarousel({ caseLogos }) {
           aria-hidden="true"
         />
       </div>
+    </div>
+  )
+}
+
+function MobileCasesCarousel({ caseLogos, viewportWidth }) {
+  const {
+    shellRef,
+    trackRef,
+    translateX,
+    isDragging,
+    dragDirection,
+    hintPosition,
+    updateHintPosition,
+    trackHandlers,
+  } = useDragCarousel({
+    snapStep: getCasesSlideStep(viewportWidth),
+    snapOnRelease: true,
+    geometryKey: viewportWidth,
+  })
+
+  return (
+    <div
+      ref={shellRef}
+      data-testid="cases-carousel-shell"
+      className="group relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen overflow-hidden py-2 md:overflow-visible"
+      onPointerMove={updateHintPosition}
+    >
+      <span
+        data-testid="cases-carousel-fade"
+        className="cases-carousel-fade pointer-events-none absolute inset-y-0 left-0 z-20 w-24 bg-gradient-to-r from-[#E5E9F1] via-[#E5E9F1]/85 to-transparent sm:w-36"
+        aria-hidden="true"
+      />
+      <span
+        data-testid="cases-carousel-fade"
+        className="cases-carousel-fade pointer-events-none absolute inset-y-0 right-0 z-20 w-24 bg-gradient-to-l from-[#E5E9F1] via-[#E5E9F1]/85 to-transparent sm:w-36"
+        aria-hidden="true"
+      />
+      <span
+        data-testid="cases-drag-hint"
+        className="pointer-events-none absolute left-0 top-0 z-30 hidden rounded-full bg-slate-950/80 px-4 py-2 text-xs font-semibold text-white opacity-0 shadow-xl backdrop-blur transition-opacity duration-300 ease-out group-hover:opacity-100 sm:inline-flex"
+        style={{
+          transform: `translateX(${hintPosition.x}px) translateY(${hintPosition.y}px) scale(0.92)`,
+        }}
+      >
+        <span>Arrastar</span>
+        <ChevronRight
+          data-testid="cases-drag-arrow"
+          className="ml-1.5 h-3.5 w-3.5"
+          aria-hidden="true"
+          style={{
+            transform: `rotate(${dragDirection === 'left' ? 180 : 0}deg) scale(${isDragging ? 1.12 : 1})`,
+            transition: 'transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+          }}
+        />
+      </span>
+      <div
+        ref={trackRef}
+        data-testid="cases-carousel"
+        data-mobile-snap="true"
+        className={[
+          'flex w-max gap-8 pb-4 pt-1 will-change-transform',
+          isDragging ? 'cursor-grabbing' : 'cursor-grab',
+        ].join(' ')}
+        style={{
+          transform: `translateX(${translateX}px)`,
+          transition: 'none',
+          touchAction: 'pan-y',
+          userSelect: 'none',
+        }}
+        {...trackHandlers}
+      >
+        <div
+          data-testid="case-carousel-edge-spacer"
+          className="cases-carousel-edge-spacer shrink-0"
+          aria-hidden="true"
+        />
+        {caseLogos.map((logo, index) => (
+          <div
+            key={logo._id || logo.name}
+            data-testid="case-carousel-item"
+            data-carousel-snap-slide="true"
+            className="cases-carousel-item case-carousel-reveal shrink-0"
+            style={{
+              '--case-carousel-reveal-index': String(index),
+              animationDelay: `${120 + index * 90}ms`,
+            }}
+          >
+            <ClientLogoCard
+              logo={logo}
+              variant="case"
+              fluid
+              testId={`case-client-card-${logo._id || logo.name}`}
+            />
+          </div>
+        ))}
+        <div
+          data-testid="case-carousel-edge-spacer"
+          className="cases-carousel-edge-spacer shrink-0"
+          aria-hidden="true"
+        />
+      </div>
+    </div>
+  )
+}
+
+function CasesCarousel({ caseLogos }) {
+  const [viewportWidth, setViewportWidth] = useState(getViewportWidth)
+
+  useEffect(() => {
+    function handleResize() {
+      setViewportWidth(window.innerWidth)
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  const isMobileCarousel = viewportWidth < 768
+
+  return isMobileCarousel ? (
+    <MobileCasesCarousel
+      key="mobile"
+      caseLogos={caseLogos}
+      viewportWidth={viewportWidth}
+    />
+  ) : (
+    <DesktopCasesCarousel key="desktop" caseLogos={caseLogos} />
+  )
+}
+
+function MobileClientLogoGroups({ groups }) {
+  const [visibleCounts, setVisibleCounts] = useState({})
+
+  function showMore(sector) {
+    setVisibleCounts((currentCounts) => ({
+      ...currentCounts,
+      [sector]: (currentCounts[sector] || MOBILE_CLIENT_INITIAL_LOGOS) + MOBILE_CLIENT_LOAD_MORE_LOGOS,
+    }))
+  }
+
+  return (
+    <div data-testid="mobile-client-groups" className="space-y-14">
+      {groups.map((group) => {
+        const visibleCount = visibleCounts[group.sector] || MOBILE_CLIENT_INITIAL_LOGOS
+        const visibleLogos = group.clients.slice(0, visibleCount)
+        const hasMore = visibleCount < group.clients.length
+
+        return (
+          <section key={group.sector} data-testid="client-sector" className="border-t border-slate-200 pt-5">
+            <div className="mb-5 flex items-center gap-4">
+              <h3 className="max-w-[85%] text-lg font-semibold leading-snug text-slate-600">
+                {group.sector}
+              </h3>
+              <span className="h-px flex-1 bg-brand-red/60" aria-hidden="true" />
+            </div>
+
+            <div data-testid="mobile-client-logo-grid" className="grid grid-cols-2 gap-3">
+              {visibleLogos.map((logo, index) => (
+                <div
+                  key={logo._id || `${group.sector}-${logo.name}`}
+                  className="client-logo-reveal min-w-0"
+                  style={{ animationDelay: `${Math.min(index * 45, 315)}ms` }}
+                >
+                  <ClientLogoCard logo={logo} className="min-w-0 p-2" />
+                </div>
+              ))}
+            </div>
+
+            {hasMore && (
+              <button
+                type="button"
+                aria-label={`Ver mais clientes de ${group.sector}`}
+                onClick={() => showMore(group.sector)}
+                className="mt-6 inline-flex items-center border-b border-slate-950 pb-1 text-sm font-semibold text-slate-950 transition-colors hover:border-brand-red hover:text-brand-red"
+              >
+                Ver mais
+              </button>
+            )}
+          </section>
+        )
+      })}
     </div>
   )
 }
@@ -779,7 +986,7 @@ function ClientLogosCarousel({ logos, animationKey }) {
   )
 }
 
-function CaseTestimonialsSection({ testimonials }) {
+export function CaseTestimonialsSection({ testimonials }) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [isVisible, setIsVisible] = useState(() => typeof IntersectionObserver === 'undefined')
   const revealTargetRef = useRef(null)
@@ -1056,6 +1263,7 @@ function Cases() {
   const [clientLogos, setClientLogos] = useState([])
   const [activeClientSector, setActiveClientSector] = useState('all')
   const [clientFilterAnimationRun, setClientFilterAnimationRun] = useState(0)
+  const [clientViewportWidth, setClientViewportWidth] = useState(getViewportWidth)
   const page = sitePages.cases
   const clientGroups = groupClientsBySector(clientLogos)
   const clientSectorFilters = clientGroups.map((group) => group.sector)
@@ -1067,6 +1275,7 @@ function Cases() {
     : clientGroups.find((group) => group.sector === selectedClientSector)?.clients || []
   const visibleCaseTestimonials = caseTestimonials.length > 0 ? caseTestimonials : MOCK_CASE_TESTIMONIALS
   const clientFilterAnimationKey = `${clientFilterAnimationRun}-${selectedClientSector}`
+  const isMobileClientLayout = clientViewportWidth < 768
 
   function selectClientSector(sector) {
     setActiveClientSector(sector)
@@ -1079,6 +1288,15 @@ function Cases() {
     return () => {
       document.documentElement.classList.remove('cases-white-background')
     }
+  }, [])
+
+  useEffect(() => {
+    function handleResize() {
+      setClientViewportWidth(window.innerWidth)
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
   }, [])
 
   useEffect(() => {
@@ -1158,7 +1376,9 @@ function Cases() {
         </div>
       </section>
 
-      <CaseTestimonialsSection testimonials={visibleCaseTestimonials} />
+      {SHOW_CASE_TESTIMONIALS && (
+        <CaseTestimonialsSection testimonials={visibleCaseTestimonials} />
+      )}
 
       <section aria-labelledby="client-logos-title" data-testid="all-client-logos-section" className="relative mx-auto max-w-[1320px]">
         <div className="mb-10 max-w-3xl">
@@ -1174,7 +1394,10 @@ function Cases() {
         </div>
 
         {clientGroups.length > 0 && (
-          <div className="space-y-7">
+          isMobileClientLayout ? (
+            <MobileClientLogoGroups groups={clientGroups} />
+          ) : (
+          <div className="space-y-7" data-testid="desktop-client-logos">
             <div className="flex flex-wrap gap-2" aria-label="Filtrar clientes por setor">
               <button
                 type="button"
@@ -1207,6 +1430,7 @@ function Cases() {
 
             <ClientLogosCarousel logos={visibleClientLogos} animationKey={clientFilterAnimationKey} />
           </div>
+          )
         )}
       </section>
 

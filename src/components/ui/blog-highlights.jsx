@@ -16,6 +16,8 @@ export function BlogHighlights() {
   const [sectionRef, isVisible] = useScrollReveal(0.1)
   const [blogPosts, setBlogPosts] = useState(staticBlogPosts)
   const [slidesPerView, setSlidesPerView] = useState(getSlidesPerView())
+  const slideStep = getSlideStep(slidesPerView)
+  const isMobileCarousel = slidesPerView === 1
   const {
     shellRef,
     trackRef,
@@ -25,7 +27,7 @@ export function BlogHighlights() {
     hintPosition,
     updateHintPosition,
     trackHandlers,
-  } = useDragCarousel()
+  } = useDragCarousel({ snapStep: slideStep, snapOnRelease: isMobileCarousel })
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -51,13 +53,6 @@ export function BlogHighlights() {
   }, [])
 
   const maxIndex = Math.max(blogPosts.length - slidesPerView, 0)
-  const slideStep = Math.max(
-    (((typeof window === 'undefined' ? 1380 : Math.min(window.innerWidth, 1380))) -
-      (slidesPerView - 1) * STAGE_GAP_PX) /
-      slidesPerView +
-      STAGE_GAP_PX,
-    1,
-  )
   const currentIndex = Math.min(Math.max(Math.round(-translateX / slideStep), 0), maxIndex)
 
   useEffect(() => {
@@ -72,9 +67,9 @@ export function BlogHighlights() {
   return (
     <section
       ref={sectionRef}
-      className="relative w-[100vw] left-[50%] right-[50%] -ml-[50vw] -mr-[50vw] overflow-hidden bg-[#EFEFF4] pb-32 pt-16 sm:pb-40 sm:pt-24"
+      className="relative w-[100vw] left-[50%] right-[50%] -ml-[50vw] -mr-[50vw] overflow-hidden bg-[#EFEFF4] pb-12 pt-16 sm:pb-16 sm:pt-24"
     >
-      <div className="mx-auto max-w-[1380px] px-4 sm:px-6 lg:px-8">
+      <div className="home-menu-shell" data-testid="home-menu-aligned-shell">
         <div className="mb-12 flex flex-col gap-8 lg:mb-14 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
             <h2
@@ -121,12 +116,12 @@ export function BlogHighlights() {
       >
         <span
           data-testid="blog-carousel-fade"
-          className="pointer-events-none absolute inset-y-0 left-0 z-20 w-24 bg-gradient-to-r from-[#EFEFF4] via-[#EFEFF4]/85 to-transparent sm:w-36 lg:w-48"
+          className="blog-carousel-fade pointer-events-none absolute inset-y-0 left-0 z-20 w-24 bg-gradient-to-r from-[#EFEFF4] via-[#EFEFF4]/85 to-transparent sm:w-36 lg:w-48"
           aria-hidden="true"
         />
         <span
           data-testid="blog-carousel-fade"
-          className="pointer-events-none absolute inset-y-0 right-0 z-20 w-24 bg-gradient-to-l from-[#EFEFF4] via-[#EFEFF4]/85 to-transparent sm:w-36 lg:w-48"
+          className="blog-carousel-fade pointer-events-none absolute inset-y-0 right-0 z-20 w-24 bg-gradient-to-l from-[#EFEFF4] via-[#EFEFF4]/85 to-transparent sm:w-36 lg:w-48"
           aria-hidden="true"
         />
         <span
@@ -148,6 +143,7 @@ export function BlogHighlights() {
         <div
           ref={trackRef}
           data-testid="blog-slider-track"
+          data-mobile-snap={isMobileCarousel ? 'true' : 'false'}
           className={cn(
             'flex w-max gap-8 pb-4 pt-1 will-change-transform',
             isDragging ? 'cursor-grabbing' : 'cursor-grab',
@@ -162,7 +158,7 @@ export function BlogHighlights() {
         >
           <div
             data-testid="blog-carousel-edge-spacer"
-            className="w-40 shrink-0 sm:w-48 lg:w-[13rem]"
+            className="blog-carousel-edge-spacer shrink-0"
             aria-hidden="true"
           />
           {blogPosts.map((post, index) => {
@@ -172,12 +168,14 @@ export function BlogHighlights() {
               <div
                 key={post.title}
                 data-testid="blog-slide"
+                data-carousel-snap-slide="true"
                 data-visible={isSlideVisible ? 'true' : 'false'}
                 aria-hidden={isSlideVisible ? undefined : true}
-                className="w-[calc(100vw-2rem)] shrink-0 sm:w-[calc((min(100vw,1380px)-3rem-32px)/2)] xl:w-[calc((min(100vw,1380px)-4rem-64px)/3)]"
+                className="blog-slide shrink-0"
               >
                 <ProjectCard
                   {...post}
+                  compact
                   disableHover
                   linkState={{
                     postPreview: {
@@ -195,7 +193,7 @@ export function BlogHighlights() {
           })}
           <div
             data-testid="blog-carousel-edge-spacer"
-            className="w-40 shrink-0 sm:w-48 lg:w-[13rem]"
+            className="blog-carousel-edge-spacer shrink-0"
             aria-hidden="true"
           />
         </div>
@@ -219,6 +217,28 @@ function getSlidesPerView() {
   }
 
   return 1
+}
+
+function getHomeInlinePx(viewportWidth) {
+  if (viewportWidth >= 1024) return 40
+  if (viewportWidth >= 640) return 32
+  return 24
+}
+
+function getSlideStep(slidesPerView) {
+  if (typeof window === 'undefined') {
+    return (1380 - (slidesPerView - 1) * STAGE_GAP_PX) / slidesPerView + STAGE_GAP_PX
+  }
+
+  if (slidesPerView === 1) {
+    return window.innerWidth - getHomeInlinePx(window.innerWidth) * 2 + STAGE_GAP_PX
+  }
+
+  return Math.max(
+    ((Math.min(window.innerWidth, 1380) - (slidesPerView - 1) * STAGE_GAP_PX) / slidesPerView) +
+      STAGE_GAP_PX,
+    1,
+  )
 }
 
 function useScrollReveal(threshold = 0.15) {

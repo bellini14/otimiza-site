@@ -1,5 +1,38 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import technologyFactoryImage from '../../imagens/technology-otmsuite-factory.png'
+
+const TECHNOLOGY_MARQUEE_ITEMS = 20
+
+function TechnologyMarqueeCycle({ duplicate = false }) {
+  return (
+    <div
+      className="flex flex-col gap-3 pb-3 sm:gap-4 sm:pb-4"
+      data-testid="technology-marquee-cycle"
+      aria-hidden={duplicate ? 'true' : undefined}
+    >
+      {[...Array(TECHNOLOGY_MARQUEE_ITEMS)].map((_, index) => (
+        <div
+          key={index}
+          className="h-16 w-16 shrink-0 rounded-md bg-black sm:h-20 sm:w-20 sm:rounded-lg md:h-24 md:w-24"
+        />
+      ))}
+    </div>
+  )
+}
+
+function TechnologyMarqueeColumn({ reverse = false }) {
+  return (
+    <div className="relative h-full w-16 overflow-hidden sm:w-20 md:w-24">
+      <div
+        className={`technology-marquee__track${reverse ? ' technology-marquee__track--reverse' : ''}`}
+        data-testid="technology-marquee-track"
+      >
+        <TechnologyMarqueeCycle />
+        <TechnologyMarqueeCycle duplicate />
+      </div>
+    </div>
+  )
+}
 
 function useScrollReveal(threshold = 0.15) {
   const [isVisible, setIsVisible] = useState(false)
@@ -32,31 +65,36 @@ export default function TechnologySection() {
   return (
     <section className="relative w-[100vw] left-[50%] right-[50%] -ml-[50vw] -mr-[50vw] overflow-hidden bg-white">
       {/* Container for Text */}
-      <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="max-w-[1320px] mx-auto w-full">
+      <div className="relative z-10 w-full">
+        <div className="home-menu-shell" data-testid="home-menu-aligned-shell">
           <div className="flex flex-col lg:flex-row min-h-[auto] lg:min-h-[600px]">
             {/* Left Col (Text) */}
-            <div ref={textRef} className="py-12 sm:py-16 md:py-20 lg:py-24 xl:py-28 flex flex-col justify-center relative w-full lg:w-1/2 lg:pr-12 xl:pr-16">
+            <div ref={textRef} className="py-10 sm:py-16 md:py-20 lg:py-24 xl:py-28 flex flex-col justify-center relative w-full lg:w-1/2 lg:pr-12 xl:pr-16">
             
             {/* Header moved inside */}
-            <div className="mb-8 sm:mb-10">
-              <h2 className={`mb-4 font-display text-4xl text-slate-900 sm:text-5xl lg:text-6xl ${textVisible ? 'animate-enter' : 'opacity-0'} [animation-delay:120ms]`}>
+            <div className="mb-6 sm:mb-10">
+              <h2 className={`mb-3 font-display text-[2.5rem] leading-[1.05] text-slate-900 sm:mb-4 sm:text-5xl lg:text-6xl ${textVisible ? 'animate-enter' : 'opacity-0'} [animation-delay:120ms]`}>
                 Nossa tecnologia
               </h2>
-              <p className={`max-w-2xl text-base text-slate-600 sm:text-lg ${textVisible ? 'animate-enter' : 'opacity-0'} [animation-delay:240ms]`}>
+              <p className={`max-w-[18rem] text-sm leading-6 text-slate-600 sm:max-w-2xl sm:text-lg ${textVisible ? 'animate-enter' : 'opacity-0'} [animation-delay:240ms]`}>
                 Acreditamos que os negócios são criados ao redor da tecnologia
               </p>
             </div>
 
-            <div className={`w-16 h-px bg-slate-300 mb-8 sm:mb-10 ${textVisible ? 'animate-enter' : 'opacity-0'} [animation-delay:340ms]`}></div>
+            <div className={`w-12 h-px bg-slate-300 mb-7 sm:w-16 sm:mb-10 ${textVisible ? 'animate-enter' : 'opacity-0'} [animation-delay:340ms]`}></div>
 
-            <h3 className={`font-display text-2xl sm:text-3xl lg:text-2xl xl:text-3xl text-slate-900 leading-relaxed mb-8 ${textVisible ? 'animate-enter' : 'opacity-0'} [animation-delay:440ms]`}>
+            <h3 className={`max-w-[25rem] font-display text-[1.25rem] sm:text-3xl lg:text-2xl xl:text-3xl text-slate-900 leading-[1.45] sm:leading-relaxed mb-7 sm:mb-8 ${textVisible ? 'animate-enter' : 'opacity-0'} [animation-delay:440ms]`}>
               E assim, são todos os serviços de consultoria que a Otimiza entrega para seus clientes. Para efetivamente entregar resultados relacionados a automação em nossos clientes, desenvolvemos a OTMSuite.
             </h3>
             <div className={`${textVisible ? 'animate-enter' : 'opacity-0'} [animation-delay:560ms]`}>
-              <Link to="/tecnologia" className="btn-primary inline-flex text-white bg-slate-900 hover:bg-slate-800">
+              <a
+                href="https://otmsuite.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary inline-flex text-white bg-slate-900 hover:bg-slate-800"
+              >
                 Saiba mais
-              </Link>
+              </a>
             </div>
           </div>
         </div>
@@ -64,7 +102,7 @@ export default function TechnologySection() {
       </div>
 
       {/* Right Col (Image & Effect) */}
-      <div className="relative lg:absolute lg:right-0 lg:top-0 lg:bottom-0 w-full lg:w-[50vw] h-[400px] sm:h-[500px] lg:h-auto overflow-hidden bg-black z-0">
+      <div className="relative lg:absolute lg:right-0 lg:top-0 lg:bottom-0 w-full lg:w-[50vw] h-[320px] sm:h-[460px] lg:h-auto overflow-hidden bg-black z-0" data-testid="technology-image-panel">
           {/* Overlay fade */}
           <div className="absolute inset-0 bg-gradient-to-b lg:bg-gradient-to-r from-white via-white/60 to-transparent via-30% z-20 pointer-events-none"></div>
           
@@ -72,9 +110,9 @@ export default function TechnologySection() {
             <div className="absolute inset-0 bg-white"></div>
             <div className="absolute inset-0">
               <img 
-                alt="Profissional utilizando tecnologia" 
-                className="w-full h-full object-cover" 
-                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=1200&h=1200&fit=crop&q=80" 
+                alt="Profissional utilizando OTMSuite em ambiente industrial" 
+                className="w-full h-full object-cover lg:object-right" 
+                src={technologyFactoryImage} 
               />
             </div>
             
@@ -83,29 +121,8 @@ export default function TechnologySection() {
               <div className="absolute inset-0" style={{ transform: 'rotate(45deg) scale(2.42)', transformOrigin: 'center center' }}>
                 <div className="flex gap-2 sm:gap-3 md:gap-4 h-full items-center justify-center">
                   
-                  {/* Column 1 */}
-                  <div className="relative overflow-hidden w-16 sm:w-20 md:w-24">
-                    <div className="flex flex-col gap-3 sm:gap-4 animate-marqueeVertical">
-                      {[...Array(20)].map((_, i) => (
-                        <div key={`col1-a-${i}`} className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-md sm:rounded-lg bg-black shrink-0"></div>
-                      ))}
-                      {[...Array(20)].map((_, i) => (
-                        <div key={`col1-b-${i}`} className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-md sm:rounded-lg bg-black shrink-0" aria-hidden="true"></div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Column 2 */}
-                  <div className="relative overflow-hidden w-16 sm:w-20 md:w-24">
-                    <div className="flex flex-col gap-3 sm:gap-4 animate-marqueeVerticalReverse">
-                      {[...Array(20)].map((_, i) => (
-                        <div key={`col2-a-${i}`} className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-md sm:rounded-lg bg-black shrink-0"></div>
-                      ))}
-                      {[...Array(20)].map((_, i) => (
-                        <div key={`col2-b-${i}`} className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-md sm:rounded-lg bg-black shrink-0" aria-hidden="true"></div>
-                      ))}
-                    </div>
-                  </div>
+                  <TechnologyMarqueeColumn />
+                  <TechnologyMarqueeColumn reverse />
                   
                 </div>
               </div>

@@ -17,6 +17,7 @@ const ProjectCard = React.forwardRef(function ProjectCard(
     linkText = 'View Project',
     eyebrow,
     disableHover = false,
+    compact = false,
     publishedAt,
     slug,
     ...props
@@ -31,13 +32,17 @@ const ProjectCard = React.forwardRef(function ProjectCard(
     <article
       ref={ref}
       className={cn(
-        'group relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900',
+        'group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900',
+        'h-full',
         !disableHover && 'transition-all duration-500 ease-in-out hover:-translate-y-2',
         className,
       )}
       {...props}
     >
-      <div className="aspect-video overflow-hidden bg-slate-100">
+      <div
+        data-testid="project-card-image-wrap"
+        className="aspect-video overflow-hidden bg-slate-100"
+      >
         <img
           src={imgSrc}
           alt={title}
@@ -54,11 +59,22 @@ const ProjectCard = React.forwardRef(function ProjectCard(
         ) : null}
       </div>
 
-      <div className="flex flex-1 flex-col p-6">
-        <h3 className="text-xl font-semibold transition-colors duration-300 group-hover:text-slate-700">
+      <div className={cn('flex flex-1 flex-col', compact ? 'p-5 sm:p-6' : 'p-6')}>
+        <h3 className={cn(
+          'font-semibold transition-colors duration-300 group-hover:text-slate-700',
+          compact ? 'line-clamp-2 text-xl leading-snug sm:line-clamp-none sm:leading-normal' : 'text-xl',
+        )}>
           {title}
         </h3>
-        <p className="mt-3 flex-1 text-muted-foreground">{description}</p>
+        <p
+          data-testid="project-card-description"
+          className={cn(
+            'text-muted-foreground',
+            compact ? 'mt-3 line-clamp-4 text-base leading-7 sm:flex-1 sm:line-clamp-none sm:leading-normal' : 'mt-3 flex-1',
+          )}
+        >
+          {description}
+        </p>
 
         {isInternalLink ? (
           <Link to={link} state={linkState} className={linkBaseClassName}>

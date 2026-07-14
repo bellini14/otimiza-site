@@ -115,13 +115,18 @@ export default function FeaturesSection() {
     }, 200);
   };
 
+  const handleMobileFeatureStep = (direction) => {
+    const nextIndex = (activeFeatureIndex + direction + featuresData.length) % featuresData.length;
+    handleFeatureClick(nextIndex);
+  };
+
   useEffect(() => () => {
     window.clearTimeout(featureActiveExitTimeoutRef.current);
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-10 sm:py-16 md:py-20 lg:py-24 bg-white dark:bg-neutral-950 px-4 sm:px-6 lg:px-8" id="nossas-solucoes">
-      <div className="max-w-[1320px] mx-auto w-full">
+    <section ref={sectionRef} className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-10 sm:py-16 md:py-20 lg:py-24 bg-white dark:bg-neutral-950" id="nossas-solucoes">
+      <div className="home-menu-shell" data-testid="home-menu-aligned-shell">
         <div className={`text-center mb-10 md:mb-14 ${isVisible ? 'animate-enter [animation-duration:800ms]' : 'opacity-0'}`}>
           <h2 className="mb-3 font-display text-3xl sm:text-4xl lg:text-5xl text-neutral-900 dark:text-white tracking-tight">
             Nossas Soluções
@@ -133,7 +138,7 @@ export default function FeaturesSection() {
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 lg:min-h-[540px]">
           {/* ── Left Sidebar ── */}
-          <div className="lg:col-span-4 flex flex-col gap-3 lg:h-[540px]">
+          <div className="hidden lg:col-span-4 lg:flex lg:flex-col gap-3 lg:h-[540px]">
             {featuresData.map((feature, index) => {
               const isActive = index === activeFeatureIndex;
               const isActiveExiting = featureActiveExitIndex === index;
@@ -189,18 +194,20 @@ export default function FeaturesSection() {
             <div key={activeFeature.id} className="feature-detail-panel-transition rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/90 p-6 md:p-7 lg:p-8 flex-1 flex flex-col relative z-0 overflow-hidden lg:min-h-[540px] lg:max-h-[540px]">
               <div className="feature-detail-transition flex-1 flex flex-col z-10 w-full">
                 {/* Header */}
-                <div className="feature-detail-transition__header mb-6 lg:mb-8 shrink-0">
-                  <div className="inline-flex items-center justify-center w-11 h-11 lg:w-12 lg:h-12 rounded-xl bg-red-50 dark:bg-neutral-800 mb-5 border border-red-100 dark:border-neutral-700">
-                    <div className="w-[22px] h-[22px] lg:w-6 lg:h-6 text-brand-red">
+                <div className="feature-detail-transition__header mb-6 lg:mb-8 shrink-0 flex items-center gap-4 lg:items-start lg:gap-5">
+                  <div className="feature-detail-mobile-icon inline-flex items-center justify-center w-14 h-14 lg:w-12 lg:h-12 rounded-xl bg-red-50 dark:bg-neutral-800 mb-0 border border-red-100 dark:border-neutral-700 shrink-0">
+                    <div className="w-7 h-7 lg:w-6 lg:h-6 text-brand-red">
                       {activeFeature.icon}
                     </div>
                   </div>
-                  <h3 className="text-xl md:text-2xl lg:text-[28px] font-display font-bold text-neutral-900 dark:text-white mb-2 tracking-tight">
-                    {activeFeature.title}
-                  </h3>
-                  <p className="text-sm md:text-[15px] text-neutral-500 dark:text-neutral-400 leading-relaxed max-w-3xl">
-                    {activeFeature.description}
-                  </p>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-2xl md:text-3xl lg:text-[28px] font-display font-bold text-neutral-900 dark:text-white mb-2 tracking-tight">
+                      {activeFeature.title}
+                    </h3>
+                    <p className="text-base md:text-[17px] lg:text-[15px] text-neutral-500 dark:text-neutral-400 leading-relaxed max-w-3xl">
+                      {activeFeature.description}
+                    </p>
+                  </div>
                 </div>
                 
                 {/* Content Cards */}
@@ -244,7 +251,38 @@ export default function FeaturesSection() {
 
                 {/* CTA — always pinned to bottom */}
                 {activeFeature.cta && (
-                  <div className="feature-detail-transition__item mt-auto pt-5 lg:pt-6 border-t border-neutral-100 dark:border-neutral-800 shrink-0">
+                  <div className="feature-detail-transition__item mt-auto pt-5 lg:pt-6 border-t border-neutral-100 dark:border-neutral-800 shrink-0 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between lg:block">
+                    <div
+                      data-testid="features-mobile-card-navigation"
+                      className="feature-detail-mobile-footer-nav lg:hidden flex items-center justify-between gap-3 rounded-2xl border border-neutral-200/80 bg-[#F9FAFB] p-2 dark:border-neutral-800/60 dark:bg-neutral-800/40"
+                    >
+                      <button
+                        type="button"
+                        aria-label="Solucao anterior"
+                        onClick={() => handleMobileFeatureStep(-1)}
+                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-neutral-200 bg-white text-brand-red shadow-[0_8px_22px_rgba(90,101,114,0.08)] transition-colors active:bg-red-50 dark:border-neutral-700 dark:bg-neutral-900"
+                      >
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+
+                      <span className="min-w-[4.25rem] text-center text-xs font-bold tracking-[0.14em] text-neutral-500 dark:text-neutral-400">
+                        {activeFeatureIndex + 1} / {featuresData.length}
+                      </span>
+
+                      <button
+                        type="button"
+                        aria-label="Proxima solucao"
+                        onClick={() => handleMobileFeatureStep(1)}
+                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-brand-red shadow-[0_8px_22px_rgba(224,32,32,0.08)] transition-colors active:bg-red-100 dark:border-neutral-700 dark:bg-neutral-800"
+                      >
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
+
                     <Link to={activeFeature.ctaLink} className="btn-primary inline-flex items-center group/btn">
                       {activeFeature.cta}
                       <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 ml-2 transition-transform group-hover/btn:translate-x-1">

@@ -21,10 +21,10 @@ Transformar a seção iniciada por “A consultoria que vai lá e faz.” em uma
 
 ## Movimento
 
-- Em mobile, cada um dos três grupos, abertura, manifesto e assinatura, inicia com `opacity: 0` e deslocamento vertical de `1.25rem`.
-- Um `IntersectionObserver` ativa cada grupo quando ele cruza uma faixa de 10% ao redor do centro da tela, usando `rootMargin: -45% 0px -45% 0px` e `threshold: 0`.
-- Cada grupo permanece visível depois da primeira ativação.
-- A transição usa `opacity 700ms` e `transform 760ms`, ambas com `cubic-bezier(0.22, 1, 0.36, 1)`; assinatura recebe atraso de `100ms` depois do manifesto.
+- A composição inteira, abertura, manifesto e assinatura, inicia com `opacity: 0` e deslocamento vertical de `1.25rem`.
+- Um único `IntersectionObserver` ativa a seção quando ela cruza uma faixa de 10% ao redor do centro da tela, usando `rootMargin: -45% 0px -45% 0px` e `threshold: 0`.
+- Todos os grupos aparecem simultaneamente e permanecem visíveis depois da primeira ativação, tanto no mobile quanto no desktop.
+- A transição usa `opacity 700ms` e `transform 760ms`, ambas com `cubic-bezier(0.22, 1, 0.36, 1)`, sem atrasos entre grupos.
 - Com `prefers-reduced-motion`, o conteúdo aparece imediatamente e sem transição.
 
 ## Validação

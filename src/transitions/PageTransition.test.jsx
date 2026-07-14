@@ -1,5 +1,71 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { scrollToLocationTarget } from './PageTransition'
+import { readFileSync } from 'node:fs'
+import { scrollToLocationTarget, shouldAnimatePageTransition } from './transitionViewport'
+import {
+  finishPageTransition,
+  isPageTransitionActive,
+  startPageTransition,
+} from './transitionState'
+import { getInternalNavigationTarget } from './navigationInterception'
+import { PAGE_TRANSITION_TIMING } from './transitionTiming'
+
+describe('page transition timing', () => {
+  it('keeps page transition animation desktop-only', () => {
+    expect(shouldAnimatePageTransition({ innerWidth: 769 })).toBe(false)
+    expect(shouldAnimatePageTransition({ innerWidth: 770 })).toBe(true)
+  })
+
+  it('keeps the complete transition light and avoids a perceptible frozen hold', () => {
+    const totalDuration =
+      PAGE_TRANSITION_TIMING.cover +
+      PAGE_TRANSITION_TIMING.hold +
+      PAGE_TRANSITION_TIMING.reveal
+
+    expect(totalDuration).toBeLessThanOrEqual(1.3)
+    expect(PAGE_TRANSITION_TIMING.hold).toBeLessThanOrEqual(0.05)
+    expect(PAGE_TRANSITION_TIMING.reveal).toBeGreaterThan(0)
+    expect(PAGE_TRANSITION_TIMING.swapPhase).toBe('after-cover')
+  })
+
+  it('softens the new route only after it is mounted', () => {
+    const css = readFileSync('src/index.css', 'utf8')
+
+    expect(css).toMatch(/\.page-transition-route\s*\{[^}]*animation:\s*page-transition-route-enter 240ms/s)
+  })
+
+  it('removes route enter animation below the desktop breakpoint', () => {
+    const css = readFileSync('src/index.css', 'utf8')
+
+    expect(css).toMatch(/@media\s*\(max-width:\s*769px\)\s*\{[^}]*\.page-transition-route\s*\{[^}]*animation:\s*none/s)
+  })
+})
+
+describe('page transition hierarchy', () => {
+  it('marks the global transition as active until its animation finishes', () => {
+    startPageTransition()
+
+    expect(isPageTransitionActive()).toBe(true)
+    expect(document.documentElement).toHaveClass('page-transition-active')
+
+    finishPageTransition()
+
+    expect(isPageTransitionActive()).toBe(false)
+    expect(document.documentElement).not.toHaveClass('page-transition-active')
+  })
+
+})
+
+describe('internal navigation interception', () => {
+  it('keeps internal navigation pending until the transition commits it', () => {
+    const anchor = document.createElement('a')
+    anchor.href = 'https://otimiza.test/quem-somos'
+
+    const target = getInternalNavigationTarget(anchor, 'https://otimiza.test/')
+
+    expect(target.href).toBe('/quem-somos')
+    expect(target.location.pathname).toBe('/quem-somos')
+  })
+})
 
 describe('scrollToLocationTarget', () => {
   beforeEach(() => {

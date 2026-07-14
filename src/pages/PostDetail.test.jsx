@@ -146,6 +146,16 @@ describe('PostDetail', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/posts/post-com-imagem-inline/likes', { method: 'GET' })
   })
 
+  it('highlights the category inside the post with the same yellow strip', async () => {
+    renderPostDetail()
+
+    const category = await screen.findByText('Insights')
+
+    expect(category).toHaveClass('inspire-category-label')
+    expect(category.querySelector('svg')).toBeNull()
+    expect(category).not.toHaveClass('font-bold', 'uppercase', 'tracking-[0.18em]')
+  })
+
   it('shows the liked state immediately when the browser already stored the like', async () => {
     window.localStorage.setItem('post-like:post-com-imagem-inline', 'true')
     fetchMock.mockResolvedValueOnce(createJsonResponse({ slug: 'post-com-imagem-inline', count: 7 }))

@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { ArrowUpRight } from 'lucide-react'
-import { motion, useScroll, useTransform } from 'motion/react'
+import { motion, useReducedMotion, useScroll, useSpring, useTransform } from 'motion/react'
 import { Link } from 'react-router-dom'
+import SplitText from '../components/SplitText'
+import { pageTitleMotion } from '../components/pageTitleMotion'
 
 const solutions = [
   {
@@ -105,7 +107,30 @@ function ServiceChapter({ solution, index, isLast }) {
     target: chapterRef,
     offset: ['start end', 'end start'],
   })
-  const depthOpacity = useTransform(scrollYProgress, [0, 0.42, 0.72, 1], [0, 0.06, 0.24, 0.36])
+  const prefersReducedMotion = useReducedMotion()
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 110,
+    damping: 28,
+    mass: 0.35,
+    restDelta: 0.001,
+  })
+  const headingY = useTransform(smoothProgress, [0, 0.16, 0.3, 0.78, 1], [32, 20, 0, 0, -10])
+  const headingOpacity = useTransform(
+    smoothProgress,
+    [0, 0.12, 0.26, 0.82, 1],
+    [0, 0.42, 1, 1, 0.76],
+  )
+  const contentY = useTransform(smoothProgress, [0, 0.18, 0.32, 0.8, 1], [40, 28, 0, 0, -8])
+  const contentOpacity = useTransform(
+    smoothProgress,
+    [0, 0.18, 0.32, 0.84, 1],
+    [0, 0.2, 1, 1, 0.8],
+  )
+  const depthOpacity = useTransform(
+    smoothProgress,
+    [0, 0.4, 0.72, 1],
+    [0, 0.035, 0.18, 0.3],
+  )
 
   return (
     <section
@@ -118,12 +143,17 @@ function ServiceChapter({ solution, index, isLast }) {
         data-testid="solution-sticky-section"
       >
         <div className="oquefazemos-service-chapter__stack">
-          <div className="oquefazemos-service-chapter__heading">
-            <span>{formatNumber(index)}</span>
+          <MotionDiv
+            className="oquefazemos-service-chapter__heading"
+            style={prefersReducedMotion ? undefined : { opacity: headingOpacity, y: headingY }}
+          >
             <h2>{solution.title}</h2>
-          </div>
+          </MotionDiv>
 
-          <div className="oquefazemos-service-chapter__content">
+          <MotionDiv
+            className="oquefazemos-service-chapter__content"
+            style={prefersReducedMotion ? undefined : { opacity: contentOpacity, y: contentY }}
+          >
             <p className="oquefazemos-service-chapter__intro">{solution.intro}</p>
 
             <div className="oquefazemos-service-chapter__capabilities">
@@ -142,10 +172,11 @@ function ServiceChapter({ solution, index, isLast }) {
               Quero contratar essa solução!
               <ArrowUpRight aria-hidden="true" size={18} strokeWidth={2} />
             </Link>
-          </div>
+          </MotionDiv>
 
-          <div
+          <MotionDiv
             className="oquefazemos-service-chapter__visual"
+            style={prefersReducedMotion ? undefined : { opacity: contentOpacity, y: contentY }}
             data-number={formatNumber(index)}
             aria-hidden="true"
           />
@@ -153,7 +184,7 @@ function ServiceChapter({ solution, index, isLast }) {
 
         <MotionDiv
           className="oquefazemos-service-chapter__depth-overlay"
-          style={{ opacity: depthOpacity }}
+          style={prefersReducedMotion ? undefined : { opacity: depthOpacity }}
         />
       </article>
     </section>
@@ -172,9 +203,14 @@ function OQueFazemos() {
   return (
     <section className="oquefazemos-page" aria-labelledby="oquefazemos-title">
       <header className="oquefazemos-hero">
-        <h1 id="oquefazemos-title" className="oquefazemos-hero__title">
-          O Que Fazemos
-        </h1>
+        <SplitText
+          id="oquefazemos-title"
+          tag="h1"
+          text="O Que Fazemos"
+          className="internal-page-title oquefazemos-hero__title"
+          {...pageTitleMotion}
+          textAlign="center"
+        />
         <p className="oquefazemos-hero__copy">
           Unimos consultoria, tecnologia e desenvolvimento de pessoas para transformar
           prioridades empresariais em processos melhores, decisões mais rápidas e resultados

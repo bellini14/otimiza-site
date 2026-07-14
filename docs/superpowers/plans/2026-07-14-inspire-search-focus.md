@@ -4,7 +4,7 @@
 
 **Goal:** Keep the Inspire search input focused and fully editable while automatic URL-synchronized search runs.
 
-**Architecture:** Preserve the existing controlled input, `q` query parameter, and 300 ms search debounce. Prevent same-path query-string updates from remounting the global route tree by keying the route wrapper only by pathname; prove the behavior through an app-level interaction test that exercises the real BrowserRouter and route wrapper.
+**Architecture:** Preserve the existing controlled input, `q` query parameter, and 300 ms search debounce. Prevent same-path query-string updates from remounting the global route tree by keying the route wrapper only by pathname, and tag local query writes with ordered component-scoped navigation IDs so delayed echoes cannot overwrite newer input or mask genuine history navigation.
 
 **Tech Stack:** React 19, React Router 7, Vitest, Testing Library, user-event, Vite
 
@@ -12,22 +12,23 @@
 
 ## File Structure
 
-- Modify `src/pages/Inspire.test.jsx`: add an app-level regression test for uninterrupted multi-character typing, URL synchronization, and retained focus.
+- Create `src/App.test.jsx`: add isolated app-level regression tests for uninterrupted multi-character typing, URL synchronization, retained focus, initial hydration, and external query navigation.
 - Modify `src/App.jsx`: limit the global route wrapper key to `displayedLocation.pathname` so query changes do not remount the route.
+- Modify `src/components/InspireLayout.jsx`: identify delayed URL echoes with ordered component-scoped navigation metadata so they cannot overwrite newer keystrokes or mask browser history.
 
 ### Task 1: Protect Continuous Inspire Search Typing
 
 **Files:**
-- Modify: `src/pages/Inspire.test.jsx`
+- Create: `src/App.test.jsx`
 - Modify: `src/App.jsx`
+- Modify: `src/components/InspireLayout.jsx`
 
 - [ ] **Step 1: Write the failing regression test**
 
-Import `act`, `userEvent`, and `App`, then add this focused behavior test to the existing Inspire suite. Waiting across two animation frames forces `PageTransition` to commit the same-path query update before focus is asserted:
+Create an isolated App test that mocks only the Inspire article feed. Import `act`, `userEvent`, and `App`, then add the focused behavior test. Waiting across two animation frames forces `PageTransition` to commit the same-path query update before focus is asserted:
 
 ```jsx
 it('keeps the search focused while typing and synchronizing the URL', async () => {
-  client.fetch.mockResolvedValue([])
   const originalUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`
 
   try {
@@ -65,7 +66,7 @@ it('keeps the search focused while typing and synchronizing the URL', async () =
 Run:
 
 ```bash
-npx vitest run src/pages/Inspire.test.jsx -t "keeps the search focused while typing and synchronizing the URL"
+npx vitest run src/App.test.jsx -t "keeps the search focused while typing and synchronizing the URL"
 ```
 
 Expected: FAIL after the forced animation frames because the first `q` update changes the route wrapper key, remounts the search input, and loses its element identity and focus.
@@ -85,22 +86,36 @@ Do not change input state, URL synchronization, debounce timing, or search fetch
 Run:
 
 ```bash
-npx vitest run src/pages/Inspire.test.jsx -t "keeps the search focused while typing and synchronizing the URL"
+npx vitest run src/App.test.jsx -t "keeps the search focused while typing and synchronizing the URL"
 ```
 
-Expected: PASS with the complete term in the input and URL and the input still focused.
+Expected after the pathname-only key change: the input keeps its identity and focus, but the test may still expose delayed internal URL echoes overwriting newer keystrokes.
 
-- [ ] **Step 5: Run affected regression suites**
+- [ ] **Step 5: Protect newer local input from delayed internal URL echoes**
+
+Add failing tests showing that a genuine external same-path `q` navigation updates the input even while focused and that type-clear-Back restores the retained query. Give every local URL write a unique component-scoped ID and monotonic sequence in router state. When the synchronization effect observes a pending internal ID, retire it and all older superseded IDs; unmatched external navigation must clear pending metadata and update local state.
+
+- [ ] **Step 6: Run the App tests and verify GREEN**
 
 Run:
 
 ```bash
-npx vitest run src/pages/Inspire.test.jsx src/pages/InspireNewsletter.test.jsx src/transitions/PageTransition.test.jsx
+npx vitest run src/App.test.jsx
+```
+
+Expected: all App search tests PASS, covering initial hydration, continuous typing, and external navigation.
+
+- [ ] **Step 7: Run affected regression suites**
+
+Run:
+
+```bash
+npx vitest run src/App.test.jsx src/pages/Inspire.test.jsx src/pages/InspireNewsletter.test.jsx src/transitions/PageTransition.test.jsx
 ```
 
 Expected: all affected tests PASS.
 
-- [ ] **Step 6: Run project verification**
+- [ ] **Step 8: Run project verification**
 
 Run:
 
@@ -111,13 +126,13 @@ npm run build
 
 Expected: the complete test suite and production build both exit successfully.
 
-- [ ] **Step 7: Review the scoped diff**
+- [ ] **Step 9: Review the scoped diff**
 
 Run:
 
 ```bash
-git diff --check -- src/App.jsx src/pages/Inspire.test.jsx
-git diff -- src/App.jsx src/pages/Inspire.test.jsx
+git diff --check -- src/App.jsx src/components/InspireLayout.jsx src/App.test.jsx
+git diff -- src/App.jsx src/components/InspireLayout.jsx src/App.test.jsx
 ```
 
-Expected: no whitespace errors and only the regression test plus the pathname-only route key correction.
+Expected: no whitespace errors and only the regression tests, pathname-only route key correction, and internal query-echo tracking.

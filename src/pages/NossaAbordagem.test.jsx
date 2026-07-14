@@ -30,6 +30,7 @@ const cssBlock = (selector) => {
 }
 
 const originalIntersectionObserver = globalThis.IntersectionObserver
+const originalMatchMedia = window.matchMedia
 let intersectionObservers = []
 
 class ControlledIntersectionObserver {
@@ -41,6 +42,11 @@ class ControlledIntersectionObserver {
 
   observe(element) {
     this.element = element
+    this.elements = [...(this.elements || []), element]
+  }
+
+  unobserve(element) {
+    this.elements = (this.elements || []).filter((observedElement) => observedElement !== element)
   }
 
   disconnect() {}
@@ -50,6 +56,7 @@ afterEach(() => {
   cleanup()
   document.documentElement.classList.remove('nossa-abordagem-white-background')
   globalThis.IntersectionObserver = originalIntersectionObserver
+  window.matchMedia = originalMatchMedia
   intersectionObservers = []
   vi.clearAllMocks()
 })
@@ -61,6 +68,41 @@ describe('NossaAbordagem', () => {
     expect(document.documentElement).toHaveClass('nossa-abordagem-white-background')
     expect(screen.getByRole('heading', { name: 'Nossa abordagem' })).toBeInTheDocument()
     expect(screen.getAllByTestId('nossa-abordagem-block')).toHaveLength(9)
+    const editorialQuote = screen.getByTestId('nossa-abordagem-editorial-quote')
+    expect(editorialQuote.tagName).toBe('SECTION')
+    expect(editorialQuote).toHaveAttribute('aria-labelledby', 'nossa-abordagem-editorial-quote-title')
+    expect(within(editorialQuote).getByText('A consultoria que vai lá e faz.')).toHaveAttribute(
+      'id',
+      'nossa-abordagem-editorial-quote-title',
+    )
+    expect(editorialQuote.querySelector('blockquote')).toHaveTextContent(/Atemporal é o humano/i)
+    expect(editorialQuote.querySelector('blockquote')).toHaveTextContent(/Criar o Atemporal é projetar/i)
+    expect(editorialQuote.querySelector('blockquote')).not.toHaveTextContent(/Há 35 anos/i)
+    expect(editorialQuote.querySelector('footer')).toHaveTextContent('Silvana Tiburi Bettiol')
+    expect(editorialQuote.querySelector('footer')).toHaveTextContent('Fundadora, Diretora e Consultora')
+    expect(cssBlock('.nossa-abordagem-editorial-quote')).toMatch(/padding:\s*5rem 1\.5rem;/)
+    expect(cssBlock('.nossa-abordagem-editorial-quote')).toMatch(/gap:\s*3\.5rem;/)
+    expect(cssBlock('.nossa-abordagem-editorial-quote__opening')).toMatch(/font-size:\s*clamp\(2\.25rem,\s*10vw,\s*3\.25rem\);/)
+    expect(cssBlock('.nossa-abordagem-editorial-quote__opening')).toMatch(/line-height:\s*0\.98;/)
+    expect(cssBlock('.nossa-abordagem-editorial-quote__opening')).toMatch(/align-content:\s*start;/)
+    expect(cssBlock('.nossa-abordagem-editorial-quote__manifesto')).toMatch(/max-width:\s*32rem;/)
+    expect(cssBlock('.nossa-abordagem-editorial-quote__manifesto')).toMatch(/border-left:\s*1px solid var\(--brand-red\);/)
+    expect(cssBlock('.nossa-abordagem-editorial-quote__manifesto')).toMatch(/font-size:\s*clamp\(1\.1rem,\s*4\.8vw,\s*1\.3rem\);/)
+    expect(cssBlock('.nossa-abordagem-editorial-quote__manifesto')).toMatch(/line-height:\s*1\.55;/)
+    expect(cssBlock('.nossa-abordagem-editorial-quote__signature')).toMatch(/gap:\s*0\.35rem;/)
+    expect(cssBlock('.nossa-abordagem-editorial-quote__name')).toMatch(/font-size:\s*1\.05rem;/)
+    expect(cssBlock('.nossa-abordagem-editorial-quote__role')).toMatch(/font-size:\s*0\.9rem;/)
+    expect(cssBlock('.nossa-abordagem-editorial-quote__name')).toMatch(/line-height:\s*1\.35;/)
+    expect(cssBlock('.nossa-abordagem-editorial-quote__role')).toMatch(/line-height:\s*1\.35;/)
+    expect(cssBlock('.nossa-abordagem-editorial-quote__group')).toMatch(/opacity:\s*0;/)
+    expect(cssBlock('.nossa-abordagem-editorial-quote__group')).toMatch(/transform:\s*translateY\(1\.25rem\);/)
+    expect(cssBlock('.nossa-abordagem-editorial-quote__group')).toMatch(/opacity 700ms cubic-bezier\(0\.22,\s*1,\s*0\.36,\s*1\)/)
+    expect(cssBlock('.nossa-abordagem-editorial-quote__group')).toMatch(/transform 760ms cubic-bezier\(0\.22,\s*1,\s*0\.36,\s*1\)/)
+    expect(cssBlock('.nossa-abordagem-editorial-quote--visible .nossa-abordagem-editorial-quote__group')).toMatch(/opacity:\s*1;/)
+    expect(cssBlock('.nossa-abordagem-editorial-quote--visible .nossa-abordagem-editorial-quote__group')).toMatch(/transform:\s*translateY\(0\);/)
+    expect(cssBlock('.nossa-abordagem-editorial-quote__signature')).not.toMatch(/transition-delay:/)
+    expect(siteCss()).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*?\.nossa-abordagem-editorial-quote__group\s*\{[^}]*opacity:\s*1;[^}]*transform:\s*none;[^}]*transition:\s*none;/)
+    expect(siteCss()).toMatch(/@media\s*\(min-width:\s*768px\)[\s\S]*?\.nossa-abordagem-editorial-quote\s*\{[^}]*padding:\s*clamp\(6rem,\s*9vw,\s*9rem\) 1\.5rem;/)
     expect(screen.queryByText(/Página \d+/)).not.toBeInTheDocument()
   })
 
@@ -73,14 +115,17 @@ describe('NossaAbordagem', () => {
     expect(screen.getByTestId('nossa-abordagem-hero-content')).toHaveClass('nossa-abordagem-hero__content')
     expect(screen.getByTestId('nossa-abordagem-hero-content')).toHaveClass('items-center', 'justify-center')
     expect(screen.getByRole('heading', { name: 'Nossa abordagem' })).toHaveClass('split-parent')
-    expect(screen.getByRole('heading', { name: 'Nossa abordagem' })).toHaveAttribute('data-split-delay', '35')
-    expect(screen.getByRole('heading', { name: 'Nossa abordagem' })).toHaveAttribute('data-split-duration', '0.42')
+    expect(screen.getByRole('heading', { name: 'Nossa abordagem' })).toHaveAttribute('data-split-delay', '100')
+    expect(screen.getByRole('heading', { name: 'Nossa abordagem' })).toHaveAttribute('data-split-duration', '0.6')
     expect(screen.getByTestId('nossa-abordagem-hero-icon')).toHaveClass(
       'nossa-abordagem-hero__icon',
       'nossa-abordagem-hero__icon--top-left',
       'home-hero__blob',
     )
-    expect(screen.getByRole('heading', { name: 'Nossa abordagem' })).toHaveClass('nossa-abordagem-hero__title')
+    expect(screen.getByRole('heading', { name: 'Nossa abordagem' })).toHaveClass(
+      'nossa-abordagem-hero__title',
+      'internal-page-title',
+    )
     expect(container.querySelector('.nossa-abordagem-hero__title-soft')).not.toBeInTheDocument()
     expect(container.querySelector('.nossa-abordagem-hero__title-strong')).not.toBeInTheDocument()
   })
@@ -92,11 +137,14 @@ describe('NossaAbordagem', () => {
     expect(cssBlock('.nossa-abordagem-hero__icon')).toMatch(/left:\s*0;/)
     expect(cssBlock('.nossa-abordagem-hero__icon')).toMatch(/display:\s*block;/)
     expect(cssBlock('.nossa-abordagem-hero__icon')).toMatch(/width:\s*100vw;/)
-    expect(cssBlock('.nossa-abordagem-hero__title')).toMatch(/font-size:\s*clamp\(3\.2rem,\s*6\.2vw,\s*6rem\);/)
+    expect(cssBlock('.nossa-abordagem-hero__icon')).toMatch(/--nossa-abordagem-icon-to-transform:\s*translate\(-5%,\s*-3%\) scale\(1\) rotate\(0deg\);/)
     expect(cssBlock('.nossa-abordagem-hero__title')).toMatch(/color:\s*var\(--brand-ink\);/)
-    expect(cssBlock('.nossa-abordagem-hero__title')).toMatch(/line-height:\s*1\.04;/)
     expect(cssBlock('.nossa-abordagem-hero__title')).toMatch(/padding-bottom:\s*0\.12em;/)
+    expect(cssBlock('.internal-page-title')).toMatch(/font-size:\s*clamp\(4\.35rem,\s*8\.35vw,\s*7\.35rem\);/)
+    expect(cssBlock('.internal-page-title')).toMatch(/line-height:\s*0\.92;/)
     expect(cssBlock('.nossa-abordagem-hero__title > span:nth-of-type(2) .split-char')).toMatch(/font-weight:\s*500;/)
+    expect(siteCss()).toMatch(/@media\s*\(max-width:\s*639px\)\s*\{[^}]*\.nossa-abordagem-hero__icon\s*\{[^}]*--nossa-abordagem-icon-to-transform:\s*translate\(-57%,\s*9%\) scale\(1\.78\) rotate\(0deg\);[^}]*width:\s*154vw;[^}]*max-width:\s*none;[\s\S]*\.nossa-abordagem-hero__title\s*\{[^}]*font-size:\s*clamp\(3\.45rem,\s*15\.8vw,\s*3\.95rem\);/s)
+    expect(siteCss()).toMatch(/@keyframes\s+nossa-abordagem-blob-slide-in\s*\{[\s\S]*transform:\s*var\(--nossa-abordagem-icon-from-transform\);[\s\S]*opacity:\s*var\(--nossa-abordagem-icon-opacity\);[\s\S]*transform:\s*var\(--nossa-abordagem-icon-to-transform\);/)
   })
 
   it('renders the timeless statement as an image-backed composition with boxed text', () => {
@@ -115,13 +163,13 @@ describe('NossaAbordagem', () => {
     expect(cssBlock('.nossa-abordagem-timeless')).toMatch(/min-height:\s*clamp\(34rem,\s*78svh,\s*48rem\);/)
     expect(cssBlock('.nossa-abordagem-timeless__content')).toMatch(/width:\s*min\(100%,\s*1320px\);/)
     expect(cssBlock('.nossa-abordagem-timeless__content')).toMatch(/margin:\s*0 auto;/)
-    expect(cssBlock('.nossa-abordagem-timeless__content')).toMatch(/align-items:\s*flex-end;/)
+    expect(cssBlock('.nossa-abordagem-timeless__content')).toMatch(/align-items:\s*center;/)
     expect(cssBlock('.nossa-abordagem-timeless__content')).toMatch(/justify-content:\s*center;/)
     expect(cssBlock('.nossa-abordagem-timeless__content')).toMatch(/padding:\s*clamp\(3rem,\s*7vw,\s*5rem\) 0\.4375rem;/)
     expect(cssBlock('.nossa-abordagem-timeless__title-box')).toMatch(/background:\s*#ffffff;/)
     expect(cssBlock('.nossa-abordagem-timeless__lines')).toMatch(/gap:\s*clamp\(1rem,\s*2vw,\s*1\.55rem\);/)
     expect(cssBlock('.nossa-abordagem-timeless__line-group')).toMatch(/gap:\s*clamp\(0\.38rem,\s*0\.9vw,\s*0\.68rem\);/)
-    expect(cssBlock('.nossa-abordagem-timeless__line-group--long')).toMatch(/align-items:\s*flex-end;/)
+    expect(cssBlock('.nossa-abordagem-timeless__line-group--long')).toMatch(/align-items:\s*center;/)
     expect(cssBlock('.nossa-abordagem-timeless__line-group--long')).toMatch(/gap:\s*clamp\(0\.22rem,\s*0\.55vw,\s*0\.42rem\);/)
     expect(cssBlock('.nossa-abordagem-timeless__line')).toMatch(/line-height:\s*1;/)
     expect(cssBlock('.nossa-abordagem-timeless__line')).toMatch(/font-weight:\s*200;/)
@@ -129,6 +177,7 @@ describe('NossaAbordagem', () => {
     expect(cssBlock('.nossa-abordagem-timeless__line span')).toMatch(/box-decoration-break:\s*clone;/)
     expect(cssBlock('.nossa-abordagem-timeless__line--dark span')).toMatch(/background:\s*var\(--brand-ink\);/)
     expect(cssBlock('.nossa-abordagem-timeless__line--desktop-only')).toMatch(/display:\s*none;/)
+    expect(siteCss()).toMatch(/@media\s*\(max-width:\s*767px\)\s*\{[\s\S]*\.nossa-abordagem-timeless__content\s*\{[^}]*align-items:\s*center;[^}]*justify-content:\s*center;[^}]*padding:\s*clamp\(3rem,\s*9vw,\s*5rem\) 1rem;[^}]*text-align:\s*center;[\s\S]*\.nossa-abordagem-timeless__lines\s*\{[^}]*align-items:\s*center;[\s\S]*\.nossa-abordagem-timeless__line-group\s*\{[^}]*align-items:\s*center;/s)
     expect(siteCss()).toMatch(/@media\s*\(min-width:\s*768px\)\s*\{[^}]*\.nossa-abordagem-timeless__line--desktop-only[^}]*\}[^}]*\.nossa-abordagem-timeless__line--mobile-only[^}]*\}[^}]*\.nossa-abordagem-timeless__line--long\s*\{[^}]*max-width:\s*none;/s)
     expect(siteCss()).toMatch(/\.nossa-abordagem-timeless--reveal-ready\s+:is\(\s*\.nossa-abordagem-timeless__title-box,\s*\.nossa-abordagem-timeless__line\s*\)\s*\{[^}]*opacity:\s*0;[^}]*transform:\s*translateX\(clamp\(2rem,\s*8vw,\s*6rem\)\);/s)
     expect(siteCss()).toMatch(/\.nossa-abordagem-timeless--revealed\s+:is\(\s*\.nossa-abordagem-timeless__title-box,\s*\.nossa-abordagem-timeless__line\s*\)\s*\{[^}]*opacity:\s*1;[^}]*transform:\s*translateX\(0\);/s)
@@ -180,8 +229,10 @@ describe('NossaAbordagem', () => {
     const css = siteCss()
 
     expect(css).toMatch(/html\.nossa-abordagem-white-background,\s*html\.nossa-abordagem-white-background body\s*\{[^}]*background:\s*#ffffff/s)
-    expect(css).toMatch(/html\.nossa-abordagem-white-background \.page-curtain,\s*html\.nossa-abordagem-white-background footer\s*\{[^}]*background:\s*#ffffff/s)
-    expect(css).not.toMatch(/html\.nossa-abordagem-white-background footer > div\s*\{[^}]*background:\s*#ffffff/s)
+    expect(css).not.toMatch(/html\.nossa-abordagem-white-background \.page-curtain[\s\S]*?background:\s*#ffffff/)
+    expect(css).toMatch(/html\.nossa-abordagem-white-background \.site-footer\s*\{[^}]*background:\s*#ffffff/s)
+    expect(css).not.toMatch(/html\.nossa-abordagem-white-background\s+footer\s*\{/)
+    expect(css).not.toMatch(/html\.nossa-abordagem-white-background \.site-footer > div\s*\{[^}]*background:\s*#ffffff/s)
   })
 
   it('preserves representative text from the PDF content', () => {
@@ -192,6 +243,89 @@ describe('NossaAbordagem', () => {
     expect(screen.getByText(/Mais de 1\.000 clientes atendidos/i)).toBeInTheDocument()
     expect(screen.getByText('Decidir melhor agora')).toBeInTheDocument()
     expect(screen.getByText('Por que não?')).toBeInTheDocument()
+  })
+
+  it('turns the closing statement into a responsive contact CTA', () => {
+    render(<NossaAbordagem />)
+
+    const closing = screen.getByTestId('nossa-abordagem-closing')
+    const closingArticle = closing.closest('article')
+    const heading = within(closing).getByRole('heading', { name: 'Decidir melhor agora' })
+    const cta = within(closing).getByRole('link', { name: 'Por que não? Fale com a Otimiza' })
+    const labels = cta.querySelector('.nossa-abordagem-closing__labels')
+    const arrow = cta.querySelector('.nossa-abordagem-closing__arrow')
+    const idleLabel = cta.querySelector('.nossa-abordagem-closing__label--idle')
+    const activeLabel = cta.querySelector('.nossa-abordagem-closing__label--active')
+    const idleChars = idleLabel?.querySelectorAll('.nossa-abordagem-closing__label-char')
+    const activeChars = activeLabel?.querySelectorAll('.nossa-abordagem-closing__label-char')
+    const css = siteCss()
+
+    expect(closing.tagName).toBe('SECTION')
+    expect(closing).toHaveAttribute('aria-labelledby', 'nossa-abordagem-closing-title')
+    expect(heading).toHaveAttribute('id', 'nossa-abordagem-closing-title')
+    expect(heading).toHaveClass('nossa-abordagem-closing__title', 'font-display')
+    expect(cta).toHaveAttribute('href', '/contato')
+    expect(cta).toHaveClass('nossa-abordagem-closing__cta')
+    expect(idleLabel).toHaveTextContent('Por que não?')
+    expect(activeLabel).toHaveTextContent('Fale com a Otimiza')
+    expect(idleChars).toHaveLength(Array.from('Por que não?').length)
+    expect(activeChars).toHaveLength(Array.from('Fale com a Otimiza').length)
+    expect(idleChars?.[0]).toHaveStyle({ '--closing-char-index': '0' })
+    expect(activeChars?.[1]).toHaveStyle({ '--closing-char-index': '1' })
+    expect(labels).toHaveAttribute('aria-hidden', 'true')
+    expect(arrow).toHaveAttribute('aria-hidden', 'true')
+    expect(arrow?.querySelector('svg')).toHaveClass('lucide-arrow-right')
+    expect(within(closing).getAllByRole('link')).toHaveLength(1)
+    expect(within(closing).queryByRole('button')).not.toBeInTheDocument()
+    expect(closing.querySelector('.nossa-abordagem-closing__prompt')).not.toBeInTheDocument()
+    expect(closingArticle).toHaveClass('nossa-abordagem-closing-block', 'py-0', 'sm:py-20', 'lg:py-24')
+
+    expect(cssBlock('.nossa-abordagem-closing')).toMatch(/min-height:\s*36rem;/)
+    expect(cssBlock('.nossa-abordagem-closing')).toMatch(/padding:\s*3\.5rem 1\.75rem;/)
+    expect(cssBlock('.nossa-abordagem-closing')).toMatch(/background:\s*#ffffff;/)
+    expect(cssBlock('.nossa-abordagem-closing__title')).toMatch(/font-size:\s*clamp\(4rem,\s*9vw,\s*9rem\);/)
+    expect(cssBlock('.nossa-abordagem-closing__title')).toMatch(/font-weight:\s*300;/)
+    expect(cssBlock('.nossa-abordagem-closing__title')).toMatch(/line-height:\s*1;/)
+    expect(cssBlock('.nossa-abordagem-closing__title')).toMatch(/color:\s*#39424c;/)
+    expect(cssBlock('.nossa-abordagem-closing__cta')).toMatch(/display:\s*inline-flex;/)
+    expect(cssBlock('.nossa-abordagem-closing__cta')).toMatch(/max-width:\s*100%;/)
+    expect(cssBlock('.nossa-abordagem-closing__cta')).not.toMatch(/(?:^|\s)width:\s*100%;/)
+    expect(cssBlock('.nossa-abordagem-closing__cta')).toMatch(/margin-top:\s*2\.5rem;/)
+    expect(cssBlock('.nossa-abordagem-closing__cta')).toMatch(/gap:\s*0\.06em;/)
+    expect(cssBlock('.nossa-abordagem-closing__cta')).toMatch(/padding:\s*0\.04em 0 0\.08em;/)
+    expect(cssBlock('.nossa-abordagem-closing__cta')).toMatch(/border-bottom:\s*1px solid currentColor;/)
+    expect(cssBlock('.nossa-abordagem-closing__cta')).toMatch(/background:\s*transparent;/)
+    expect(cssBlock('.nossa-abordagem-closing__cta')).toMatch(/font-size:\s*clamp\(2\.2rem,\s*5vw,\s*5\.8rem\);/)
+    expect(cssBlock('.nossa-abordagem-closing__labels')).toMatch(/position:\s*relative;/)
+    expect(cssBlock('.nossa-abordagem-closing__labels')).toMatch(/overflow:\s*hidden;/)
+    expect(cssBlock('.nossa-abordagem-closing__labels')).toMatch(/height:\s*1\.16em;/)
+    expect(cssBlock('.nossa-abordagem-closing__labels')).toMatch(/padding-inline:\s*0\.12em;/)
+    expect(cssBlock('.nossa-abordagem-closing__labels')).toMatch(/box-sizing:\s*content-box;/)
+    expect(cssBlock('.nossa-abordagem-closing__labels')).toMatch(/width:\s*var\(--closing-label-idle-width,\s*7\.25ch\);/)
+    expect(cssBlock('.nossa-abordagem-closing__labels')).toMatch(/width 360ms cubic-bezier\(0\.165,\s*0\.84,\s*0\.44,\s*1\)/)
+    expect(css).toMatch(/\.nossa-abordagem-closing__cta:hover \.nossa-abordagem-closing__labels,\s*\.nossa-abordagem-closing__cta:focus-visible \.nossa-abordagem-closing__labels\s*\{[^}]*width:\s*var\(--closing-label-active-width,\s*14\.5ch\);/)
+    expect(cssBlock('.nossa-abordagem-closing__label')).toMatch(/position:\s*absolute;/)
+    expect(cssBlock('.nossa-abordagem-closing__label')).toMatch(/white-space:\s*nowrap;/)
+    expect(cssBlock('.nossa-abordagem-closing__label--idle .nossa-abordagem-closing__label-char')).toMatch(/transform 360ms cubic-bezier\(0\.165,\s*0\.84,\s*0\.44,\s*1\)/)
+    expect(cssBlock('.nossa-abordagem-closing__label--idle .nossa-abordagem-closing__label-char')).toMatch(/opacity 180ms ease-out/)
+    expect(cssBlock('.nossa-abordagem-closing__label--idle .nossa-abordagem-closing__label-char')).toMatch(/transition-delay:\s*calc\(55ms \+ \(var\(--closing-char-index\) \* 7ms\)\),\s*calc\(200ms \+ \(var\(--closing-char-index\) \* 5ms\)\);/)
+    expect(cssBlock('.nossa-abordagem-closing__label--active .nossa-abordagem-closing__label-char')).toMatch(/transform 280ms cubic-bezier\(0\.165,\s*0\.84,\s*0\.44,\s*1\)/)
+    expect(cssBlock('.nossa-abordagem-closing__label--active .nossa-abordagem-closing__label-char')).toMatch(/opacity 110ms ease-out/)
+    expect(cssBlock('.nossa-abordagem-closing__label--active .nossa-abordagem-closing__label-char')).toMatch(/calc\(var\(--closing-char-index\) \* 5ms\)/)
+    expect(cssBlock('.nossa-abordagem-closing__label--active .nossa-abordagem-closing__label-char')).toMatch(/transform:\s*translateY\(40px\);/)
+    expect(cssBlock('.nossa-abordagem-closing__label--active .nossa-abordagem-closing__label-char')).toMatch(/opacity:\s*0;/)
+    expect(css).toMatch(/\.nossa-abordagem-closing__cta:hover \.nossa-abordagem-closing__label--idle \.nossa-abordagem-closing__label-char,[\s\S]*?\{[^}]*transform:\s*translateY\(-40px\);[^}]*opacity:\s*0;/)
+    expect(css).toMatch(/\.nossa-abordagem-closing__cta:hover \.nossa-abordagem-closing__label--active \.nossa-abordagem-closing__label-char,[\s\S]*?\{[^}]*transform:\s*translateY\(0\);[^}]*opacity:\s*1;/)
+    expect(css).toMatch(/\.nossa-abordagem-closing__cta:hover \.nossa-abordagem-closing__label--idle \.nossa-abordagem-closing__label-char,[\s\S]*?\{[^}]*transition:[^}]*transform 280ms[^}]*opacity 110ms ease-out;[^}]*transition-delay:\s*calc\(var\(--closing-char-index\) \* 5ms\);/)
+    expect(css).toMatch(/\.nossa-abordagem-closing__cta:hover \.nossa-abordagem-closing__label--active \.nossa-abordagem-closing__label-char,[\s\S]*?\{[^}]*transition:[^}]*transform 360ms[^}]*opacity 180ms ease-out;[^}]*transition-delay:\s*calc\(55ms \+ \(var\(--closing-char-index\) \* 7ms\)\),\s*calc\(170ms \+ \(var\(--closing-char-index\) \* 5ms\)\);/)
+    expect(cssBlock('.nossa-abordagem-closing__arrow svg')).toMatch(/width:\s*0\.34em;/)
+    expect(cssBlock('.nossa-abordagem-closing__arrow svg')).toMatch(/stroke-width:\s*1\.7;/)
+    expect(cssBlock('.nossa-abordagem-closing__cta:focus-visible')).toMatch(/outline:\s*2px solid var\(--brand-red\);/)
+    expect(cssBlock('.nossa-abordagem-closing__cta:focus-visible')).toMatch(/outline-offset:\s*4px;/)
+    expect(css).toMatch(/@media\s*\(min-width:\s*640px\)[\s\S]*?\.nossa-abordagem-closing\s*\{[^}]*padding-inline:\s*3rem;/)
+    expect(css).toMatch(/@media\s*\(min-width:\s*1024px\)[\s\S]*?\.nossa-abordagem-closing\s*\{[^}]*padding-inline:\s*4rem;/)
+    expect(css).toMatch(/@media\s*\(max-width:\s*639px\)[\s\S]*?\.nossa-abordagem-closing__cta\s*\{[^}]*margin-top:\s*1\.5rem;[^}]*font-size:\s*clamp\(1\.65rem,\s*8\.2vw,\s*2\.6rem\);/)
+    expect(css).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*?\.nossa-abordagem-closing__labels,\s*\.nossa-abordagem-closing__label-char\s*\{[^}]*transition:\s*none;/)
   })
 
   it('sets the 1990 metric text inside a gray menu-width page shell', () => {
@@ -205,6 +339,7 @@ describe('NossaAbordagem', () => {
     const jobsTerm = screen.getByTestId('jobs-to-be-done-term')
     const underlinedJobsText = screen.getByTestId('jobs-to-be-done-underlined-text')
     const jobsTooltip = screen.getByTestId('jobs-to-be-done-tooltip')
+    const modalPanelCss = cssBlock('.jobs-to-be-done-modal__panel')
 
     expect(metricText).toHaveTextContent(/jobs to be done/i)
     expect(metricText).not.toHaveTextContent(/foco do cliente/i)
@@ -232,12 +367,63 @@ describe('NossaAbordagem', () => {
     expect(cssBlock('.nossa-abordagem-metric-copy--visible')).toMatch(/opacity:\s*1;/)
     expect(cssBlock('.nossa-abordagem-metric-copy--visible')).toMatch(/transform:\s*translateY\(0\);/)
     expect(jobsTerm).toHaveClass('group/jobs-term', 'cursor-help')
+    expect(jobsTerm).toHaveAttribute('role', 'button')
+    expect(jobsTerm).toHaveAttribute('aria-expanded', 'false')
     expect(jobsTerm).not.toHaveClass('underline', 'border-b-[0.035em]', 'pb-[0.02em]')
     expect(underlinedJobsText).toHaveTextContent('jobs to be done')
     expect(underlinedJobsText).toHaveClass('underline', 'decoration-current', 'decoration-[0.035em]', 'underline-offset-[0.08em]')
-    expect(jobsTooltip).toHaveClass('pointer-events-none', 'absolute', 'opacity-0', 'group-hover/jobs-term:opacity-100')
+    expect(jobsTooltip).toHaveClass('jobs-to-be-done-tooltip', 'pointer-events-none', 'absolute', 'hidden', 'sm:block', 'opacity-0', 'group-hover/jobs-term:opacity-100')
     expect(jobsTooltip).toHaveTextContent(/Jobs to be Done/i)
     expect(jobsTooltip).toHaveTextContent(/progresso que deseja alcan/i)
+    expect(modalPanelCss).toMatch(/background:\s*transparent;/)
+    expect(modalPanelCss).toMatch(/border:\s*0;/)
+    expect(modalPanelCss).toMatch(/border-radius:\s*0;/)
+    expect(modalPanelCss).toMatch(/box-shadow:\s*none;/)
+    expect(siteCss()).toMatch(/@media\s*\(max-width:\s*767px\)[\s\S]*?\.jobs-to-be-done-modal\s*\{[^}]*place-items:\s*center;/)
+    expect(cssBlock('.jobs-to-be-done-modal__title')).toMatch(/color:\s*#ffffff;/)
+    expect(cssBlock('.jobs-to-be-done-modal__title')).toMatch(/font-size:\s*clamp\(1\.75rem,\s*7vw,\s*2rem\);/)
+    expect(cssBlock('.jobs-to-be-done-modal__title')).toMatch(/line-height:\s*1\.1;/)
+    expect(cssBlock('.jobs-to-be-done-modal__body')).toMatch(/color:\s*rgb\(255 255 255 \/ 0\.82\);/)
+    expect(cssBlock('.jobs-to-be-done-modal__body')).toMatch(/font-size:\s*clamp\(1\.1rem,\s*4\.8vw,\s*1\.25rem\);/)
+    expect(cssBlock('.jobs-to-be-done-modal__body')).toMatch(/line-height:\s*1\.55;/)
+    expect(cssBlock('.jobs-to-be-done-modal__close')).toMatch(/position:\s*fixed;/)
+    expect(cssBlock('.jobs-to-be-done-modal__close')).toMatch(/top:\s*max\(1\.25rem,\s*env\(safe-area-inset-top\)\);/)
+    expect(cssBlock('.jobs-to-be-done-modal__close')).toMatch(/right:\s*1\.25rem;/)
+    expect(cssBlock('.jobs-to-be-done-modal__close')).toMatch(/border:\s*0;/)
+    expect(cssBlock('.jobs-to-be-done-modal__close')).toMatch(/border-radius:\s*0;/)
+    expect(cssBlock('.jobs-to-be-done-modal__close')).toMatch(/background:\s*transparent;/)
+    expect(cssBlock('.jobs-to-be-done-modal__close')).toMatch(/box-shadow:\s*none;/)
+    expect(siteCss()).toMatch(/@media\s*\(max-width:\s*767px\)\s*and\s*\(max-height:\s*699px\)\s*\{[\s\S]*?\.jobs-to-be-done-modal\s*\{[^}]*place-items:\s*start center;[^}]*padding-top:\s*5rem;[^}]*padding-bottom:\s*2rem;[^}]*overflow-y:\s*auto;/)
+
+    fireEvent.click(jobsTerm)
+
+    expect(jobsTerm).toHaveAttribute('aria-expanded', 'true')
+    expect(jobsTooltip).toHaveClass('jobs-to-be-done-tooltip--open', 'opacity-100')
+    const jobsModal = screen.getByTestId('jobs-to-be-done-modal')
+    expect(jobsModal).toHaveAttribute('role', 'dialog')
+    expect(jobsModal.parentElement).toBe(document.body)
+    expect(screen.getByRole('button', { name: 'Fechar' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fechar' }))
+
+    expect(jobsTerm).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByTestId('jobs-to-be-done-modal')).not.toBeInTheDocument()
+
+    fireEvent.click(jobsTerm)
+    expect(document.documentElement).toHaveClass('jobs-to-be-done-modal-open')
+
+    fireEvent.pointerDown(screen.getByTestId('jobs-to-be-done-modal'))
+
+    expect(jobsTerm).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByTestId('jobs-to-be-done-modal')).not.toBeInTheDocument()
+    expect(document.documentElement).not.toHaveClass('jobs-to-be-done-modal-open')
+
+    fireEvent.click(jobsTerm)
+    fireEvent.keyDown(document, { key: 'Escape' })
+
+    expect(jobsTerm).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByTestId('jobs-to-be-done-modal')).not.toBeInTheDocument()
+    expect(document.documentElement).not.toHaveClass('jobs-to-be-done-modal-open')
 
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 500 })
     Object.defineProperty(window, 'innerHeight', { configurable: true, value: 400 })
@@ -259,6 +445,36 @@ describe('NossaAbordagem', () => {
     })
 
     expect(metricText).toHaveClass('nossa-abordagem-metric-copy--visible')
+  })
+
+  it('reveals the complete editorial quote together as it crosses the viewport center', () => {
+    globalThis.IntersectionObserver = ControlledIntersectionObserver
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: query === '(max-width: 767px)',
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+
+    const { container } = render(<NossaAbordagem />)
+    const editorialQuote = screen.getByTestId('nossa-abordagem-editorial-quote')
+    const groups = Array.from(container.querySelectorAll('.nossa-abordagem-editorial-quote__group'))
+    const quoteObserver = intersectionObservers.find((observer) => (
+      observer.options?.rootMargin === '-45% 0px -45% 0px'
+      && observer.elements?.includes(editorialQuote)
+    ))
+
+    expect(groups).toHaveLength(3)
+    expect(quoteObserver).toBeDefined()
+    expect(quoteObserver.options.threshold).toBe(0)
+    expect(editorialQuote).not.toHaveClass('nossa-abordagem-editorial-quote--visible')
+
+    act(() => {
+      quoteObserver.callback([{ target: editorialQuote, isIntersecting: true }])
+    })
+
+    expect(editorialQuote).toHaveClass('nossa-abordagem-editorial-quote--visible')
+    groups.forEach((group) => expect(group).toBeInTheDocument())
   })
 
   it('fetches Nossa abordagem client logos from Sanity and renders them in the following carousel section', async () => {

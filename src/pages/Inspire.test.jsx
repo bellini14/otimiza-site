@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { createMemoryRouter, MemoryRouter, Route, RouterProvider, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -61,9 +61,20 @@ function makePost(index, overrides = {}) {
   }
 }
 
-function renderInspirePage() {
+function deferred() {
+  let resolve
+  let reject
+  const promise = new Promise((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise
+    reject = rejectPromise
+  })
+
+  return { promise, reject, resolve }
+}
+
+function renderInspirePage(path = '/inspire') {
   return render(
-    <MemoryRouter initialEntries={['/inspire']}>
+    <MemoryRouter initialEntries={[path]}>
       <Routes>
         <Route element={<InspireLayout />}>
           <Route path="/inspire" element={<Inspire />} />
@@ -75,9 +86,10 @@ function renderInspirePage() {
 
 beforeEach(() => {
   clearCachedInspirePosts()
+  client.fetch.mockReset()
   observerInstances = []
   globalThis.IntersectionObserver = ControlledIntersectionObserver
-  fetchMock = vi.fn(async (input, init) => {
+  fetchMock = vi.fn(async (input) => {
     const path = typeof input === 'string' ? input : input.toString()
     const slug = path.match(/\/api\/posts\/([^/]+)\/likes/)?.[1] ?? 'post'
     const numericMatch = slug.match(/(\d+)/)
@@ -101,6 +113,16 @@ afterEach(() => {
 })
 
 describe('Inspire', () => {
+  it('renders exactly one descriptive H1 for the editorial page', async () => {
+    client.fetch.mockResolvedValue([])
+
+    renderInspirePage()
+
+    const headings = await screen.findAllByRole('heading', { level: 1 })
+    expect(headings).toHaveLength(1)
+    expect(headings[0]).toHaveTextContent('Inspire: conteúdos sobre gestão e processos')
+  })
+
   it('renders cached Sanity stories immediately while the refresh request is still pending', () => {
     setCachedInspirePosts([
       makePost(101, {
@@ -114,7 +136,7 @@ describe('Inspire', () => {
 
     expect(screen.getAllByRole('heading', { name: 'Cached Sanity Post' }).length).toBeGreaterThanOrEqual(1)
     expect(screen.queryByText(staticBlogPosts[0].title)).not.toBeInTheDocument()
-    expect(screen.queryByText('Buscar')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Pesquisar no Inspire' })).toBeInTheDocument()
     expect(document.querySelector('.inspire-page__loading')).toBeNull()
   })
 
@@ -164,13 +186,290 @@ describe('Inspire', () => {
     expect(screen.queryByRole('navigation', { name: 'Main navigation' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /voltar para a p.+gina anterior/i })).toBeInTheDocument()
     expect(await screen.findAllByRole('heading', { name: 'Should You Still Learn to Code in 2026?' })).toHaveLength(2)
-    expect(screen.getByText('Buscar')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Pesquisar no Inspire' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Assinar newsletter' })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Para você' })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('tab', { name: 'Em destaque' })).toHaveAttribute('aria-selected', 'false')
+    const filters = screen.getByRole('group', { name: 'Filtrar artigos por categoria' })
+    expect(within(filters).getByRole('button', { name: 'Tudo' })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(filters).getByRole('button', { name: 'Artigos' })).toHaveAttribute('aria-pressed', 'false')
     expect(screen.getByText('Seleções da redação')).toBeInTheDocument()
     expect(screen.getByText('Tópicos recomendados')).toBeInTheDocument()
     expect(screen.getByText('Quem seguir')).toBeInTheDocument()
+  })
+
+  it('filters the Inspire feed by the requested categories', async () => {
+    client.fetch
+      .mockResolvedValueOnce([
+        makePost(1, { title: 'Artigo inicial', eyebrow: 'Artigos' }),
+        makePost(2, { title: 'Vídeo inicial', eyebrow: 'Dica para assistir' }),
+      ])
+      .mockResolvedValueOnce([
+        makePost(3, { title: 'Novo artigo filtrado', eyebrow: 'Artigos' }),
+      ])
+
+    renderInspirePage()
+
+    expect(await screen.findAllByRole('heading', { name: 'Artigo inicial' })).not.toHaveLength(0)
+
+    const filters = screen.getByRole('group', { name: 'Filtrar artigos por categoria' })
+    expect(within(filters).getAllByRole('button').map((button) => button.textContent)).toEqual([
+      'Tudo',
+      'Artigos',
+      'Editorial',
+      'Dica de leitura',
+      'Dica para assistir',
+      'Lente analítica',
+    ])
+    expect(within(filters).getByRole('button', { name: 'Tudo' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.queryByRole('tab', { name: 'Para você' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: 'Em destaque' })).not.toBeInTheDocument()
+
+    fireEvent.click(within(filters).getByRole('button', { name: 'Artigos' }))
+
+    expect(await screen.findByRole('heading', { name: 'Novo artigo filtrado' })).toBeInTheDocument()
+    const stories = document.querySelector('.inspire-page__stories')
+    expect(within(stories).queryByRole('heading', { name: 'Vídeo inicial' })).not.toBeInTheDocument()
+    expect(within(filters).getByRole('button', { name: 'Tudo' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+    expect(within(filters).getByRole('button', { name: 'Artigos' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(client.fetch).toHaveBeenLastCalledWith(expect.stringContaining('eyebrow == $category'), {
+      category: 'Artigos',
+      start: 0,
+      end: 15,
+    })
+  })
+
+  it('filters Editorial posts with the canonical Sanity category', async () => {
+    client.fetch
+      .mockResolvedValueOnce([
+        makePost(1, { title: 'Artigo inicial', eyebrow: 'Artigos' }),
+      ])
+      .mockResolvedValueOnce([
+        makePost(2, { title: 'Conteúdo editorial', eyebrow: 'Editorial' }),
+      ])
+
+    renderInspirePage()
+    await screen.findAllByRole('heading', { name: 'Artigo inicial' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Editorial' }))
+
+    expect(await screen.findByRole('heading', { name: 'Conteúdo editorial' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Editorial' })).toHaveAttribute('aria-pressed', 'true')
+    expect(client.fetch).toHaveBeenLastCalledWith(expect.stringContaining('eyebrow == $category'), {
+      category: 'Editorial',
+      start: 0,
+      end: 15,
+    })
+  })
+
+  it('keeps infinite loading restricted to the selected category', async () => {
+    client.fetch
+      .mockResolvedValueOnce(Array.from({ length: 15 }, (_, index) => makePost(index + 1)))
+      .mockResolvedValueOnce(
+        Array.from({ length: 15 }, (_, index) =>
+          makePost(index + 101, { eyebrow: 'Dica de Leitura' }),
+        ),
+      )
+      .mockResolvedValueOnce(
+        Array.from({ length: 5 }, (_, index) =>
+          makePost(index + 116, { eyebrow: 'Dica de Leitura' }),
+        ),
+      )
+
+    renderInspirePage()
+
+    await screen.findAllByRole('heading', { name: 'Post 15' })
+    fireEvent.click(screen.getByRole('button', { name: 'Dica de leitura' }))
+    await screen.findByRole('heading', { name: 'Post 115' })
+
+    const sentinel = document.querySelector('.inspire-page__sentinel')
+    triggerIntersection(sentinel)
+
+    expect(await screen.findByRole('heading', { name: 'Post 120' })).toBeInTheDocument()
+    expect(client.fetch).toHaveBeenLastCalledWith(expect.stringContaining('eyebrow == $category'), {
+      category: 'Dica de Leitura',
+      start: 15,
+      end: 20,
+    })
+  })
+
+  it('ignores a stale category response after a newer filter is selected', async () => {
+    const readingRequest = deferred()
+    const watchRequest = deferred()
+    client.fetch
+      .mockResolvedValueOnce([makePost(1, { eyebrow: 'Artigos' })])
+      .mockImplementationOnce(() => readingRequest.promise)
+      .mockImplementationOnce(() => watchRequest.promise)
+
+    renderInspirePage()
+    await screen.findAllByRole('heading', { name: 'Post 1' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Dica de leitura' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Dica para assistir' }))
+
+    await act(async () => {
+      watchRequest.resolve([makePost(20, { title: 'Resposta mais recente', eyebrow: 'Dica para assistir' })])
+    })
+    expect(await screen.findByRole('heading', { name: 'Resposta mais recente' })).toBeInTheDocument()
+
+    await act(async () => {
+      readingRequest.resolve([makePost(21, { title: 'Resposta antiga', eyebrow: 'Dica de leitura' })])
+    })
+
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: 'Resposta antiga' })).not.toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'Resposta mais recente' })).toBeInTheDocument()
+    })
+  })
+
+  it('ignores a stale pagination failure after another category is selected', async () => {
+    const stalePagination = deferred()
+    client.fetch
+      .mockResolvedValueOnce(Array.from({ length: 15 }, (_, index) => makePost(index + 1)))
+      .mockResolvedValueOnce(
+        Array.from({ length: 15 }, (_, index) =>
+          makePost(index + 101, { eyebrow: 'Dica de leitura' }),
+        ),
+      )
+      .mockImplementationOnce(() => stalePagination.promise)
+      .mockResolvedValueOnce([
+        makePost(200, { title: 'Categoria atual', eyebrow: 'Dica para assistir' }),
+      ])
+
+    renderInspirePage()
+    await screen.findAllByRole('heading', { name: 'Post 15' })
+    fireEvent.click(screen.getByRole('button', { name: 'Dica de leitura' }))
+    await screen.findByRole('heading', { name: 'Post 115' })
+
+    triggerIntersection(document.querySelector('.inspire-page__sentinel'))
+    fireEvent.click(screen.getByRole('button', { name: 'Dica para assistir' }))
+    expect(await screen.findByRole('heading', { name: 'Categoria atual' })).toBeInTheDocument()
+
+    await act(async () => {
+      stalePagination.reject(new Error('old request failed'))
+    })
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Categoria atual' })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Tentar carregar novamente' })).not.toBeInTheDocument()
+    })
+  })
+
+  it('waits for bootstrap before deciding how to load a selected category', async () => {
+    const bootstrapRequest = deferred()
+    client.fetch
+      .mockImplementationOnce(() => bootstrapRequest.promise)
+      .mockResolvedValueOnce([
+        makePost(30, { title: 'Artigo vindo do Sanity', eyebrow: 'Artigos' }),
+      ])
+
+    renderInspirePage()
+    fireEvent.click(screen.getByRole('button', { name: 'Artigos' }))
+
+    expect(document.querySelector('.inspire-page__stories')).toBeNull()
+    expect(client.fetch).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      bootstrapRequest.resolve([makePost(1, { eyebrow: 'Artigos' })])
+    })
+
+    expect(await screen.findByRole('heading', { name: 'Artigo vindo do Sanity' })).toBeInTheDocument()
+    expect(client.fetch).toHaveBeenLastCalledWith(expect.stringContaining('eyebrow == $category'), {
+      category: 'Artigos',
+      start: 0,
+      end: 15,
+    })
+  })
+
+  it('shows an explicit empty state for a category without posts', async () => {
+    client.fetch
+      .mockResolvedValueOnce([makePost(1, { eyebrow: 'Artigos' })])
+      .mockResolvedValueOnce([])
+
+    renderInspirePage()
+    await screen.findAllByRole('heading', { name: 'Post 1' })
+    fireEvent.click(screen.getByRole('button', { name: 'Dica para assistir' }))
+
+    expect(await screen.findByText('Nenhum artigo encontrado nesta categoria.')).toBeInTheDocument()
+  })
+
+  it('filters the confirmed static fallback with Inspire categories', async () => {
+    client.fetch.mockRejectedValueOnce(new Error('sanity unavailable'))
+
+    renderInspirePage()
+    await screen.findAllByRole('heading', { name: staticBlogPosts[0].title })
+
+    const categories = [
+      ['Editorial', 'Editorial'],
+      ['Artigos', 'Artigos'],
+      ['Dica de leitura', 'Dica de leitura'],
+      ['Dica para assistir', 'Dica para assistir'],
+      ['Lente analítica', 'Lente Analítica'],
+    ]
+
+    for (const [label, category] of categories) {
+      fireEvent.click(screen.getByRole('button', { name: label }))
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: label })).toHaveAttribute('aria-pressed', 'true')
+        const renderedTitles = Array.from(document.querySelectorAll('.inspire-story__title'))
+          .map((heading) => heading.textContent)
+        const expectedTitles = staticBlogPosts
+          .filter((post) => post.inspireCategory === category)
+          .map((post) => post.title)
+        expect(renderedTitles).toEqual(expectedTitles)
+        expect(renderedTitles.length).toBeGreaterThan(0)
+      })
+    }
+  })
+
+  it('keeps search results independent and hides category filters while searching', async () => {
+    client.fetch
+      .mockResolvedValueOnce([makePost(1, { eyebrow: 'Artigos' })])
+      .mockResolvedValueOnce([
+        makePost(40, { title: 'Resultado da busca', eyebrow: 'Dica para assistir' }),
+      ])
+
+    renderInspirePage('/inspire?q=resultado')
+
+    expect(screen.queryByRole('group', { name: 'Filtrar artigos por categoria' })).not.toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Resultado da busca' })).toBeInTheDocument()
+    expect(screen.getByText('1 resultado para "resultado"')).toBeInTheDocument()
+  })
+
+  it('restores the selected category after search is cleared', async () => {
+    client.fetch
+      .mockResolvedValueOnce([makePost(1, { eyebrow: 'Artigos' })])
+      .mockResolvedValueOnce([
+        makePost(50, { title: 'Leitura selecionada', eyebrow: 'Dica de leitura' }),
+      ])
+      .mockResolvedValueOnce([
+        makePost(51, { title: 'Resultado temporário', eyebrow: 'Artigos' }),
+      ])
+
+    renderInspirePage()
+    await screen.findAllByRole('heading', { name: 'Post 1' })
+    fireEvent.click(screen.getByRole('button', { name: 'Dica de leitura' }))
+    expect(await screen.findByRole('heading', { name: 'Leitura selecionada' })).toBeInTheDocument()
+
+    const searchInput = screen.getByRole('textbox', { name: 'Pesquisar no Inspire' })
+    fireEvent.change(searchInput, { target: { value: 'temporário' } })
+    expect(await screen.findByRole('heading', { name: 'Resultado temporário' })).toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: 'Filtrar artigos por categoria' })).not.toBeInTheDocument()
+
+    fireEvent.change(searchInput, { target: { value: '' } })
+    const filters = await screen.findByRole('group', { name: 'Filtrar artigos por categoria' })
+    expect(within(filters).getByRole('button', { name: 'Dica de leitura' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByRole('heading', { name: 'Leitura selecionada' })).toBeInTheDocument()
   })
 
   it('returns to the previous page instead of forcing the home route', async () => {

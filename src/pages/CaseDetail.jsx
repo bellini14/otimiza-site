@@ -5,6 +5,8 @@ import { ArrowLeft } from 'lucide-react'
 import { client, urlFor } from '../lib/sanity'
 import { caseStudies } from '../data/caseStudies'
 import GradualBlur from '../components/GradualBlur'
+import SeoHead from '../seo/SeoHead'
+import { getPageDescription, getPageTitle } from '../seo/siteMetadata'
 
 const fallbackHeroImages = {
   default: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1800&q=82',
@@ -338,18 +340,28 @@ function CaseDetail() {
 
   if (!loading && !cmsCase && !fallbackStudy) {
     return (
-      <div className="mx-auto max-w-4xl py-24 text-center text-slate-600">
+      <>
+        <SeoHead title={getPageTitle()} description={getPageDescription()} />
+        <div className="mx-auto max-w-4xl py-24 text-center text-slate-600">
         <h1 className="text-3xl font-bold text-slate-900">Case não encontrado</h1>
         <p className="mt-4">O case que você está procurando não existe ou foi removido.</p>
         <Link to="/cases" className="mt-8 inline-flex items-center gap-2 font-semibold text-brand-red hover:underline">
           <ArrowLeft className="h-4 w-4" /> Voltar para Cases
         </Link>
-      </div>
+        </div>
+      </>
     )
   }
 
   return (
-    <article className="case-detail-page -mt-32 pb-0 sm:-mt-36">
+    <>
+      <SeoHead
+        title={getPageTitle(title)}
+        description={getPageDescription(subtitle || `Case de consultoria da Otimiza para ${clientName}.`)}
+        imageUrl={heroImage}
+        ogType="article"
+      />
+      <article className="case-detail-page -mt-32 pb-0 sm:-mt-36">
       <section
         data-testid="case-detail-hero"
         className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] h-[48svh] min-h-[22rem] w-screen overflow-hidden bg-slate-950"
@@ -391,7 +403,8 @@ function CaseDetail() {
           />
         )}
       </div>
-    </article>
+      </article>
+    </>
   )
 }
 

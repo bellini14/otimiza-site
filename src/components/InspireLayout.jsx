@@ -1,9 +1,11 @@
 import { ArrowLeft, Mail, Search, X } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { Link, Outlet, useLocation, useSearchParams } from 'react-router-dom'
 
 import InspireAnimatedLogo from './InspireAnimatedLogo'
 import usePageTransitionNavigate from '../transitions/usePageTransitionNavigate'
+
+const INTERNAL_SEARCH_UPDATE_STATE_KEY = '__otimizaInspireSearchUpdateId'
 
 function InspireLayout() {
   const location = useLocation()
@@ -12,6 +14,9 @@ function InspireLayout() {
   const isLandingPage = location.pathname === '/inspire'
 
   const [searchValue, setSearchValue] = useState(() => searchParams.get('q') || '')
+  const searchComponentInstanceId = useId()
+  const searchUpdateCounterRef = useRef(0)
+  const pendingInternalSearchUpdatesRef = useRef(new Map())
 
   const handleBackClick = (event) => {
     if (isLandingPage) {
@@ -22,23 +27,41 @@ function InspireLayout() {
     navigateWithTransition(-1, { sourceEvent: event })
   }
 
+  const writeSearchParams = useCallback(
+    (update, options = {}) => {
+      searchUpdateCounterRef.current += 1
+      const updateId = `inspire-search-${searchComponentInstanceId}-${searchUpdateCounterRef.current}`
+      pendingInternalSearchUpdatesRef.current.set(updateId, searchUpdateCounterRef.current)
+
+      setSearchParams(update, {
+        ...options,
+        state: {
+          ...(location.state ?? {}),
+          [INTERNAL_SEARCH_UPDATE_STATE_KEY]: updateId,
+        },
+      })
+    },
+    [location.state, searchComponentInstanceId, setSearchParams],
+  )
+
   const clearSearch = useCallback(() => {
     setSearchValue('')
-    setSearchParams((prev) => {
+    writeSearchParams((prev) => {
       prev.delete('q')
       return prev
     })
-  }, [setSearchParams])
+  }, [writeSearchParams])
 
   const handleSearchChange = useCallback(
     (e) => {
       const value = e.target.value
+      const normalizedValue = value.trim()
       setSearchValue(value)
 
-      setSearchParams(
+      writeSearchParams(
         (prev) => {
-          if (value.trim()) {
-            prev.set('q', value.trim())
+          if (normalizedValue) {
+            prev.set('q', normalizedValue)
           } else {
             prev.delete('q')
           }
@@ -48,7 +71,7 @@ function InspireLayout() {
         { replace: true },
       )
     },
-    [setSearchParams],
+    [writeSearchParams],
   )
 
   const handleSearchKeyDown = useCallback(
@@ -63,8 +86,22 @@ function InspireLayout() {
 
   useEffect(() => {
     const q = searchParams.get('q') || ''
+    const internalUpdateId = location.state?.[INTERNAL_SEARCH_UPDATE_STATE_KEY]
+    const pendingInternalUpdates = pendingInternalSearchUpdatesRef.current
+    const internalUpdateSequence = pendingInternalUpdates.get(internalUpdateId)
+
+    if (internalUpdateSequence !== undefined) {
+      pendingInternalUpdates.forEach((sequence, updateId) => {
+        if (sequence <= internalUpdateSequence) {
+          pendingInternalUpdates.delete(updateId)
+        }
+      })
+      return
+    }
+
+    pendingInternalUpdates.clear()
     setSearchValue(q)
-  }, [searchParams])
+  }, [location.state, searchParams])
 
   return (
     <div className="inspire-shell overflow-x-hidden">

@@ -9,6 +9,7 @@ export const staticBlogPosts = [
     link: '/inspire/teste-de-integracao-sanity-nossa-nova-estrutura-esta-ativa',
     linkText: 'Ler artigo',
     eyebrow: 'Novidade',
+    inspireCategory: 'Editorial',
   },
   {
     title: 'Como transformar gargalos operacionais em vantagem competitiva',
@@ -20,6 +21,7 @@ export const staticBlogPosts = [
     link: '/inspire/como-transformar-gargalos-operacionais-em-vantagem-competitiva',
     linkText: 'Ler artigo',
     eyebrow: 'Processos',
+    inspireCategory: 'Lente Analítica',
   },
   {
     title: 'Governanca orientada por dados para times que precisam escalar',
@@ -31,6 +33,7 @@ export const staticBlogPosts = [
     link: '/inspire/governanca-orientada-por-dados-para-times-que-precisam-escalar',
     linkText: 'Ler artigo',
     eyebrow: 'Estrategia',
+    inspireCategory: 'Lente Analítica',
   },
   {
     title: 'Automacao com impacto real: onde investir primeiro',
@@ -42,6 +45,7 @@ export const staticBlogPosts = [
     link: '/inspire/automacao-com-impacto-real-onde-investir-primeiro',
     linkText: 'Ler artigo',
     eyebrow: 'Tecnologia',
+    inspireCategory: 'Artigos',
   },
   {
     title: 'Rituais de gestao que reduzem ruido e aceleram resposta',
@@ -53,6 +57,7 @@ export const staticBlogPosts = [
     link: '/inspire/rituais-de-gestao-que-reduzem-ruido-e-aceleram-resposta',
     linkText: 'Ler artigo',
     eyebrow: 'Gestao',
+    inspireCategory: 'Dica de leitura',
   },
   {
     title: 'O que muda quando a operacao passa a trabalhar com prioridade real',
@@ -64,6 +69,7 @@ export const staticBlogPosts = [
     link: '/inspire/o-que-muda-quando-a-operacao-passa-a-trabalhar-com-prioridade-real',
     linkText: 'Ler artigo',
     eyebrow: 'Performance',
+    inspireCategory: 'Artigos',
   },
   {
     title: 'Estrutura enxuta para acompanhar indicadores sem burocracia',
@@ -75,6 +81,7 @@ export const staticBlogPosts = [
     link: '/inspire/estrutura-enxuta-para-acompanhar-indicadores-sem-burocracia',
     linkText: 'Ler artigo',
     eyebrow: 'Dados',
+    inspireCategory: 'Dica de leitura',
   },
   {
     title: 'Onde a automacao entrega valor nas primeiras semanas',
@@ -86,6 +93,7 @@ export const staticBlogPosts = [
     link: '/inspire/onde-a-automacao-entrega-valor-nas-primeiras-semanas',
     linkText: 'Ler artigo',
     eyebrow: 'Execucao',
+    inspireCategory: 'Dica para assistir',
   },
   {
     title: 'Como desenhar fluxos mais claros para times multifuncionais',
@@ -97,6 +105,7 @@ export const staticBlogPosts = [
     link: '/inspire/como-desenhar-fluxos-mais-claros-para-times-multifuncionais',
     linkText: 'Ler artigo',
     eyebrow: 'Fluxos',
+    inspireCategory: 'Dica para assistir',
   },
   {
     title: 'Onde a automacao falha quando o processo ainda esta errado',
@@ -108,6 +117,7 @@ export const staticBlogPosts = [
     link: '/inspire/onde-a-automacao-falha-quando-o-processo-ainda-esta-errado',
     linkText: 'Ler artigo',
     eyebrow: 'Diagnostico',
+    inspireCategory: 'Lente Analítica',
   },
   {
     title: 'Playbooks enxutos para times comerciais mais previsiveis',
@@ -119,5 +129,6 @@ export const staticBlogPosts = [
     link: '/inspire/playbooks-enxutos-para-times-comerciais-mais-previsiveis',
     linkText: 'Ler artigo',
     eyebrow: 'Comercial',
+    inspireCategory: 'Dica de leitura',
   },
 ]

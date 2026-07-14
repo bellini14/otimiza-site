@@ -17,13 +17,14 @@ const homeClientLogoQuery = `*[_type == "clientLogo" && isVisible != false && sh
   "logoUrl": logo.asset->url
 }`
 
-const homeTestimonialsQuery = `*[_type == "customerTestimonial" && isVisible != false && defined(shortQuote)] | order(coalesce(sortOrder, 9999) asc, clientName asc) {
+const homeCasesQuery = `*[_type == "clientLogo" && isVisible != false && showOnCases == true && defined(logo.asset)] | order(coalesce(sortOrder, 9999) asc, name asc) {
   _id,
-  clientName,
-  role,
-  company,
-  shortQuote,
-  "avatarUrl": avatar.asset->url
+  name,
+  sector,
+  logoAlt,
+  caseDescription,
+  "caseSlug": caseSlug.current,
+  "logoUrl": logo.asset->url
 }`
 
 const HOME_CLIENT_LOGO_FALLBACKS = [
@@ -125,10 +126,6 @@ function useScrollReveal(threshold = 0.15) {
   return [ref, isVisible]
 }
 
-function preventHeroSubmit(event) {
-  event.preventDefault()
-}
-
 function buildHomeLogoRows(logos) {
   if (logos.length === 0) {
     return []
@@ -171,7 +168,7 @@ function HomeClientLogo({ logo, isDecorative = false }) {
     <img
       src={logo.logoUrl}
       alt={isDecorative ? '' : logo.logoAlt || logo.name}
-      className="max-h-9 w-auto max-w-[8.5rem] object-contain grayscale transition duration-300 group-hover/logo:grayscale-0"
+      className="max-h-5 w-auto max-w-[4.5rem] object-contain grayscale transition duration-300 group-hover/logo:grayscale-0 sm:max-h-9 sm:max-w-[8.5rem]"
       loading="eager"
       decoding="async"
     />
@@ -179,7 +176,7 @@ function HomeClientLogo({ logo, isDecorative = false }) {
 
   return (
     <div
-      className="home-client-logo-card group/logo flex h-16 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-8 transition hover:border-slate-300"
+      className="home-client-logo-card group/logo flex h-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-3 transition hover:border-slate-300 sm:h-16 sm:px-8"
       aria-hidden={isDecorative ? 'true' : undefined}
     >
       {logo.website ? (
@@ -196,9 +193,9 @@ function HomeClientLogo({ logo, isDecorative = false }) {
 function Home() {
   const [brandsRef, brandsVisible] = useScrollReveal(0.1)
   const [homeClientLogos, setHomeClientLogos] = useState([])
-  const [homeTestimonials, setHomeTestimonials] = useState([])
+  const [homeCases, setHomeCases] = useState([])
   const homeLogoRows = buildHomeLogoRows(homeClientLogos)
-  const homeTestimonialsKey = homeTestimonials.map((testimonial) => testimonial._id).join('|')
+  const homeCasesKey = homeCases.map((caseStudy) => caseStudy._id).join('|')
 
   useEffect(() => {
     let isMounted = true
@@ -227,18 +224,18 @@ function Home() {
   useEffect(() => {
     let isMounted = true
 
-    async function fetchHomeTestimonials() {
+    async function fetchHomeCases() {
       try {
-        const testimonials = await client.fetch(homeTestimonialsQuery)
-        if (isMounted && Array.isArray(testimonials)) {
-          setHomeTestimonials(testimonials)
+        const cases = await client.fetch(homeCasesQuery)
+        if (isMounted && Array.isArray(cases)) {
+          setHomeCases(cases)
         }
       } catch (error) {
-        console.error('Error fetching home testimonials from Sanity:', error)
+        console.error('Error fetching home cases from Sanity:', error)
       }
     }
 
-    fetchHomeTestimonials()
+    fetchHomeCases()
 
     return () => {
       isMounted = false
@@ -261,14 +258,17 @@ function Home() {
             </div>
 
             <div className="home-hero__text-content">
-              <h1 className="home-hero__title" aria-label="Criar o atemporal.">
-                <span className="home-hero__title-soft">Criar o </span>
-                <span className="home-hero__title-strong">atemporal.</span>
+              <h1
+                className="home-hero__title"
+                aria-label="Transformamos visão em método, cultura em capacidade e estratégia em operação."
+              >
+                <span className="home-hero__title-soft">Transformamos </span>
+                <span className="home-hero__title-strong home-hero__title-strong--spaced">
+                  visão em método,
+                </span>
+                <span className="home-hero__title-soft"> cultura em capacidade e </span>
+                <span className="home-hero__title-strong">estratégia em operação.</span>
               </h1>
-              <p className="home-hero__copy">
-                Junte-se as mais de 400 empresas que transformaram
-                sua gestao em algo que permanece no tempo.
-              </p>
             </div>
           </div>
 
@@ -279,25 +279,16 @@ function Home() {
               alt="Profissional analisando dados no laptop"
               className="home-hero__photo"
             />
-            <div className="home-hero__form-overlay">
-              <form className="home-hero__form" onSubmit={preventHeroSubmit}>
-                <label htmlFor="hero-email" className="sr-only">
-                  Seu email
-                </label>
-                <input id="hero-email" type="email" placeholder="Seu email" className="home-hero__input" />
-                <button type="submit" className="home-hero__submit">
-                  Quero fazer parte
-                </button>
-              </form>
-            </div>
           </div>
         </div>
       </section>
 
       <div className="relative z-10" data-testid="home-content">
-        <section ref={brandsRef} className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden bg-[#EFEFF4] py-24 sm:py-32">
-          <div className="mx-auto w-full max-w-[1380px] px-4 sm:px-6 lg:px-8">
-            <div className="mb-16 text-center">
+        <BlogHighlights />
+
+        <section ref={brandsRef} className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden bg-[#EFEFF4] pt-14 pb-24 sm:py-32">
+          <div className="home-menu-shell" data-testid="home-menu-aligned-shell">
+            <div className="mb-10 text-center sm:mb-16">
               <h2 className={`mb-6 font-display text-4xl text-slate-900 sm:text-5xl lg:text-6xl ${brandsVisible ? 'animate-enter' : 'opacity-0'} [animation-delay:150ms]`}>
                 Marcas que confiam na Otimiza
               </h2>
@@ -314,7 +305,7 @@ function Home() {
                 <ScrollVelocity
                   velocity={40}
                   texts={homeLogoRows.map((logos, rowIndex) => (
-                    <div key={rowIndex} className="flex items-center gap-6 pr-6">
+                    <div key={rowIndex} className="flex items-center gap-3 pr-3 sm:gap-6 sm:pr-6">
                       {logos.map(({ instanceKey, isDecorative, logo }) => (
                         <HomeClientLogo key={instanceKey} logo={logo} isDecorative={isDecorative} />
                       ))}
@@ -326,9 +317,8 @@ function Home() {
           </div>
         </section>
 
-        <BlogHighlights />
         <TechnologySection />
-        <StaggerTestimonials key={homeTestimonialsKey} testimonials={homeTestimonials} />
+        <StaggerTestimonials key={homeCasesKey} cases={homeCases} />
         <FeaturesSection />
       </div>
     </div>

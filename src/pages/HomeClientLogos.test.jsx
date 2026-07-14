@@ -279,11 +279,16 @@ describe('Home client logos', () => {
     expect(tailwindConfig).not.toMatch(/-20s/)
   })
 
-  it('keeps the duplicated marquee tracks separated by the same gap used in the keyframes', () => {
-    expect(indexCss).toMatch(/\.home-client-logo-marquee__scroller\s*\{[^}]*gap:\s*1\.5rem;/s)
+  it('keeps mobile logo tracks compact and restores desktop spacing at the sm breakpoint', () => {
+    expect(indexCss).toMatch(/\.home-client-logo-card\s*\{[^}]*width:\s*8rem;/s)
+    expect(indexCss).toMatch(/\.home-client-logo-marquee__scroller\s*\{[^}]*--home-client-logo-gap-offset:\s*0\.375rem;[^}]*gap:\s*0\.75rem;/s)
+    expect(indexCss).toMatch(/\.home-client-logo-marquee__track\s*\{[^}]*gap:\s*0\.75rem;/s)
+    expect(indexCss).toMatch(/@media\s*\(min-width:\s*640px\)\s*\{[\s\S]*\.home-client-logo-card\s*\{[\s\S]*width:\s*13rem;/s)
+    expect(indexCss).toMatch(/@media\s*\(min-width:\s*640px\)\s*\{[\s\S]*\.home-client-logo-marquee__scroller\s*\{[\s\S]*--home-client-logo-gap-offset:\s*0\.75rem;/s)
+    expect(indexCss).toMatch(/@media\s*\(min-width:\s*640px\)\s*\{[\s\S]*\.home-client-logo-marquee__scroller,\s*\.home-client-logo-marquee__track\s*\{[\s\S]*gap:\s*1\.5rem;/s)
     expect(indexCss).toMatch(/animation:\s*home-client-logo-scroll\s+var\(--home-client-logo-duration,\s*54s\)\s+linear\s+infinite;/)
     expect(indexCss).toMatch(/\.home-client-logo-marquee__scroller\[data-scroll-velocity-enhanced="true"\]\s*\{[^}]*animation:\s*none;/s)
-    expect(indexCss).toMatch(/translate3d\(calc\(-50% - 0\.75rem\), 0, 0\)/)
+    expect(indexCss).toMatch(/translate3d\(calc\(-50% - var\(--home-client-logo-gap-offset,\s*0\.375rem\)\), 0, 0\)/)
   })
 
   it('keeps the base logo marquee pace until scroll velocity accelerates it', async () => {

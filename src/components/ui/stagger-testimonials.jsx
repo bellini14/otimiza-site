@@ -3,45 +3,25 @@ import { createPortal } from 'react-dom'
 import { ArrowRight, ChevronRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { normalizeHomeCases } from '@/data/homeCases'
 
 const CAROUSEL_COPIES = 3
-const CARD_GAP = 24
+const DESKTOP_CARD_SIZE = 365
+const MOBILE_CARD_SIZE = 276
+const DESKTOP_CARD_GAP = 24
+const MOBILE_CARD_GAP = 12
+const TOUCH_DRAG_MULTIPLIER = 1.45
+const TOUCH_AXIS_LOCK_PX = 8
+const TOUCH_AXIS_BIAS = 1.15
+const TOUCH_SWIPE_THRESHOLD = 36
+const MAX_TOUCH_SWIPE_STEPS = 2
 const RELEASE_GAIN = 0.24
 const RELEASE_FRICTION = 0.94
 const MAX_RELEASE_SPEED = 40
 const MAX_INERTIA_FRAMES = 38
 const SNAP_DURATION_MS = 360
 
-const FALLBACK_TESTIMONIALS = [
-  ['A Otimiza trouxe uma clareza operacional que nunca tivemos. Nossos processos agora são 5x mais eficientes e escaláveis.', 'Ricardo Silveira, CEO na TechFlow', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=faces&q=80'],
-  ['A segurança e confiabilidade da OTMSuite nos permitiu expandir para novos mercados com tranquilidade total.', 'Camila Arantes, CTO na SecureSystems', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=faces&q=80'],
-  ['Implementar a metodologia Otimiza foi o melhor investimento estratégico que fizemos nos últimos anos.', 'Marcos Oliveira, Diretor de Operações na InnovaCorp', 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=faces&q=80'],
-  ['A interface é intuitiva e o suporte é excepcional. Mudou completamente a cultura de produtividade da nossa equipe.', 'Beatriz Santos, CFO na FutureLog', 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=faces&q=80'],
-  ['Uma solução atemporal que resolve problemas reais de gestão com elegância e eficiência.', 'André Mendes, Head de Design na CreativeFlow', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=faces&q=80'],
-  ['Recuperamos centenas de horas produtivas em poucos meses de uso. O impacto no faturamento foi imediato.', 'Juliana Costa, Gerente de Produto na TimeLess', 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop&crop=faces&q=80'],
-  ['A robustez da plataforma Otimiza é impressionante. É o motor que impulsiona nosso crescimento diário.', 'Felipe Almeida, Diretor de Marketing na BrandScale', 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&h=150&fit=crop&crop=faces&q=80'],
-  ['Análise de dados precisa e dashboards que realmente ajudam na tomada de decisão. Essencial para nós.', 'Carla Nunes, Cientista de Dados na DataDriven', 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=faces&q=80'],
-  ['Simplesmente a melhor solução de automação e gestão que já utilizamos. Nível global.', 'Roberto Lima, UX Designer na UserFirst', 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=faces&q=80'],
-  ['A escalabilidade é real. O sistema cresce sem fricção, acompanhando nossa demanda global.', 'Thiago Pires, Engenheiro DevOps na CloudScale', 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=150&h=150&fit=crop&crop=faces&q=80'],
-].map(([testimonial, by, imgSrc], id) => ({ id, testimonial, by, imgSrc }))
-
-function normalizeTestimonials(testimonials) {
-  if (!Array.isArray(testimonials) || testimonials.length === 0) return FALLBACK_TESTIMONIALS
-
-  return testimonials
-    .map((testimonial, index) => {
-      const roleAndCompany = [testimonial.role, testimonial.company].filter(Boolean).join(' na ')
-      return {
-        id: testimonial.id ?? testimonial._id ?? index,
-        testimonial: testimonial.testimonial ?? testimonial.shortQuote,
-        by: testimonial.by ?? [testimonial.clientName, roleAndCompany].filter(Boolean).join(', '),
-        imgSrc: testimonial.imgSrc ?? testimonial.avatarUrl ?? FALLBACK_TESTIMONIALS[5].imgSrc,
-      }
-    })
-    .filter((testimonial) => testimonial.testimonial && testimonial.by)
-}
-
-function TestimonialCard({ testimonial, cardSize, isActive, isDragging, logicalIndex, copyIndex, virtualIndex }) {
+function CaseCard({ caseStudy, cardSize, isActive, isDragging, logicalIndex, copyIndex, virtualIndex }) {
   const tilt = logicalIndex % 2 === 0 ? -1.4 : 1.4
   const activeTransform = isDragging
     ? 'translateY(-10px) rotate(0deg) scale(0.985)'
@@ -55,8 +35,9 @@ function TestimonialCard({ testimonial, cardSize, isActive, isDragging, logicalI
       data-virtual-index={virtualIndex}
       data-dragging={isActive && isDragging ? 'true' : 'false'}
       aria-hidden={copyIndex !== 1}
+      aria-label={copyIndex === 1 ? `Case ${caseStudy.company}` : undefined}
       className={cn(
-        'relative flex-none rounded-2xl border border-slate-200/60 bg-[#EFEFF4] p-8 antialiased',
+        'relative flex-none rounded-2xl border border-slate-200/60 bg-[#EFEFF4] p-7 antialiased sm:p-8',
         'transition-[transform,opacity,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
         isActive ? 'z-10 opacity-100 shadow-2xl shadow-slate-900/10' : 'opacity-45 shadow-sm',
       )}
@@ -69,39 +50,54 @@ function TestimonialCard({ testimonial, cardSize, isActive, isDragging, logicalI
       }}
     >
       {isActive && <span className="absolute right-6 top-6 h-2.5 w-2.5 rounded-full bg-brand-red/60" />}
-      <img
-        src={testimonial.imgSrc}
-        alt={copyIndex === 1 ? testimonial.by.split(',')[0] : ''}
-        draggable="false"
-        className="mb-4 h-14 w-14 rounded-full bg-slate-100 object-cover object-top ring-2 ring-slate-100"
-      />
-      <h3 className={cn('text-base font-medium leading-snug sm:text-lg', isActive ? 'text-slate-900' : 'text-slate-700')}>
-        &ldquo;{testimonial.testimonial}&rdquo;
-      </h3>
-      <p className={cn(
-        'absolute bottom-8 left-8 right-8 mt-2 text-sm',
-        isActive ? 'font-medium text-brand-red' : 'italic text-slate-400',
-      )}>
-        - {testimonial.by}
+      <div className="mb-4 flex h-16 items-center sm:mb-5 sm:h-[4.5rem]">
+        <img
+          src={caseStudy.logoUrl}
+          alt={copyIndex === 1 ? caseStudy.logoAlt || caseStudy.company : ''}
+          draggable="false"
+          className={cn(
+            'max-h-10 w-auto max-w-[8.5rem] object-contain transition-[filter] duration-500 sm:max-h-12 sm:max-w-[10rem]',
+            isActive ? 'grayscale-0' : 'grayscale',
+          )}
+        />
+      </div>
+      <p
+        data-testid="home-case-summary"
+        className={cn('line-clamp-2 text-[0.92rem] font-medium leading-snug sm:line-clamp-none sm:text-lg', isActive ? 'text-slate-900' : 'text-slate-700')}
+      >
+        {caseStudy.summary}
       </p>
+      <div
+        data-testid="home-case-details"
+        className="absolute bottom-7 left-7 right-7 border-t border-slate-300/70 pt-3 sm:bottom-8 sm:left-8 sm:right-8"
+      >
+        <h3 className={cn('text-sm font-semibold sm:text-base', isActive ? 'text-brand-red' : 'text-slate-500')}>
+          {caseStudy.company}
+        </h3>
+        <p className="mt-0.5 text-[0.68rem] font-medium uppercase tracking-[0.08em] text-slate-500 sm:text-xs">
+          {caseStudy.sector}
+        </p>
+      </div>
     </article>
   )
 }
 
-export function StaggerTestimonials({ testimonials }) {
-  const activeTestimonials = useMemo(() => normalizeTestimonials(testimonials), [testimonials])
-  const loopedTestimonials = useMemo(
+export function StaggerTestimonials({ cases }) {
+  const activeCases = useMemo(() => normalizeHomeCases(cases), [cases])
+  const loopedCases = useMemo(
     () => Array.from({ length: CAROUSEL_COPIES }, (_, copyIndex) =>
-      activeTestimonials.map((testimonial, logicalIndex) => ({
-        testimonial,
+      activeCases.map((caseStudy, logicalIndex) => ({
+        caseStudy,
         logicalIndex,
         copyIndex,
-        virtualIndex: copyIndex * activeTestimonials.length + logicalIndex,
+        virtualIndex: copyIndex * activeCases.length + logicalIndex,
       }))).flat(),
-    [activeTestimonials],
+    [activeCases],
   )
-  const [cardSize, setCardSize] = useState(365)
-  const [activeVirtualIndex, setActiveVirtualIndex] = useState(activeTestimonials.length)
+  const [cardSize, setCardSize] = useState(DESKTOP_CARD_SIZE)
+  const [cardGap, setCardGap] = useState(DESKTOP_CARD_GAP)
+  const [carouselSidePadding, setCarouselSidePadding] = useState(0)
+  const [activeVirtualIndex, setActiveVirtualIndex] = useState(activeCases.length)
   const [isDragging, setIsDragging] = useState(false)
   const [isHintVisible, setIsHintVisible] = useState(false)
   const [dragDirection, setDragDirection] = useState('right')
@@ -116,13 +112,17 @@ export function StaggerTestimonials({ testimonials }) {
   const dragStateRef = useRef({
     isDragging: false,
     pointerId: null,
+    axis: 'idle',
     startX: 0,
+    startY: 0,
     startScrollLeft: 0,
     lastX: 0,
     lastMoveX: 0,
+    dragMultiplier: 1,
+    pointerType: 'mouse',
   })
-  const cardInterval = cardSize + CARD_GAP
-  const loopWidth = activeTestimonials.length * cardInterval
+  const cardInterval = cardSize + cardGap
+  const loopWidth = activeCases.length * cardInterval
 
   const stopAnimation = useCallback(() => {
     if (animationFrameRef.current !== null) {
@@ -194,11 +194,10 @@ export function StaggerTestimonials({ testimonials }) {
     hintFrameRef.current = requestAnimationFrame(animateHint)
   }, [])
 
-  const snapToNearestCard = useCallback(() => {
+  const animateToScrollLeft = useCallback((target) => {
     const viewport = viewportRef.current
     if (!viewport) return
     const start = viewport.scrollLeft
-    const target = Math.round(start / cardInterval) * cardInterval
     const distance = target - start
     const startedAt = performance.now()
 
@@ -215,7 +214,31 @@ export function StaggerTestimonials({ testimonials }) {
     }
 
     animationFrameRef.current = requestAnimationFrame(step)
-  }, [cardInterval, updateScrollLeft])
+  }, [updateScrollLeft])
+
+  const snapToNearestCard = useCallback(() => {
+    const viewport = viewportRef.current
+    if (!viewport) return
+    animateToScrollLeft(Math.round(viewport.scrollLeft / cardInterval) * cardInterval)
+  }, [animateToScrollLeft, cardInterval])
+
+  const snapTouchSwipe = useCallback((dragState) => {
+    const totalDrag = (dragState.lastX - dragState.startX) * dragState.dragMultiplier
+    const draggedDistance = Math.abs(totalDrag)
+
+    if (draggedDistance < TOUCH_SWIPE_THRESHOLD) {
+      snapToNearestCard()
+      return
+    }
+
+    const direction = totalDrag < 0 ? 1 : -1
+    const steps = Math.min(
+      MAX_TOUCH_SWIPE_STEPS,
+      Math.max(1, Math.round(draggedDistance / cardInterval)),
+    )
+    const startIndex = Math.round(dragState.startScrollLeft / cardInterval)
+    animateToScrollLeft((startIndex + direction * steps) * cardInterval)
+  }, [animateToScrollLeft, cardInterval, snapToNearestCard])
 
   const startInertia = useCallback((pointerVelocity) => {
     stopAnimation()
@@ -247,40 +270,84 @@ export function StaggerTestimonials({ testimonials }) {
     if (event.button !== undefined && event.button !== 0) return
     const viewport = viewportRef.current
     if (!viewport) return
-    event.preventDefault()
+    const isTouch = event.pointerType === 'touch'
+    if (!isTouch) event.preventDefault()
     stopAnimation()
     updateHintPosition(event)
     dragStateRef.current = {
-      isDragging: true,
+      isDragging: !isTouch,
       pointerId: event.pointerId,
+      axis: isTouch ? 'pending' : 'horizontal',
       startX: event.clientX,
+      startY: event.clientY,
       startScrollLeft: viewport.scrollLeft,
       lastX: event.clientX,
       lastMoveX: 0,
+      dragMultiplier: event.pointerType === 'touch' ? TOUCH_DRAG_MULTIPLIER : 1,
+      pointerType: event.pointerType || 'mouse',
     }
-    setIsDragging(true)
-    event.currentTarget.setPointerCapture?.(event.pointerId)
+    setIsDragging(!isTouch)
+    if (!isTouch) event.currentTarget.setPointerCapture?.(event.pointerId)
   }
 
   const handlePointerMove = (event) => {
     updateHintPosition(event)
     const dragState = dragStateRef.current
-    if (!dragState.isDragging || dragState.pointerId !== event.pointerId) return
+    if (dragState.pointerId !== event.pointerId || dragState.axis === 'vertical') return
+
+    if (dragState.axis === 'pending') {
+      const totalX = event.clientX - dragState.startX
+      const totalY = event.clientY - dragState.startY
+      const absoluteX = Math.abs(totalX)
+      const absoluteY = Math.abs(totalY)
+
+      if (absoluteX < TOUCH_AXIS_LOCK_PX && absoluteY < TOUCH_AXIS_LOCK_PX) return
+
+      if (absoluteY > absoluteX * TOUCH_AXIS_BIAS) {
+        dragState.axis = 'vertical'
+        dragState.isDragging = false
+        if (viewportRef.current) viewportRef.current.scrollLeft = dragState.startScrollLeft
+        setIsDragging(false)
+        return
+      }
+
+      if (absoluteX <= absoluteY * TOUCH_AXIS_BIAS) return
+
+      dragState.axis = 'horizontal'
+      dragState.isDragging = true
+      setIsDragging(true)
+      event.currentTarget.setPointerCapture?.(event.pointerId)
+    }
+
+    if (!dragState.isDragging) return
     event.preventDefault()
-    dragState.lastMoveX = event.clientX - dragState.lastX
+    const moveDelta = event.clientX - dragState.lastX
+    dragState.lastMoveX = moveDelta * dragState.dragMultiplier
     dragState.lastX = event.clientX
     if (dragState.lastMoveX > 0.5) setDragDirection('right')
     if (dragState.lastMoveX < -0.5) setDragDirection('left')
-    updateScrollLeft(dragState.startScrollLeft - (event.clientX - dragState.startX))
+    updateScrollLeft(dragState.startScrollLeft - ((event.clientX - dragState.startX) * dragState.dragMultiplier))
   }
 
   const handlePointerEnd = (event) => {
     const dragState = dragStateRef.current
-    if (!dragState.isDragging || dragState.pointerId !== event.pointerId) return
+    if (dragState.pointerId !== event.pointerId) return
+    if (!dragState.isDragging || dragState.axis !== 'horizontal') {
+      dragState.isDragging = false
+      dragState.pointerId = null
+      dragState.axis = 'idle'
+      setIsDragging(false)
+      return
+    }
     dragState.isDragging = false
     dragState.pointerId = null
+    dragState.axis = 'idle'
     setIsDragging(false)
     event.currentTarget.releasePointerCapture?.(event.pointerId)
+    if (dragState.pointerType === 'touch') {
+      snapTouchSwipe(dragState)
+      return
+    }
     startInertia(dragState.lastMoveX)
   }
 
@@ -288,8 +355,30 @@ export function StaggerTestimonials({ testimonials }) {
     if (!dragStateRef.current.isDragging) setIsHintVisible(false)
   }
 
+  const handleKeyDown = (event) => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+    const viewport = viewportRef.current
+    if (!viewport) return
+
+    event.preventDefault()
+    stopAnimation()
+    const direction = event.key === 'ArrowRight' ? 1 : -1
+    const currentIndex = Math.round(viewport.scrollLeft / cardInterval)
+    animateToScrollLeft((currentIndex + direction) * cardInterval)
+  }
+
   useEffect(() => {
-    const updateSize = () => setCardSize(window.matchMedia('(min-width: 640px)').matches ? 365 : 290)
+    const updateSize = () => {
+      const isDesktop = window.matchMedia('(min-width: 640px)').matches
+      const nextCardSize = isDesktop ? DESKTOP_CARD_SIZE : MOBILE_CARD_SIZE
+      const nextCardGap = isDesktop ? DESKTOP_CARD_GAP : MOBILE_CARD_GAP
+      const carouselWidth = viewportRef.current?.clientWidth || window.innerWidth
+
+      setCardSize(nextCardSize)
+      setCardGap(nextCardGap)
+      setCarouselSidePadding(Math.max(16, (carouselWidth - nextCardSize) / 2))
+    }
+
     updateSize()
     window.addEventListener('resize', updateSize)
     return () => window.removeEventListener('resize', updateSize)
@@ -301,11 +390,11 @@ export function StaggerTestimonials({ testimonials }) {
 
     viewport.scrollLeft = loopWidth
     const frameId = requestAnimationFrame(() => {
-      setActiveVirtualIndex(activeTestimonials.length)
+      setActiveVirtualIndex(activeCases.length)
     })
 
     return () => cancelAnimationFrame(frameId)
-  }, [activeTestimonials.length, loopWidth])
+  }, [activeCases.length, loopWidth])
 
   useEffect(() => () => {
     stopAnimation()
@@ -317,7 +406,7 @@ export function StaggerTestimonials({ testimonials }) {
       ref={sectionRef}
       className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-[100vw] overflow-hidden bg-[#EFEFF4] py-16 sm:py-24"
     >
-      <div className="mx-auto mb-8 max-w-[1380px] px-4 sm:px-6 lg:px-8">
+      <div className="home-menu-shell mb-8" data-testid="home-menu-aligned-shell">
         <div className="text-center">
           <h2 className={cn(
             'mb-6 font-display text-4xl text-slate-900 sm:text-5xl lg:text-6xl',
@@ -331,7 +420,7 @@ export function StaggerTestimonials({ testimonials }) {
             isVisible ? 'animate-enter' : 'opacity-0',
             '[animation-delay:300ms]',
           )}>
-            Mais de 400 empresas confiam na Otimiza para transformar seus processos e acelerar seus resultados.
+            Mais de mil clientes confiam na Otimiza para transformar seus processos e acelerar seus resultados.
           </p>
         </div>
       </div>
@@ -341,6 +430,9 @@ export function StaggerTestimonials({ testimonials }) {
         data-testid="home-cases-carousel"
         data-card-interval={cardInterval}
         data-loop-width={loopWidth}
+        role="region"
+        aria-label="Carrossel de cases de sucesso"
+        tabIndex={0}
         className={cn(
           'group relative w-full overflow-hidden touch-pan-y select-none',
           isDragging ? 'cursor-grabbing' : 'cursor-grab',
@@ -353,18 +445,19 @@ export function StaggerTestimonials({ testimonials }) {
         onPointerUp={handlePointerEnd}
         onPointerCancel={handlePointerEnd}
         onPointerLeave={handlePointerLeave}
+        onKeyDown={handleKeyDown}
       >
-        <span className="pointer-events-none absolute inset-y-0 left-0 z-20 w-[15%] bg-gradient-to-r from-[#EFEFF4] to-transparent" />
-        <span className="pointer-events-none absolute inset-y-0 right-0 z-20 w-[15%] bg-gradient-to-l from-[#EFEFF4] to-transparent" />
+        <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 z-20 hidden w-[15%] bg-gradient-to-r from-[#EFEFF4] to-transparent sm:block" />
+        <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 z-20 hidden w-[15%] bg-gradient-to-l from-[#EFEFF4] to-transparent sm:block" />
         <div
           data-testid="home-cases-track"
           className="flex h-full w-max items-center"
-          style={{ gap: CARD_GAP, paddingInline: `calc(50vw - ${cardSize / 2}px)` }}
+          style={{ gap: cardGap, paddingInline: carouselSidePadding }}
         >
-          {loopedTestimonials.map(({ testimonial, logicalIndex, copyIndex, virtualIndex }) => (
-            <TestimonialCard
-              key={`${copyIndex}-${testimonial.id}`}
-              testimonial={testimonial}
+          {loopedCases.map(({ caseStudy, logicalIndex, copyIndex, virtualIndex }) => (
+            <CaseCard
+              key={`${copyIndex}-${caseStudy.id}`}
+              caseStudy={caseStudy}
               cardSize={cardSize}
               logicalIndex={logicalIndex}
               copyIndex={copyIndex}
@@ -401,11 +494,14 @@ export function StaggerTestimonials({ testimonials }) {
         document.body,
       )}
 
-      <div className={cn(
-        'mt-8 flex justify-center',
+      <div
+        className={cn(
+        'home-menu-shell mt-8 flex justify-center',
         isVisible ? 'animate-enter' : 'opacity-0',
         '[animation-delay:600ms]',
-      )}>
+      )}
+        data-testid="home-menu-aligned-shell"
+      >
         <Link to="/cases" className="solutions-section__cta" style={{ boxShadow: 'none' }}>
           Confira todos os cases
           <ArrowRight className="solutions-section__cta-arrow" />

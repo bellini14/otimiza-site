@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from 'motion/react'
+import { ArrowRight } from 'lucide-react'
 import SplitText from '../components/SplitText'
+import { pageTitleMotion } from '../components/pageTitleMotion'
 import timelessBackground from '../../imagens/shutterstock_2714404709-optimized.jpg'
 import timelessComparisonBackground from '../../imagens/criar o atemporal.webp'
 import iconeLine from '../../imagens/icone line.svg'
@@ -269,6 +272,74 @@ const blocks = [
   },
 ]
 
+function ClosingCtaLabel({ text, variant }) {
+  return (
+    <span className={`nossa-abordagem-closing__label nossa-abordagem-closing__label--${variant}`}>
+      {Array.from(text).map((character, index) => (
+        <span
+          key={`${character}-${index}`}
+          className="nossa-abordagem-closing__label-char"
+          style={{ '--closing-char-index': index }}
+        >
+          {character}
+        </span>
+      ))}
+    </span>
+  )
+}
+
+function ClosingContactCta({ idleText }) {
+  const ctaRef = useRef(null)
+  const idleLabelRef = useRef(null)
+  const activeLabelRef = useRef(null)
+
+  useEffect(() => {
+    let mounted = true
+
+    function measureLabels() {
+      if (!mounted || !ctaRef.current || !idleLabelRef.current || !activeLabelRef.current) return
+
+      const idleWidth = Math.ceil(idleLabelRef.current.scrollWidth)
+      const activeWidth = Math.ceil(activeLabelRef.current.scrollWidth)
+
+      if (idleWidth > 0) {
+        ctaRef.current.style.setProperty('--closing-label-idle-width', `${idleWidth}px`)
+      }
+      if (activeWidth > 0) {
+        ctaRef.current.style.setProperty('--closing-label-active-width', `${activeWidth}px`)
+      }
+    }
+
+    measureLabels()
+    document.fonts?.ready.then(measureLabels)
+    window.addEventListener('resize', measureLabels)
+
+    return () => {
+      mounted = false
+      window.removeEventListener('resize', measureLabels)
+    }
+  }, [])
+
+  return (
+    <a
+      ref={ctaRef}
+      className="nossa-abordagem-closing__cta"
+      href="/contato"
+      aria-label={`${idleText} Fale com a Otimiza`}
+    >
+      <span className="nossa-abordagem-closing__labels" aria-hidden="true">
+        <span ref={idleLabelRef} className="nossa-abordagem-closing__label-measure">{idleText}</span>
+        <span ref={activeLabelRef} className="nossa-abordagem-closing__label-measure">Fale com a Otimiza</span>
+        <ClosingCtaLabel text={idleText} variant="idle" />
+        <ClosingCtaLabel text="Fale com a Otimiza" variant="active" />
+      </span>
+      <span className="nossa-abordagem-closing__arrow" aria-hidden="true">
+        <ArrowRight />
+      </span>
+    </a>
+  )
+}
+
 function TextStack({ lines, large = false }) {
   return (
     <div className={large ? 'space-y-5 text-[clamp(1.08rem,1.78vw,2rem)] leading-[1.22]' : 'space-y-4 text-lg leading-8 sm:text-xl'}>
@@ -281,11 +352,14 @@ function TextStack({ lines, large = false }) {
 
 function JobsToBeDoneTerm() {
   const tooltipRef = useRef(null)
+  const termRef = useRef(null)
+  const modalPanelRef = useRef(null)
   const tooltipFrameRef = useRef(null)
   const tooltipHasPositionRef = useRef(false)
   const tooltipPositionRef = useRef({ x: 0, y: 0 })
   const tooltipTargetRef = useRef({ x: 0, y: 0 })
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 })
+  const [tooltipOpen, setTooltipOpen] = useState(false)
 
   useEffect(() => {
     return () => {
@@ -294,6 +368,36 @@ function JobsToBeDoneTerm() {
       }
     }
   }, [])
+
+  useEffect(() => {
+    if (!tooltipOpen) return undefined
+
+    function closeOnOutsideInteraction(event) {
+      if (
+        termRef.current?.contains(event.target)
+        || tooltipRef.current?.contains(event.target)
+        || modalPanelRef.current?.contains(event.target)
+      ) return
+
+      setTooltipOpen(false)
+    }
+
+    function closeOnEscape(event) {
+      if (event.key === 'Escape') {
+        setTooltipOpen(false)
+      }
+    }
+
+    document.addEventListener('pointerdown', closeOnOutsideInteraction)
+    document.addEventListener('keydown', closeOnEscape)
+    document.documentElement.classList.add('jobs-to-be-done-modal-open')
+
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsideInteraction)
+      document.removeEventListener('keydown', closeOnEscape)
+      document.documentElement.classList.remove('jobs-to-be-done-modal-open')
+    }
+  }, [tooltipOpen])
 
   function updateTooltipPosition(event) {
     const termRect = event.currentTarget.getBoundingClientRect()
@@ -352,8 +456,20 @@ function JobsToBeDoneTerm() {
 
   return (
     <span
+      ref={termRef}
       data-testid="jobs-to-be-done-term"
       className="group/jobs-term relative inline cursor-help"
+      role="button"
+      tabIndex={0}
+      aria-expanded={tooltipOpen}
+      aria-describedby="jobs-to-be-done-tooltip"
+      onClick={() => setTooltipOpen((open) => !open)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          setTooltipOpen((open) => !open)
+        }
+      }}
       onPointerMove={updateTooltipPosition}
     >
       “<span
@@ -363,15 +479,49 @@ function JobsToBeDoneTerm() {
         jobs to be done
       </span>”
       <span
+        id="jobs-to-be-done-tooltip"
         ref={tooltipRef}
         data-testid="jobs-to-be-done-tooltip"
-        className="pointer-events-none absolute left-0 top-0 z-30 hidden w-[min(34rem,calc(100vw-2rem))] rounded-[0.65rem] bg-slate-950/85 px-5 py-4 text-left text-sm font-normal leading-6 text-white opacity-0 shadow-2xl backdrop-blur transition-opacity duration-300 ease-out group-hover/jobs-term:opacity-100 sm:inline-block"
+        className={[
+          'jobs-to-be-done-tooltip pointer-events-none absolute left-0 top-0 z-30 hidden w-[min(34rem,calc(100vw-2rem))] rounded-[0.65rem] bg-slate-950/85 px-5 py-4 text-left text-sm font-normal leading-6 text-white opacity-0 shadow-2xl backdrop-blur transition-opacity duration-300 ease-out group-hover/jobs-term:opacity-100 group-focus-visible/jobs-term:opacity-100 sm:block',
+          tooltipOpen ? 'jobs-to-be-done-tooltip--open opacity-100' : '',
+        ].filter(Boolean).join(' ')}
         style={{
           transform: `translateX(${tooltipPosition.x}px) translateY(${tooltipPosition.y}px) scale(0.96)`,
         }}
       >
         {JOBS_TO_BE_DONE_TOOLTIP}
       </span>
+      {tooltipOpen && typeof document !== 'undefined' ? createPortal(
+        <span
+          className="jobs-to-be-done-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="jobs-to-be-done-modal-title"
+          data-testid="jobs-to-be-done-modal"
+        >
+          <span ref={modalPanelRef} className="jobs-to-be-done-modal__panel">
+            <button
+              type="button"
+              className="jobs-to-be-done-modal__close"
+              aria-label="Fechar"
+              onClick={(event) => {
+                event.stopPropagation()
+                setTooltipOpen(false)
+              }}
+            >
+              ×
+            </button>
+            <span id="jobs-to-be-done-modal-title" className="jobs-to-be-done-modal__title">
+              Jobs to be Done
+            </span>
+            <span className="jobs-to-be-done-modal__body">
+              {JOBS_TO_BE_DONE_TOOLTIP}
+            </span>
+          </span>
+        </span>,
+        document.body,
+      ) : null}
     </span>
   )
 }
@@ -573,6 +723,7 @@ function ValueVisionBlock({ block, timelineBlocks = [] }) {
   const introLines = block.content.slice(0, 3)
   const sectionRef = useRef(null)
   const trackRef = useRef(null)
+  const stepRefs = useRef([])
   const nodeRefs = useRef([])
   const reachedNodes = useRef(new Set())
   const [activeNodes, setActiveNodes] = useState([])
@@ -631,6 +782,54 @@ function ValueVisionBlock({ block, timelineBlocks = [] }) {
   }, [prefersReducedMotion])
 
   useEffect(() => {
+    if (prefersReducedMotion || typeof window === 'undefined') {
+      return undefined
+    }
+
+    const mobileQuery = window.matchMedia('(max-width: 767px)')
+
+    if (!mobileQuery.matches) {
+      return undefined
+    }
+
+    if (typeof IntersectionObserver === 'undefined') {
+      const fallbackTimer = window.setTimeout(() => {
+        setActiveNodes(steps.map((_, index) => index))
+      }, 0)
+
+      return () => {
+        window.clearTimeout(fallbackTimer)
+      }
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      const visibleStepIndexes = entries
+        .filter((entry) => entry.isIntersecting)
+        .map((entry) => Number(entry.target.getAttribute('data-value-step-index')))
+        .filter((stepIndex) => Number.isInteger(stepIndex))
+
+      if (visibleStepIndexes.length === 0) return
+
+      setActiveNodes((current) => {
+        const next = new Set(current)
+        visibleStepIndexes.forEach((stepIndex) => next.add(stepIndex))
+        return Array.from(next).sort((a, b) => a - b)
+      })
+    }, {
+      rootMargin: '-45% 0px -45% 0px',
+      threshold: 0,
+    })
+
+    stepRefs.current.forEach((step) => {
+      if (step) observer.observe(step)
+    })
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [prefersReducedMotion, steps])
+
+  useEffect(() => {
     const updateTitleLineWidths = () => {
       sectionRef.current?.querySelectorAll('.nossa-abordagem-value-vision__step').forEach((step) => {
         const title = step.querySelector('h3')
@@ -664,6 +863,7 @@ function ValueVisionBlock({ block, timelineBlocks = [] }) {
 
   useMotionValueEvent(lineScale, 'change', (latest) => {
     if (prefersReducedMotion || !trackRef.current) return
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches) return
 
     const trackRect = trackRef.current.getBoundingClientRect()
     const fillBottom = trackRect.top + trackRect.height * latest
@@ -732,7 +932,11 @@ function ValueVisionBlock({ block, timelineBlocks = [] }) {
                 : 'nossa-abordagem-value-vision__step--right',
               prefersReducedMotion || activeNodes.includes(stepIndex) ? 'nossa-abordagem-value-vision__step--active' : '',
             ].join(' ')}
+            ref={(stepElement) => {
+              stepRefs.current[stepIndex] = stepElement
+            }}
             data-testid="nossa-abordagem-value-vision-step"
+            data-value-step-index={stepIndex}
             style={{ '--value-step-delay': '0ms' }}
           >
             <span
@@ -764,6 +968,71 @@ function ValueVisionBlock({ block, timelineBlocks = [] }) {
         ))}
       </div>
     </article>
+  )
+}
+
+function EditorialQuoteBlock({ block }) {
+  const sectionRef = useRef(null)
+  const [visible, setVisible] = useState(false)
+  const prefersReducedMotion = useReducedMotion()
+
+  useEffect(() => {
+    if (prefersReducedMotion || typeof window === 'undefined') {
+      setVisible(true)
+      return undefined
+    }
+
+    if (typeof IntersectionObserver === 'undefined') {
+      setVisible(true)
+      return undefined
+    }
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry?.isIntersecting) return
+      setVisible(true)
+      observer.disconnect()
+    }, {
+      rootMargin: '-45% 0px -45% 0px',
+      threshold: 0,
+    })
+
+    if (sectionRef.current) observer.observe(sectionRef.current)
+
+    return () => observer.disconnect()
+  }, [prefersReducedMotion])
+
+  return (
+    <section
+      ref={sectionRef}
+      className={`nossa-abordagem-editorial-quote${visible ? ' nossa-abordagem-editorial-quote--visible' : ''}`}
+      aria-labelledby="nossa-abordagem-editorial-quote-title"
+      data-testid="nossa-abordagem-editorial-quote"
+    >
+      <div
+        className="nossa-abordagem-editorial-quote__opening nossa-abordagem-editorial-quote__group"
+      >
+        <h2 id="nossa-abordagem-editorial-quote-title">{block.content[0]}</h2>
+        {block.content.slice(1, 3).map((line) => <p key={line}>{line}</p>)}
+      </div>
+
+      <div className="nossa-abordagem-editorial-quote__content">
+        <div
+          className="nossa-abordagem-editorial-quote__manifesto nossa-abordagem-editorial-quote__group"
+        >
+          <blockquote className="nossa-abordagem-editorial-quote__quote">
+            {block.content.slice(3, 5).map((line) => <p key={line}>{line}</p>)}
+          </blockquote>
+          <p className="nossa-abordagem-editorial-quote__closing">{block.content[5]}</p>
+        </div>
+
+        <footer
+          className="nossa-abordagem-editorial-quote__signature nossa-abordagem-editorial-quote__group"
+        >
+          <p className="nossa-abordagem-editorial-quote__name">{block.content[6]}</p>
+          <p className="nossa-abordagem-editorial-quote__role">{block.content[7]}</p>
+        </footer>
+      </div>
+    </section>
   )
 }
 
@@ -824,17 +1093,10 @@ function ContentBlock({ block, index, timelineBlocks, abordagemLogos = [] }) {
           <SplitText
             tag="h1"
             text="Nossa abordagem"
-            className="nossa-abordagem-hero__title"
-            delay={35}
-            duration={0.42}
-            data-split-delay="35"
-            data-split-duration="0.42"
-            ease="power3.out"
-            splitType="chars"
-            from={{ opacity: 0, y: 40 }}
-            to={{ opacity: 1, y: 0 }}
-            threshold={0.1}
-            rootMargin="-100px"
+            className="internal-page-title nossa-abordagem-hero__title"
+            {...pageTitleMotion}
+            data-split-delay="100"
+            data-split-duration="0.6"
             textAlign="center"
           />
         </div>
@@ -925,12 +1187,19 @@ function ContentBlock({ block, index, timelineBlocks, abordagemLogos = [] }) {
       ref={block.variant === 'metric' ? metricBlockRef : undefined}
       data-testid="nossa-abordagem-block"
       className={[
-        'relative py-16 text-[#5a6572] sm:py-20 lg:py-24',
+        'relative text-[#5a6572]',
+        block.variant === 'quote'
+          ? 'py-0'
+          : block.variant === 'closing'
+            ? 'py-0 sm:py-20 lg:py-24'
+            : 'py-16 sm:py-20 lg:py-24',
         block.variant === 'metric' ? 'overflow-visible' : 'overflow-hidden',
         block.variant === 'metric' ? 'bg-[#E5E9F1]' : 'bg-white',
         block.variant === 'metric' ? 'nossa-abordagem-metric-block' : '',
         block.variant === 'statement' ? 'nossa-abordagem-statement-block' : '',
         block.variant === 'list' ? 'nossa-abordagem-list-block' : '',
+        block.variant === 'quote' ? 'nossa-abordagem-quote-block' : '',
+        block.variant === 'closing' ? 'nossa-abordagem-closing-block' : '',
         block.backgroundImage ? 'nossa-abordagem-comparison-backdrop' : '',
       ].filter(Boolean).join(' ')}
       style={block.backgroundImage ? { '--comparison-background-image': `url(${block.backgroundImage})` } : undefined}
@@ -985,30 +1254,22 @@ function ContentBlock({ block, index, timelineBlocks, abordagemLogos = [] }) {
 
         {block.variant === 'clients' ? <NossaAbordagemLogoCarousel logos={abordagemLogos} intro={block.content[0]} /> : null}
 
-        {block.variant === 'quote' ? (
-          <div className="grid gap-8 lg:grid-cols-[0.82fr_1.18fr]">
-            <div className="space-y-4 text-[clamp(2rem,4vw,4.8rem)] font-light leading-[1.02] text-[#39424c]">
-              {block.content.slice(0, 3).map((line) => (
-                <p key={line}>{line}</p>
-              ))}
-            </div>
-            <div className="space-y-7 border-l border-[#5a6572]/20 pl-7 text-xl leading-9 sm:text-2xl sm:leading-10">
-              {block.content.slice(3).map((line) => (
-                <p key={line}>{line}</p>
-              ))}
-            </div>
-          </div>
-        ) : null}
+        {block.variant === 'quote' ? <EditorialQuoteBlock block={block} /> : null}
 
         {block.variant === 'closing' ? (
-          <div className="min-h-[36rem] bg-white px-7 py-14 sm:px-12 lg:px-16">
-            <h2 className="font-display text-[clamp(4rem,9vw,9rem)] font-light leading-none text-[#39424c]">
+          <section
+            className="nossa-abordagem-closing"
+            aria-labelledby="nossa-abordagem-closing-title"
+            data-testid="nossa-abordagem-closing"
+          >
+            <h2
+              id="nossa-abordagem-closing-title"
+              className="nossa-abordagem-closing__title font-display"
+            >
               {block.title}
             </h2>
-            <p className="mt-10 max-w-3xl text-[clamp(2.2rem,5vw,5.8rem)] font-light leading-none text-[#5a6572]">
-              {block.content[0]}
-            </p>
-          </div>
+            <ClosingContactCta idleText={block.content[0]} />
+          </section>
         ) : null}
       </div>
     </article>
