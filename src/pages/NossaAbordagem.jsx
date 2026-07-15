@@ -458,7 +458,7 @@ function JobsToBeDoneTerm() {
     <span
       ref={termRef}
       data-testid="jobs-to-be-done-term"
-      className="group/jobs-term relative inline cursor-help"
+      className="group/jobs-term relative inline whitespace-nowrap cursor-help"
       role="button"
       tabIndex={0}
       aria-expanded={tooltipOpen}
@@ -483,7 +483,7 @@ function JobsToBeDoneTerm() {
         ref={tooltipRef}
         data-testid="jobs-to-be-done-tooltip"
         className={[
-          'jobs-to-be-done-tooltip pointer-events-none absolute left-0 top-0 z-30 hidden w-[min(34rem,calc(100vw-2rem))] rounded-[0.65rem] bg-slate-950/85 px-5 py-4 text-left text-sm font-normal leading-6 text-white opacity-0 shadow-2xl backdrop-blur transition-opacity duration-300 ease-out group-hover/jobs-term:opacity-100 group-focus-visible/jobs-term:opacity-100 sm:block',
+          'jobs-to-be-done-tooltip pointer-events-none absolute left-0 top-0 z-30 hidden w-[min(34rem,calc(100vw-2rem))] whitespace-normal rounded-[0.65rem] bg-slate-950/85 px-5 py-4 text-left text-sm font-normal leading-6 text-white opacity-0 shadow-2xl backdrop-blur transition-opacity duration-300 ease-out group-hover/jobs-term:opacity-100 group-focus-visible/jobs-term:opacity-100 sm:block',
           tooltipOpen ? 'jobs-to-be-done-tooltip--open opacity-100' : '',
         ].filter(Boolean).join(' ')}
         style={{
@@ -1239,7 +1239,7 @@ function ContentBlock({ block, index, timelineBlocks, abordagemLogos = [] }) {
         {block.variant === 'comparison' ? <ComparisonBlock block={block} /> : null}
 
         {block.variant === 'metric' ? (
-          <div className="mx-auto flex min-h-[36rem] min-w-0 w-full max-w-[1320px] items-center px-4 py-20 sm:px-5 sm:py-24 lg:px-0 lg:py-28">
+          <div className="mx-auto flex min-h-[36rem] min-w-0 w-full max-w-[1180px] items-center px-6 py-20 sm:px-8 sm:py-24 lg:px-10 lg:py-28">
             <p
               data-testid="nossa-abordagem-metric-text"
               className={[

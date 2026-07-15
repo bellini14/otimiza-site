@@ -347,7 +347,14 @@ describe('NossaAbordagem', () => {
     expect(metricText).not.toHaveTextContent(/orientados pelo/i)
     expect(metricBlock).toHaveClass('bg-[#E5E9F1]', 'nossa-abordagem-metric-block')
     expect(metricBlock).toHaveClass('overflow-visible')
-    expect(metricShell).toHaveClass('mx-auto', 'max-w-[1320px]', 'min-h-[36rem]', 'px-4', 'sm:px-5', 'lg:px-0')
+    expect(metricShell).toHaveClass(
+      'mx-auto',
+      'max-w-[1180px]',
+      'min-h-[36rem]',
+      'px-6',
+      'sm:px-8',
+      'lg:px-10',
+    )
     expect(metricShell).toHaveClass('py-20', 'sm:py-24', 'lg:py-28')
     expect(metricShell).toHaveClass('items-center')
     expect(metricText).toHaveClass(
@@ -367,6 +374,8 @@ describe('NossaAbordagem', () => {
     expect(cssBlock('.nossa-abordagem-metric-copy--visible')).toMatch(/opacity:\s*1;/)
     expect(cssBlock('.nossa-abordagem-metric-copy--visible')).toMatch(/transform:\s*translateY\(0\);/)
     expect(jobsTerm).toHaveClass('group/jobs-term', 'cursor-help')
+    expect(jobsTerm).toHaveClass('whitespace-nowrap')
+    expect(jobsTooltip).toHaveClass('whitespace-normal')
     expect(jobsTerm).toHaveAttribute('role', 'button')
     expect(jobsTerm).toHaveAttribute('aria-expanded', 'false')
     expect(jobsTerm).not.toHaveClass('underline', 'border-b-[0.035em]', 'pb-[0.02em]')
