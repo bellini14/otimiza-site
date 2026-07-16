@@ -276,10 +276,16 @@ describe('PostDetail', () => {
     expect(panel).toHaveAttribute('aria-modal', 'true')
     expect(document.querySelector('.post-detail__sidebar')).not.toContainElement(panel)
     expect(panel.parentElement?.parentElement).toBe(document.body)
-    expect(within(panel).getByRole('heading', { name: 'Converse sobre este artigo' })).toBeInTheDocument()
+    const heading = within(panel).getByRole('heading', { name: 'Converse sobre este artigo' })
+    const headingGroup = heading.closest('.post-detail__contact-heading-group')
+    const headingIcon = within(panel).getByTestId('contact-heading-icon')
+    expect(headingGroup).toContainElement(headingIcon)
+    expect(headingIcon).toHaveClass('post-detail__contact-heading-icon')
+    expect(headingIcon.querySelector('svg')).toHaveAttribute('aria-hidden', 'true')
+    expect(within(headingGroup).getByText('Compartilhe uma dúvida, percepção ou aplicação prática.')).toHaveClass('post-detail__contact-heading-copy')
     expect(within(panel).getByText('Sobre o artigo')).toBeInTheDocument()
     expect(within(panel).getByText('Post com imagem inline')).toHaveClass('post-detail__contact-article-title')
-    expect(within(panel).getByText(/dúvida, percepção ou aplicação prática/i)).toBeInTheDocument()
+    expect(within(panel).getByText('A equipe da Otimiza responderá pelo seu e-mail.')).toHaveClass('post-detail__contact-prompt')
 
     fireEvent.change(within(panel).getByRole('textbox', { name: 'Email' }), {
       target: { value: 'leitor@example.com' },

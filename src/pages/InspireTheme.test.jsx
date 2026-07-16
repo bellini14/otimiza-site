@@ -30,10 +30,25 @@ describe('Inspire theme text color', () => {
     expect(indexCss).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{[\s\S]*?\.post-detail__contact-screen,[\s\S]*?\.post-detail__contact-dialog\s*\{[^}]*animation:\s*none;/s)
   })
 
+  it('gives the contact dialog a stronger Inspire editorial hierarchy', () => {
+    expect(indexCss).toMatch(/\.post-detail__contact-heading-group\s*\{[^}]*display:\s*flex;[^}]*align-items:\s*flex-start;[^}]*gap:\s*0\.85rem;/s)
+    expect(indexCss).toMatch(/\.post-detail__contact-heading-icon\s*\{[^}]*width:\s*2\.75rem;[^}]*height:\s*2\.75rem;[^}]*border-radius:\s*999px;[^}]*background:\s*var\(--inspire-button-surface\);/s)
+    expect(indexCss).toMatch(/\.post-detail__contact-heading\s*\{[^}]*font-size:\s*1\.35rem;[^}]*font-weight:\s*500;/s)
+    expect(indexCss).toMatch(/\.post-detail__contact-heading-copy\s*\{[^}]*margin:\s*0\.35rem\s+0\s+0;[^}]*font-size:\s*0\.8rem;/s)
+    expect(indexCss).toMatch(/@media\s*\(max-width:\s*520px\)\s*\{[\s\S]*?\.post-detail__contact-heading-icon\s*\{[^}]*width:\s*2\.5rem;[^}]*height:\s*2\.5rem;[\s\S]*?\.post-detail__contact-heading\s*\{[^}]*font-size:\s*1\.2rem;/s)
+  })
+
   it('visually separates the current article context inside the contact panel', () => {
-    expect(indexCss).toMatch(/\.post-detail__contact-context\s*\{[^}]*padding:\s*0\.75rem\s+0\.85rem;[^}]*border-left:\s*2px solid var\(--inspire-text\);[^}]*background:\s*var\(--inspire-button-surface\);/s)
+    expect(indexCss).toMatch(/\.post-detail__contact-context\s*\{[^}]*padding:\s*0\.9rem\s+1rem;[^}]*border-left:\s*2px solid var\(--inspire-text\);[^}]*border-radius:\s*0\.75rem;[^}]*background:\s*var\(--inspire-button-surface\);/s)
     expect(indexCss).toMatch(/\.post-detail__contact-article-title\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;/s)
     expect(indexCss).toMatch(/\.post-detail__contact-status--success\s*\{[^}]*font-weight:\s*500;/s)
+  })
+
+  it('refines the contact fields and gives the submit action stronger contrast', () => {
+    expect(indexCss).toMatch(/\.post-detail__contact-form\s*\{[^}]*gap:\s*1\.15rem;/s)
+    expect(indexCss).toMatch(/\.post-detail__contact-form input\s*\{[^}]*padding:\s*0\.45rem\s+0\s+0\.75rem;/s)
+    expect(indexCss).toMatch(/\.post-detail__contact-form input:focus,[\s\S]*?\.post-detail__contact-form textarea:focus\s*\{[^}]*border-color:\s*var\(--inspire-text\);[^}]*box-shadow:\s*0\s+2px\s+0\s+-1px\s+rgb\(90 101 114 \/ 0\.18\);/s)
+    expect(indexCss).toMatch(/\.post-detail__contact-footer button\s*\{[^}]*min-height:\s*2\.9rem;[^}]*background:\s*var\(--inspire-text\);[^}]*color:\s*var\(--inspire-tooltip-text\);/s)
   })
 
   it('aligns the post actions with the back link and keeps their lower spacing compact', () => {
@@ -78,10 +93,10 @@ describe('Inspire theme text color', () => {
     expect(indexCss).toMatch(/\.post-detail__sidebar-action-control\s*\{[^}]*width:\s*100%;[^}]*min-height:\s*2\.7rem;[^}]*border-radius:\s*999px;[^}]*background:\s*var\(--inspire-button-surface\);/s)
   })
 
-  it('uses the same subtle gray for the background and border of every sidebar button', () => {
+  it('uses the subtle gray for secondary actions and stronger contrast for the modal submit', () => {
     expect(indexCss).toMatch(/--inspire-button-surface:\s*#eef1f3;/i)
     expect(indexCss).toMatch(/\.post-detail__sidebar-action-control\s*\{[^}]*border:\s*1px solid var\(--inspire-button-surface\);[^}]*background:\s*var\(--inspire-button-surface\);/s)
-    expect(indexCss).toMatch(/\.post-detail__contact-footer button\s*\{[^}]*border:\s*1px solid var\(--inspire-button-surface\);[^}]*background:\s*var\(--inspire-button-surface\);/s)
+    expect(indexCss).toMatch(/\.post-detail__contact-footer button\s*\{[^}]*border:\s*1px solid var\(--inspire-text\);[^}]*background:\s*var\(--inspire-text\);/s)
     expect(indexCss).toMatch(/\.inspire-sidebar__newsletter-submit\s*\{[^}]*border:\s*1px solid var\(--inspire-button-surface\);[^}]*background:\s*var\(--inspire-button-surface\);/s)
   })
 

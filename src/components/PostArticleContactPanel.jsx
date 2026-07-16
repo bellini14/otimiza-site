@@ -166,9 +166,23 @@ function PostArticleContactPanel({ postTitle, postPath }) {
             aria-labelledby={dialogTitleId}
           >
             <header className="post-detail__contact-dialog-header">
-              <h2 id={dialogTitleId} className="post-detail__contact-heading">
-                Converse sobre este artigo
-              </h2>
+              <div className="post-detail__contact-heading-group">
+                <span
+                  className="post-detail__contact-heading-icon"
+                  data-testid="contact-heading-icon"
+                  aria-hidden="true"
+                >
+                  <MessageCircle size={20} strokeWidth={1.7} aria-hidden="true" />
+                </span>
+                <div className="post-detail__contact-heading-text">
+                  <h2 id={dialogTitleId} className="post-detail__contact-heading">
+                    Converse sobre este artigo
+                  </h2>
+                  <p className="post-detail__contact-heading-copy">
+                    Compartilhe uma dúvida, percepção ou aplicação prática.
+                  </p>
+                </div>
+              </div>
               <button
                 ref={closeButtonRef}
                 type="button"
@@ -186,8 +200,7 @@ function PostArticleContactPanel({ postTitle, postPath }) {
             </div>
 
             <p className="post-detail__contact-prompt">
-              Envie uma dúvida, percepção ou aplicação prática. A equipe da Otimiza responderá
-              pelo seu e-mail.
+              A equipe da Otimiza responderá pelo seu e-mail.
             </p>
 
             <form className="post-detail__contact-form" onSubmit={handleSubmit}>
