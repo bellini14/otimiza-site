@@ -249,6 +249,7 @@ describe('PostDetail', () => {
     expect(within(actions).getByRole('button', { name: 'Compartilhar' })).toHaveAttribute('data-inspire-tooltip', 'Compartilhar artigo')
     const contactButton = within(actions).getByRole('button', { name: 'Contato' })
     expect(contactButton).toHaveAttribute('data-inspire-tooltip', 'Enviar mensagem')
+    expect(contactButton).toHaveAttribute('aria-haspopup', 'dialog')
     expect(contactButton).toHaveAttribute('aria-expanded', 'false')
     expect(contactButton.querySelector('svg')).not.toBeNull()
     expect(within(newsletter).getByRole('heading', { name: 'Assine o Inspire' })).toBeInTheDocument()
@@ -256,7 +257,7 @@ describe('PostDetail', () => {
     expect(document.querySelector('.post-detail__footer-actions')).toBeNull()
   })
 
-  it('opens an article-aware contact form below the action buttons and sends its message', async () => {
+  it('opens an article-aware contact dialog in a portal and sends its message', async () => {
     fetchMock
       .mockResolvedValueOnce(createJsonResponse({ slug: 'post-com-imagem-inline', count: 7 }))
       .mockResolvedValueOnce(createJsonResponse({ message: 'Mensagem recebida.' }))
@@ -266,12 +267,15 @@ describe('PostDetail', () => {
     expect(await screen.findByRole('heading', { name: 'Post com imagem inline' })).toBeInTheDocument()
 
     const contactButton = screen.getByRole('button', { name: 'Contato' })
-    expect(screen.queryByRole('region', { name: 'Enviar mensagem sobre o artigo' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Converse sobre este artigo' })).not.toBeInTheDocument()
 
     fireEvent.click(contactButton)
 
-    const panel = screen.getByRole('region', { name: 'Enviar mensagem sobre o artigo' })
+    const panel = screen.getByRole('dialog', { name: 'Converse sobre este artigo' })
     expect(contactButton).toHaveAttribute('aria-expanded', 'true')
+    expect(panel).toHaveAttribute('aria-modal', 'true')
+    expect(document.querySelector('.post-detail__sidebar')).not.toContainElement(panel)
+    expect(panel.parentElement?.parentElement).toBe(document.body)
     expect(within(panel).getByRole('heading', { name: 'Converse sobre este artigo' })).toBeInTheDocument()
     expect(within(panel).getByText('Sobre o artigo')).toBeInTheDocument()
     expect(within(panel).getByText('Post com imagem inline')).toHaveClass('post-detail__contact-article-title')
@@ -323,7 +327,7 @@ describe('PostDetail', () => {
     expect(await screen.findByRole('heading', { name: 'Post com imagem inline' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Contato' }))
 
-    const panel = screen.getByRole('region', { name: 'Enviar mensagem sobre o artigo' })
+    const panel = screen.getByRole('dialog', { name: 'Converse sobre este artigo' })
     const emailField = within(panel).getByRole('textbox', { name: 'Email' })
     const messageField = within(panel).getByRole('textbox', { name: 'Mensagem' })
 
@@ -337,9 +341,16 @@ describe('PostDetail', () => {
     expect(emailField).toHaveValue('leitor@example.com')
     expect(messageField).toHaveValue('Minha reflexão sobre o artigo.')
     expect(within(panel).getByRole('button', { name: 'Enviar mensagem' })).toBeEnabled()
+
+    fireEvent.click(within(panel).getByRole('button', { name: 'Fechar contato' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Contato' }))
+
+    const reopenedPanel = screen.getByRole('dialog', { name: 'Converse sobre este artigo' })
+    expect(within(reopenedPanel).getByRole('alert')).toHaveTextContent('Serviço indisponível.')
+    expect(within(reopenedPanel).getByRole('textbox', { name: 'Mensagem' })).toHaveValue('Minha reflexão sobre o artigo.')
   })
 
-  it('closes the contact panel with one stable collapsed layout state', async () => {
+  it('closes the contact dialog accessibly and preserves unfinished fields when reopened', async () => {
     fetchMock.mockResolvedValueOnce(createJsonResponse({ slug: 'post-com-imagem-inline', count: 7 }))
 
     renderPostDetail()
@@ -349,15 +360,59 @@ describe('PostDetail', () => {
     const contactButton = screen.getByRole('button', { name: 'Contato' })
     fireEvent.click(contactButton)
 
-    const panel = screen.getByRole('region', { name: 'Enviar mensagem sobre o artigo' })
-    const panelShell = panel.parentElement
-    fireEvent.click(contactButton)
+    const panel = screen.getByRole('dialog', { name: 'Converse sobre este artigo' })
+    const closeButton = within(panel).getByRole('button', { name: 'Fechar contato' })
+    const submitButton = within(panel).getByRole('button', { name: 'Enviar mensagem' })
+    const emailField = within(panel).getByRole('textbox', { name: 'Email' })
+    const messageField = within(panel).getByRole('textbox', { name: 'Mensagem' })
+    const backdrop = panel.parentElement
+
+    expect(closeButton).toHaveFocus()
+    expect(document.documentElement).toHaveStyle({ overflow: 'hidden' })
+
+    submitButton.focus()
+    fireEvent.keyDown(document, { key: 'Tab' })
+    expect(closeButton).toHaveFocus()
+
+    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true })
+    expect(submitButton).toHaveFocus()
+
+    const sidebarNewsletter = document.querySelector('.inspire-sidebar__newsletter')
+    const outsideEmailField = within(sidebarNewsletter).getByRole('textbox', { name: 'Email' })
+    outsideEmailField.focus()
+    fireEvent.keyDown(document, { key: 'Tab' })
+    expect(closeButton).toHaveFocus()
+
+    outsideEmailField.focus()
+    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true })
+    expect(submitButton).toHaveFocus()
+
+    fireEvent.change(emailField, { target: { value: 'leitor@example.com' } })
+    fireEvent.change(messageField, { target: { value: 'Rascunho preservado.' } })
+
+    fireEvent.mouseDown(panel)
+    expect(screen.getByRole('dialog', { name: 'Converse sobre este artigo' })).toBeInTheDocument()
+
+    fireEvent.mouseDown(backdrop)
 
     expect(contactButton).toHaveAttribute('aria-expanded', 'false')
-    expect(panelShell).toHaveClass('post-detail__contact-panel-shell--closed')
-    expect(panelShell).toHaveAttribute('aria-hidden', 'true')
-    expect(panel).toBeInTheDocument()
-    expect(screen.queryByRole('region', { name: 'Enviar mensagem sobre o artigo' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Converse sobre este artigo' })).not.toBeInTheDocument()
+    expect(contactButton).toHaveFocus()
+    expect(document.documentElement).not.toHaveStyle({ overflow: 'hidden' })
+
+    fireEvent.click(contactButton)
+    const reopenedPanel = screen.getByRole('dialog', { name: 'Converse sobre este artigo' })
+    expect(within(reopenedPanel).getByRole('textbox', { name: 'Email' })).toHaveValue('leitor@example.com')
+    expect(within(reopenedPanel).getByRole('textbox', { name: 'Mensagem' })).toHaveValue('Rascunho preservado.')
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByRole('dialog', { name: 'Converse sobre este artigo' })).not.toBeInTheDocument()
+    expect(contactButton).toHaveFocus()
+
+    fireEvent.click(contactButton)
+    fireEvent.click(screen.getByRole('button', { name: 'Fechar contato' }))
+    expect(screen.queryByRole('dialog', { name: 'Converse sobre este artigo' })).not.toBeInTheDocument()
+    expect(contactButton).toHaveFocus()
   })
 
   it('highlights the category inside the post with the same yellow strip', async () => {

@@ -20,13 +20,14 @@ describe('Inspire theme text color', () => {
     expect(postDetailSource).not.toMatch(/text-\[#(?!5A6572\])/i)
   })
 
-  it('reveals and dismisses the article contact panel with accessible smooth animations', () => {
+  it('presents the article contact form as a centered accessible dialog', () => {
     expect(indexCss).toMatch(/\.post-detail__sidebar-actions-row\s*\{[^}]*column-gap:\s*0\.5rem;[^}]*row-gap:\s*0;/s)
-    expect(indexCss).toMatch(/\.post-detail__contact-panel-shell\s*\{[^}]*display:\s*grid;[^}]*grid-template-rows:\s*0fr;[^}]*transition:\s*grid-template-rows\s+340ms[^;]+;/s)
-    expect(indexCss).toMatch(/\.post-detail__contact-panel-shell--open\s*\{[^}]*grid-template-rows:\s*1fr;/s)
-    expect(indexCss).toMatch(/\.post-detail__contact-panel\s*\{[^}]*opacity:\s*0;[^}]*transition:\s*opacity\s+140ms[^;]+;/s)
-    expect(indexCss).toMatch(/\.post-detail__contact-panel-shell--open\s+\.post-detail__contact-panel\s*\{[^}]*opacity:\s*1;[^}]*transition:\s*opacity\s+180ms\s+ease\s+340ms;/s)
-    expect(indexCss).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{[\s\S]*?\.post-detail__contact-panel-shell,[\s\S]*?\.post-detail__contact-panel\s*\{[^}]*transition:\s*none;/s)
+    expect(indexCss).toMatch(/\.post-detail__contact-screen\s*\{[^}]*position:\s*fixed;[^}]*inset:\s*0;[^}]*z-index:\s*910;[^}]*display:\s*grid;[^}]*place-items:\s*center;/s)
+    expect(indexCss).toMatch(/\.post-detail__contact-dialog\s*\{[^}]*width:\s*min\(32rem,\s*100%\);[^}]*max-height:\s*calc\(100dvh\s*-\s*2rem\);[^}]*overflow-y:\s*auto;/s)
+    expect(indexCss).toMatch(/\.post-detail__contact-dialog-header\s*\{[^}]*display:\s*flex;[^}]*justify-content:\s*space-between;/s)
+    expect(indexCss).toMatch(/\.post-detail__contact-dialog-close\s*\{[^}]*border-radius:\s*999px;[^}]*background:\s*var\(--inspire-button-surface\);/s)
+    expect(indexCss).toMatch(/@media\s*\(max-width:\s*520px\)\s*\{[\s\S]*?\.post-detail__contact-screen\s*\{[^}]*padding:\s*0\.75rem;/s)
+    expect(indexCss).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{[\s\S]*?\.post-detail__contact-screen,[\s\S]*?\.post-detail__contact-dialog\s*\{[^}]*animation:\s*none;/s)
   })
 
   it('visually separates the current article context inside the contact panel', () => {
@@ -38,8 +39,7 @@ describe('Inspire theme text color', () => {
   it('aligns the post actions with the back link and keeps their lower spacing compact', () => {
     expect(indexCss).toMatch(/\.post-detail__sidebar\s*\{[^}]*padding:\s*2\.5rem\s+0\s+0\s+2\.4rem;/s)
     expect(indexCss).toMatch(/\.post-detail__sidebar-actions\s*\{[^}]*margin-bottom:\s*1\.75rem;[^}]*padding-bottom:\s*1\.5rem;/s)
-    expect(indexCss).toMatch(/\.post-detail__contact-panel-shell\s*\{[^}]*overflow:\s*hidden;/s)
-    expect(indexCss).toMatch(/\.post-detail__contact-panel-content\s*\{[^}]*margin-top:\s*1\.15rem;[^}]*padding-top:\s*1\.35rem;[^}]*border-top:\s*1px solid #ececec;/s)
+    expect(indexCss).toMatch(/\.post-detail__contact-dialog\s*\{[^}]*padding:\s*1\.35rem;[^}]*border:\s*1px solid #e1e6ea;[^}]*background:\s*#fff(?:fff)?;/s)
   })
 
   it('contains the feed and article thumbnails inside the available width', () => {
