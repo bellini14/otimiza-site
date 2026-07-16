@@ -23,6 +23,8 @@ import { buildStructuredData } from './seo/structuredData'
 
 function AppRoutes() {
   const displayedLocation = useTransitionLocation()
+  const isInspireRoute = displayedLocation.pathname === '/inspire'
+    || displayedLocation.pathname.startsWith('/inspire/')
   const routeMetadata = staticPageMetadata[displayedLocation.pathname]
   const fallbackTitle = displayedLocation.pathname.startsWith('/cases/')
     ? 'Case de consultoria e melhoria de processos | Otimiza'
@@ -40,8 +42,8 @@ function AppRoutes() {
 
   return (
     <div
-      className="page-transition-route"
-      key={displayedLocation.pathname}
+      className={isInspireRoute ? 'inspire-transition-route' : 'page-transition-route'}
+      key={isInspireRoute ? 'inspire' : displayedLocation.pathname}
     >
       <SeoHead
         title={routeMetadata?.title || fallbackTitle}

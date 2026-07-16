@@ -28,6 +28,33 @@ describe('contact form layout styles', () => {
     expect(mainRule).toContain('clamp(7rem, 12vw, 11rem)')
   })
 
+  it('styles fields as the minimal underlined controls from the reference', () => {
+    const fieldRule = ruleFor('.contact-form__field')
+    const buttonRule = ruleFor('.contact-form__footer button')
+
+    expect(fieldRule).toContain('border: 0')
+    expect(fieldRule).toContain('border-bottom: 1px solid')
+    expect(fieldRule).toContain('border-radius: 0')
+    expect(fieldRule).toContain('background: transparent')
+    expect(buttonRule).toContain('border-radius: 1.1rem')
+    expect(buttonRule).toContain('background: #5a6572')
+    expect(buttonRule).not.toContain('width: 100%')
+  })
+
+  it('uses the Otimiza slate palette throughout the form without red or black accents', () => {
+    const formStyles = css.slice(css.indexOf('  .contact-main {'), css.indexOf('  @keyframes contact-rise'))
+
+    expect(formStyles).toContain('color: #5a6572')
+    expect(formStyles).toContain('background: #5a6572')
+    expect(formStyles).not.toMatch(/#(?:171717|e02020|bd1717)/i)
+  })
+
+  it('uses Elza explicitly across the contact form', () => {
+    const panelRule = ruleFor('.contact-form-panel')
+
+    expect(panelRule).toContain('font-family: "elza", sans-serif')
+  })
+
   it('uses the contact hero color behind provider-rendered map tiles', () => {
     const canvasRule = ruleFor('.contact-leaflet__canvas')
     const tilesRule = ruleFor('.contact-leaflet__canvas .leaflet-tile-pane')

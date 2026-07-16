@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from '../App'
@@ -40,7 +40,28 @@ describe('Inspire newsletter CTA', () => {
     const cta = screen.getByRole('link', { name: 'Assinar newsletter' })
 
     expect(cta).toHaveAttribute('href', '/inspire/newsletter')
+    expect(cta).toHaveAttribute('data-inspire-tooltip', 'Assinar newsletter')
     expect(cta.querySelector('.lucide-mail')).not.toBeNull()
+  })
+
+  it('keeps the tooltip attached to the mouse position', async () => {
+    renderLayout()
+
+    const backButton = screen.getByRole('button', { name: /voltar para a p.+gina anterior/i })
+    fireEvent.mouseMove(backButton, { clientX: 120, clientY: 80 })
+
+    const tooltip = screen.getByRole('tooltip')
+    expect(tooltip).toHaveTextContent('Voltar')
+    expect(tooltip).toHaveStyle({ transform: 'translate3d(134px, 94px, 0)' })
+    expect(tooltip).toHaveClass('inspire-cursor-tooltip--enter')
+
+    fireEvent.mouseMove(document.body, { clientX: 200, clientY: 160 })
+    expect(tooltip).toHaveClass('inspire-cursor-tooltip--exit')
+    expect(tooltip).toBeInTheDocument()
+
+    await waitFor(() => {
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
+    })
   })
 
   it('renders the newsletter page with a name and email form on the app route', async () => {
@@ -61,6 +82,6 @@ describe('Inspire newsletter CTA', () => {
     expect(document.querySelector('.inspire-newsletter__content')).not.toBeNull()
     expect(screen.getByLabelText('Nome')).toBeInTheDocument()
     expect(screen.getByLabelText('Email')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Assinar newsletter' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Assinar newsletter' })).toHaveAttribute('data-inspire-tooltip', 'Assinar newsletter')
   })
 })

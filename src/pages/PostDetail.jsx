@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { PortableText } from '@portabletext/react'
-import { ArrowLeft, Calendar, Share2 } from 'lucide-react'
+import { ArrowLeft, Calendar } from 'lucide-react'
 import { client, urlFor } from '../lib/sanity'
 import PostLikeButton from '../components/PostLikeButton'
+import InspireNewsletterSignup from '../components/InspireNewsletterSignup'
+import InspireShareButton from '../components/InspireShareButton'
+import PostArticleContactPanel from '../components/PostArticleContactPanel'
 import SeoHead from '../seo/SeoHead'
 import { getPageDescription, getPageTitle } from '../seo/siteMetadata'
 
@@ -31,7 +34,7 @@ function PostDetail() {
   const location = useLocation()
   const [post, setPost] = useState(() => getPreviewPost(location.state))
   const [morePosts, setMorePosts] = useState([])
-  const [loading, setLoading] = useState(() => !getPreviewPost(location.state))
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
@@ -40,7 +43,7 @@ function PostDetail() {
     window.scrollTo(0, 0)
     setPost(previewPost)
     setMorePosts([])
-    setLoading(!previewPost)
+    setLoading(true)
 
     const query = `{
       "post": *[_type == "post" && slug.current == $slug][0] {
@@ -77,7 +80,7 @@ function PostDetail() {
       } catch (error) {
         console.error('Error fetching post details from Sanity:', error)
 
-        if (!cancelled) {
+        if (!cancelled && !previewPost) {
           setPost(null)
           setMorePosts([])
         }
@@ -96,6 +99,7 @@ function PostDetail() {
   }, [location.state, slug])
 
   const isShellLoading = loading && !post
+  const contentPhase = loading ? 'loading' : 'ready'
   const postSocialImage = post?.mainImage
     ? urlFor(post.mainImage).width(1200).url()
     : post?.imgSrc
@@ -158,9 +162,14 @@ function PostDetail() {
           ogType="article"
         />
       ) : null}
-    <article className="relative w-full px-6 pb-14 md:px-12 lg:pb-20">
-      <div className="relative z-10 mx-auto w-full max-w-[1380px]">
-        <header className="mb-12 border-b border-[#ececec] pb-10 pt-32 sm:pt-40">
+    <article className="post-detail">
+      <div className="post-detail__grid">
+        <div className="post-detail__main" data-lenis-prevent-wheel>
+        <div
+          key={`${slug}-${contentPhase}`}
+          className={`post-detail__content post-detail__content--${contentPhase}`}
+        >
+        <header className="mb-12 border-b border-[#ececec] pb-10 pt-8 sm:pt-10">
           <Link
             to="/inspire"
             className="mb-10 inline-flex items-center gap-2 text-sm font-medium text-[#5A6572] transition-opacity hover:opacity-80"
@@ -201,15 +210,10 @@ function PostDetail() {
                 )}
               </div>
 
-              <h1 className="text-[2.6rem] font-bold leading-[1.05] tracking-[-0.04em] text-[#5A6572] sm:text-[3.6rem] lg:text-[4.6rem]">
+              <h1 className="text-[2.6rem] font-medium leading-[1.05] tracking-[-0.015em] text-[#5A6572] sm:text-[3.6rem] lg:text-[4.6rem]">
                 {post.title}
               </h1>
 
-              {post.description && (
-                <p className="mt-8 border-l-2 border-[#d8dde3] pl-6 text-xl leading-relaxed text-[#5A6572]">
-                  {post.description}
-                </p>
-              )}
             </>
           )}
         </header>
@@ -243,22 +247,7 @@ function PostDetail() {
             </div>
 
             <footer className="mx-auto mt-16 max-w-4xl border-t border-[#ececec] pt-8">
-              <div className="mb-16 flex flex-col items-center justify-between gap-6 sm:flex-row">
-                <p className="text-sm text-[#5A6572]">Obrigado por ler na Inspire.</p>
-                <div className="flex flex-wrap items-center gap-3">
-                  <PostLikeButton slug={slug} variant="detail" />
-                  <button className="flex items-center gap-2 rounded-full border border-[#dfdfdf] px-5 py-2.5 text-sm font-medium text-[#5A6572] transition-colors hover:bg-[#f5f5f5] hover:text-[#5A6572]">
-                    <Share2 size={16} strokeWidth={1.8} />
-                    Compartilhar
-                  </button>
-                  <Link
-                    to="/contato"
-                    className="ml-2 flex items-center justify-center rounded-full bg-[#f3f5f7] px-6 py-2.5 text-sm font-semibold text-[#5A6572] transition-colors hover:bg-[#eceff2]"
-                  >
-                    Falar com a Otimiza
-                  </Link>
-                </div>
-              </div>
+              <p className="mb-12 text-sm text-[#5A6572]">Obrigado por ler na Inspire.</p>
 
               {morePosts.length > 0 && (
                 <div className="border-t border-[#ececec] pt-12">
@@ -305,6 +294,46 @@ function PostDetail() {
             </footer>
           </>
         )}
+        </div>
+        </div>
+
+        <aside className="post-detail__sidebar">
+          <section
+            className={`post-detail__sidebar-actions post-detail__sidebar-actions--${loading ? 'loading' : 'ready'}`}
+            aria-labelledby="post-detail-actions-title"
+            aria-busy={loading}
+          >
+            <h2 id="post-detail-actions-title" className="sr-only">Ações do artigo</h2>
+            {loading ? (
+              <div className="post-detail__sidebar-actions-placeholder" aria-hidden="true" />
+            ) : (
+              <div className="post-detail__sidebar-actions-row post-detail__sidebar-actions-row--enter">
+                <div className="post-detail__sidebar-action-item">
+                  <PostLikeButton
+                    slug={slug}
+                    variant="detail"
+                    className="post-detail__sidebar-like"
+                    buttonClassName="post-detail__sidebar-action-control"
+                    showLabel
+                  />
+                </div>
+                <div className="post-detail__sidebar-action-item">
+                  <InspireShareButton
+                    className="post-detail__sidebar-action-control post-detail__sidebar-action-button"
+                    title={post.title}
+                    url={`/inspire/${slug}`}
+                  />
+                </div>
+                <PostArticleContactPanel
+                  postTitle={post.title}
+                  postPath={`/inspire/${slug}`}
+                />
+              </div>
+            )}
+          </section>
+
+          <InspireNewsletterSignup />
+        </aside>
       </div>
     </article>
     </>

@@ -11,7 +11,7 @@ import {
   submitPostLike,
 } from '../lib/postLikes'
 
-const LIKE_ANIMATION_MS = 220
+const LIKE_ANIMATION_MS = 360
 
 function formatLikeCountLabel(value) {
   return `${value} curtida${value === 1 ? '' : 's'}`
@@ -26,11 +26,18 @@ function getButtonAriaLabel({ likeCount, liked }) {
   return liked ? 'Curtido este post' : 'Curtir este post'
 }
 
-function PostLikeButton({ slug, className = '', variant = 'detail' }) {
+function PostLikeButton({
+  slug,
+  className = '',
+  buttonClassName: customButtonClassName = '',
+  variant = 'detail',
+  showLabel = false,
+}) {
   const [likeCount, setLikeCount] = useState(() => getCachedPostLikeCount(slug))
   const [liked, setLiked] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
+  const [feedbackMessage, setFeedbackMessage] = useState('')
   const interactionVersionRef = useRef(0)
 
   useEffect(() => {
@@ -93,6 +100,7 @@ function PostLikeButton({ slug, className = '', variant = 'detail' }) {
     interactionVersionRef.current += 1
     setIsSubmitting(true)
     setLiked(nextLiked)
+    setFeedbackMessage(nextLiked ? 'Artigo curtido' : 'Curtida removida')
 
     if (typeof nextLikeCount === 'number') {
       cachePostLikeCount(slug, nextLikeCount)
@@ -116,6 +124,11 @@ function PostLikeButton({ slug, className = '', variant = 'detail' }) {
       console.error('Error submitting post like:', error)
       setLiked(previousLiked)
       setLikeCount(previousLikeCount)
+      setFeedbackMessage(
+        previousLiked
+          ? 'Não foi possível remover a curtida. Tente novamente.'
+          : 'Não foi possível curtir. Tente novamente.'
+      )
       if (typeof previousLikeCount === 'number') {
         cachePostLikeCount(slug, previousLikeCount)
       }
@@ -137,7 +150,10 @@ function PostLikeButton({ slug, className = '', variant = 'detail' }) {
   const buttonClassName = [
     'post-like-button',
     `post-like-button--${variant}`,
+    showLabel ? 'post-like-button--labeled' : '',
     liked ? 'post-like-button--liked' : '',
+    isAnimating ? 'post-like-button--feedback' : '',
+    customButtonClassName,
   ]
     .filter(Boolean)
     .join(' ')
@@ -149,6 +165,7 @@ function PostLikeButton({ slug, className = '', variant = 'detail' }) {
         aria-label={getButtonAriaLabel({ likeCount, liked })}
         aria-pressed={liked}
         aria-disabled={isSubmitting}
+        data-inspire-tooltip={liked ? 'Remover curtida' : 'Curtir artigo'}
         onClick={handleClick}
         className={buttonClassName}
       >
@@ -161,12 +178,18 @@ function PostLikeButton({ slug, className = '', variant = 'detail' }) {
             <Heart size={16} strokeWidth={1.8} fill={liked ? 'currentColor' : 'none'} />
           </span>
         </span>
+        {showLabel && (
+          <span className="post-like-button__label">{liked ? 'Curtido' : 'Curtir'}</span>
+        )}
       </button>
       {typeof likeCount === 'number' && (
         <span className="post-like-button__count" aria-hidden="true">
           {likeCount}
         </span>
       )}
+      <span className="post-like-button__status" role="status" aria-live="polite">
+        {feedbackMessage}
+      </span>
     </span>
   )
 }

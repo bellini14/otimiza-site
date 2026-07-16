@@ -55,6 +55,25 @@ beforeEach(() => {
 })
 
 describe('FeaturesSection mobile navigation', () => {
+  it('uses the full mobile navigation width with arrows only', () => {
+    renderFeaturesSection()
+
+    const mobileNavigation = screen.getByTestId('features-mobile-card-navigation')
+    const previousButton = screen.getByRole('button', { name: 'Solucao anterior' })
+    const nextButton = screen.getByRole('button', { name: 'Proxima solucao' })
+
+    expect(mobileNavigation).toHaveClass('w-full', 'justify-between')
+    expect(mobileNavigation).not.toHaveClass('w-fit')
+    expect(mobileNavigation).not.toHaveClass('self-center')
+    expect(mobileNavigation).not.toHaveClass('justify-center')
+    expect([...mobileNavigation.children]).toEqual([previousButton, nextButton])
+    expect(mobileNavigation).not.toHaveTextContent(/\d\s*\/\s*\d/)
+    ;[previousButton, nextButton].forEach((button) => {
+      expect(button).toHaveClass('border-neutral-200', 'bg-white', 'text-neutral-500')
+      expect(button).not.toHaveClass('bg-red-50', 'text-brand-red')
+    })
+  })
+
   it('uses footer mobile controls to navigate between solution cards', () => {
     renderFeaturesSection()
 
@@ -66,17 +85,38 @@ describe('FeaturesSection mobile navigation', () => {
     expect(mobileNavigation).toHaveClass('feature-detail-mobile-footer-nav')
     expect(detailPanel).toContainElement(mobileNavigation)
     expect(mobileNavigation.compareDocumentPosition(detailHeader) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy()
-    expect(mobileNavigation).toHaveTextContent('1 / 4')
+    expect(mobileNavigation).not.toHaveTextContent(/\d\s*\/\s*\d/)
     expect(mobileNavigation.compareDocumentPosition(document.querySelector('#nossas-solucoes a.btn-primary')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Proxima solucao' }))
+    const nextButton = screen.getByRole('button', { name: 'Proxima solucao' })
+    nextButton.focus()
+    fireEvent.click(nextButton)
 
     expect(getDetailCardTitle()).toMatch(/^Gest/)
-    expect(screen.getByTestId('features-mobile-card-navigation')).toHaveTextContent('2 / 4')
+    expect(screen.getByTestId('features-mobile-card-navigation')).toBe(mobileNavigation)
+    expect(screen.getByRole('button', { name: 'Proxima solucao' })).toBe(nextButton)
+    expect(document.activeElement).toBe(nextButton)
+    expect(mobileNavigation).not.toHaveTextContent(/\d\s*\/\s*\d/)
 
     fireEvent.click(screen.getByRole('button', { name: 'Solucao anterior' }))
 
     expect(getDetailCardTitle()).toMatch(/^Diagn/)
+  })
+
+  it('centers the mobile CTA and sends every card to contact', () => {
+    renderFeaturesSection()
+
+    const cta = document.querySelector('#nossas-solucoes a.btn-primary')
+    const nextButton = screen.getByRole('button', { name: 'Proxima solucao' })
+
+    expect(cta).toHaveClass('justify-center', 'lg:justify-start')
+    expect(cta).toHaveAttribute('href', '/contato')
+
+    fireEvent.click(nextButton)
+    fireEvent.click(nextButton)
+    fireEvent.click(nextButton)
+
+    expect(cta).toHaveAttribute('href', '/contato')
   })
 
   it('places the detail icon beside enlarged title and subtitle on mobile', () => {

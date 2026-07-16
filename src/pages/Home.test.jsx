@@ -85,7 +85,9 @@ describe('Home', () => {
       </MemoryRouter>,
     )
 
-    const inspireHeading = screen.getByRole('heading', { name: 'Inspire para quem opera no longo prazo' })
+    const inspireHeading = screen.getByRole('heading', {
+      name: 'Inspire. Conteúdo de vanguarda para a gestão de alto impacto.',
+    })
     const brandsHeading = screen.getByRole('heading', { name: 'Marcas que confiam na Otimiza' })
 
     expect(inspireHeading.compareDocumentPosition(brandsHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()

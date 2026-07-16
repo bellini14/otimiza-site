@@ -15,6 +15,15 @@ describe('page transition timing', () => {
     expect(shouldAnimatePageTransition({ innerWidth: 770 })).toBe(true)
   })
 
+  it('skips the global curtain between Inspire routes only', () => {
+    const viewport = { innerWidth: 1440 }
+
+    expect(shouldAnimatePageTransition(viewport, '/inspire', '/inspire/artigo')).toBe(false)
+    expect(shouldAnimatePageTransition(viewport, '/inspire/artigo', '/inspire')).toBe(false)
+    expect(shouldAnimatePageTransition(viewport, '/', '/inspire')).toBe(true)
+    expect(shouldAnimatePageTransition(viewport, '/inspire', '/')).toBe(true)
+  })
+
   it('keeps the complete transition light and avoids a perceptible frozen hold', () => {
     const totalDuration =
       PAGE_TRANSITION_TIMING.cover +
@@ -37,6 +46,14 @@ describe('page transition timing', () => {
     const css = readFileSync('src/index.css', 'utf8')
 
     expect(css).toMatch(/@media\s*\(max-width:\s*769px\)\s*\{[^}]*\.page-transition-route\s*\{[^}]*animation:\s*none/s)
+  })
+
+  it('keeps the Inspire shell mounted and outside the global route animation', () => {
+    const appSource = readFileSync('src/App.jsx', 'utf8')
+
+    expect(appSource).toMatch(/const isInspireRoute = displayedLocation\.pathname(?:\s|\S)*?startsWith\('\/inspire\/'\)/)
+    expect(appSource).toMatch(/className=\{isInspireRoute \? 'inspire-transition-route' : 'page-transition-route'\}/)
+    expect(appSource).toMatch(/key=\{isInspireRoute \? 'inspire' : displayedLocation\.pathname\}/)
   })
 })
 

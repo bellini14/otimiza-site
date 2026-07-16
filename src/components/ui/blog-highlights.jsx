@@ -79,7 +79,7 @@ export function BlogHighlights() {
                 '[animation-delay:150ms]',
               )}
             >
-              Inspire para quem opera no longo prazo
+              Inspire. Conteúdo de vanguarda para a gestão de alto impacto.
             </h2>
           </div>
 

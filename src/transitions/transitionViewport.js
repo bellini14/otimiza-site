@@ -1,6 +1,14 @@
 const PAGE_TRANSITION_DESKTOP_MIN_WIDTH = 770
 
-export function shouldAnimatePageTransition(viewport = window) {
+export function isInspirePath(pathname = '') {
+  return pathname === '/inspire' || pathname.startsWith('/inspire/')
+}
+
+export function shouldAnimatePageTransition(viewport = window, fromPath = '', toPath = '') {
+  if (isInspirePath(fromPath) && isInspirePath(toPath)) {
+    return false
+  }
+
   return viewport.innerWidth >= PAGE_TRANSITION_DESKTOP_MIN_WIDTH
 }
 

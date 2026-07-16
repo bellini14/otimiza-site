@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Link } from 'react-router-dom';
 
 function useScrollReveal(threshold = 0.15) {
@@ -23,6 +23,38 @@ function useScrollReveal(threshold = 0.15) {
   }, [threshold]);
 
   return [ref, hasEnteredView, isInView];
+}
+
+const desktopFeaturesMediaQuery = '(min-width: 1024px)';
+const getServerDesktopFeaturesLayoutSnapshot = () => false;
+
+function useDesktopFeaturesLayout() {
+  const [mediaQueryList] = useState(() => {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    return window.matchMedia(desktopFeaturesMediaQuery);
+  });
+  const subscribe = useCallback((onStoreChange) => {
+    if (!mediaQueryList) {
+      return () => {};
+    }
+
+    mediaQueryList.addEventListener('change', onStoreChange);
+
+    return () => mediaQueryList.removeEventListener('change', onStoreChange);
+  }, [mediaQueryList]);
+  const getSnapshot = useCallback(
+    () => mediaQueryList?.matches ?? false,
+    [mediaQueryList]
+  );
+
+  return useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getServerDesktopFeaturesLayoutSnapshot
+  );
 }
 
 const featuresData = [
@@ -83,7 +115,7 @@ const featuresData = [
     description: 'Ajudamos na identificação de problemas com relação à política, organização e procedimentos.',
     fullDescription: 'Ajudamos na identificação de problemas com relação à política, organização, procedimentos e métodos da empresa, utilizando o conhecimento, experiência e tecnologia para encontrar a ação adequada em cada caso, além de auxiliar na implementação das mudanças. Conheça os produtos e serviços disponibilizados pela Otimiza nos seus três vértices: Consultoria, Tecnologia e Academia.',
     cta: 'Conheça todas as Soluções',
-    ctaLink: '/solucoes',
+    ctaLink: '/contato',
     icon: (
       <svg viewBox="0 0 48 48" className="w-full h-full" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M24 8l16 8-16 8-16-8 16-8z" />
@@ -100,6 +132,7 @@ export default function FeaturesSection() {
   const activeFeature = featuresData[activeFeatureIndex];
   const [sectionRef, isVisible] = useScrollReveal(0.35);
   const featureActiveExitTimeoutRef = useRef(null);
+  const isDesktopFeaturesLayout = useDesktopFeaturesLayout();
 
   const handleFeatureClick = (index) => {
     if (index === activeFeatureIndex) {
@@ -191,10 +224,11 @@ export default function FeaturesSection() {
             className={`lg:col-span-8 flex transition-all ${isVisible ? 'animate-enter [animation-duration:1000ms]' : 'opacity-0'}`} 
             style={{ animationDelay: isVisible ? '450ms' : '0ms' }}
           >
-            <div key={activeFeature.id} className="feature-detail-panel-transition rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/90 p-6 md:p-7 lg:p-8 flex-1 flex flex-col relative z-0 overflow-hidden lg:min-h-[540px] lg:max-h-[540px]">
+            <div key={isDesktopFeaturesLayout ? activeFeature.id : 'mobile'} className="feature-detail-panel-transition rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/90 p-6 md:p-7 lg:p-8 flex-1 flex flex-col relative z-0 overflow-hidden lg:min-h-[540px] lg:max-h-[540px]">
               <div className="feature-detail-transition flex-1 flex flex-col z-10 w-full">
-                {/* Header */}
-                <div className="feature-detail-transition__header mb-6 lg:mb-8 shrink-0 flex items-center gap-4 lg:items-start lg:gap-5">
+                <div key={activeFeature.id} className="feature-detail-transition__body flex-1">
+                  {/* Header */}
+                  <div className="feature-detail-transition__header mb-6 lg:mb-8 shrink-0 flex items-center gap-4 lg:items-start lg:gap-5">
                   <div className="feature-detail-mobile-icon inline-flex items-center justify-center w-14 h-14 lg:w-12 lg:h-12 rounded-xl bg-red-50 dark:bg-neutral-800 mb-0 border border-red-100 dark:border-neutral-700 shrink-0">
                     <div className="w-7 h-7 lg:w-6 lg:h-6 text-brand-red">
                       {activeFeature.icon}
@@ -208,10 +242,10 @@ export default function FeaturesSection() {
                       {activeFeature.description}
                     </p>
                   </div>
-                </div>
-                
-                {/* Content Cards */}
-                <div className="space-y-3 lg:space-y-4">
+                  </div>
+
+                  {/* Content Cards */}
+                  <div className="space-y-3 lg:space-y-4">
                   {activeFeature.processo && (
                     <div className="feature-detail-transition__item p-4 lg:p-5 rounded-xl bg-[#F9FAFB] dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-800/60 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
                       <h4 className="text-[11px] font-bold tracking-[0.12em] text-neutral-500 dark:text-neutral-400 mb-2.5 uppercase flex items-center gap-2">
@@ -247,35 +281,32 @@ export default function FeaturesSection() {
                       </p>
                     </div>
                   )}
+                  </div>
                 </div>
 
                 {/* CTA — always pinned to bottom */}
                 {activeFeature.cta && (
-                  <div className="feature-detail-transition__item mt-auto pt-5 lg:pt-6 border-t border-neutral-100 dark:border-neutral-800 shrink-0 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between lg:block">
+                  <div className="feature-detail-transition__footer mt-auto pt-5 lg:pt-6 border-t border-neutral-100 dark:border-neutral-800 shrink-0 flex flex-col gap-4 lg:block">
                     <div
                       data-testid="features-mobile-card-navigation"
-                      className="feature-detail-mobile-footer-nav lg:hidden flex items-center justify-between gap-3 rounded-2xl border border-neutral-200/80 bg-[#F9FAFB] p-2 dark:border-neutral-800/60 dark:bg-neutral-800/40"
+                      className="feature-detail-mobile-footer-nav lg:hidden flex w-full items-center justify-between rounded-2xl border border-neutral-200/80 bg-[#F9FAFB] p-2 dark:border-neutral-800/60 dark:bg-neutral-800/40"
                     >
                       <button
                         type="button"
                         aria-label="Solucao anterior"
                         onClick={() => handleMobileFeatureStep(-1)}
-                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-neutral-200 bg-white text-brand-red shadow-[0_8px_22px_rgba(90,101,114,0.08)] transition-colors active:bg-red-50 dark:border-neutral-700 dark:bg-neutral-900"
+                        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-500 shadow-[0_8px_22px_rgba(90,101,114,0.08)] transition-colors active:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400 dark:active:bg-neutral-800"
                       >
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                         </svg>
                       </button>
 
-                      <span className="min-w-[4.25rem] text-center text-xs font-bold tracking-[0.14em] text-neutral-500 dark:text-neutral-400">
-                        {activeFeatureIndex + 1} / {featuresData.length}
-                      </span>
-
                       <button
                         type="button"
                         aria-label="Proxima solucao"
                         onClick={() => handleMobileFeatureStep(1)}
-                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-brand-red shadow-[0_8px_22px_rgba(224,32,32,0.08)] transition-colors active:bg-red-100 dark:border-neutral-700 dark:bg-neutral-800"
+                        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-500 shadow-[0_8px_22px_rgba(90,101,114,0.08)] transition-colors active:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400 dark:active:bg-neutral-800"
                       >
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -283,7 +314,7 @@ export default function FeaturesSection() {
                       </button>
                     </div>
 
-                    <Link to={activeFeature.ctaLink} className="btn-primary inline-flex items-center group/btn">
+                    <Link to={activeFeature.ctaLink} className="btn-primary inline-flex items-center justify-center lg:justify-start group/btn">
                       {activeFeature.cta}
                       <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 ml-2 transition-transform group-hover/btn:translate-x-1">
                         <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638l-3.96-3.72a.75.75 0 011.04-1.06l5.25 4.92a.75.75 0 010 1.06l-5.25 4.92a.75.75 0 01-1.04-1.06l3.96-3.72H3.75A.75.75 0 013 10z" clipRule="evenodd" />

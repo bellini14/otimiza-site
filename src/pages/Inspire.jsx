@@ -1,11 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Search, Share2 } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { client } from '../lib/sanity'
 import { staticBlogPosts } from '../data/blogPosts'
-import { deriveCategoryOptions, matchesInspireCategory, sortByDate } from '../lib/blogFilters'
+import { matchesInspireCategory, sortByDate } from '../lib/blogFilters'
 import { getCachedInspirePosts, setCachedInspirePosts } from '../lib/inspirePostCache'
+import {
+  buildInspireBroadPattern,
+  buildInspireSearchPattern,
+  rankInspireSearchResults,
+} from '../lib/inspireSearch'
 import PostLikeButton from '../components/PostLikeButton'
+import InspireNewsletterSignup from '../components/InspireNewsletterSignup'
+import InspireShareButton from '../components/InspireShareButton'
 
 const INITIAL_POST_COUNT = 15
 const POSTS_PER_BATCH = 5
@@ -43,8 +50,14 @@ const CATEGORY_POSTS_QUERY = `*[_type == "post" && eyebrow == $category] | order
 
 const SEARCH_QUERY = `*[_type == "post" && (
   title match $term ||
+  title match $foldedTerm ||
+  title match $broadTerm ||
   description match $term ||
-  eyebrow match $term
+  description match $foldedTerm ||
+  description match $broadTerm ||
+  eyebrow match $term ||
+  eyebrow match $foldedTerm ||
+  eyebrow match $broadTerm
 )] | order(publishedAt desc) {
   title,
   description,
@@ -98,9 +111,6 @@ function Inspire() {
     hasMore: cachedPosts.length >= INITIAL_POST_COUNT,
   }))
   const [categoryFeed, setCategoryFeed] = useState({ posts: [], nextOffset: 0, hasMore: false })
-  const [sidebarPosts, setSidebarPosts] = useState(() => {
-    return cachedPosts.length > 0 ? cachedPosts : INITIAL_FALLBACK_POSTS
-  })
   const [searchResults, setSearchResults] = useState([])
   const [searchLoading, setSearchLoading] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -196,8 +206,6 @@ function Inspire() {
             nextOffset: sortedPosts.length,
             hasMore: dynamicPosts.length === INITIAL_POST_COUNT,
           })
-          setSidebarPosts(sortedPosts)
-
           if (activeFilterRef.current.category) {
             loadCategoryFirstBatch(activeFilterRef.current, 'sanity')
           }
@@ -208,8 +216,6 @@ function Inspire() {
             nextOffset: INITIAL_FALLBACK_POSTS.length,
             hasMore: STATIC_FALLBACK_POSTS.length > INITIAL_FALLBACK_POSTS.length,
           })
-          setSidebarPosts(INITIAL_FALLBACK_POSTS)
-
           if (activeFilterRef.current.category) {
             loadCategoryFirstBatch(activeFilterRef.current, 'fallback')
           }
@@ -223,8 +229,6 @@ function Inspire() {
           nextOffset: INITIAL_FALLBACK_POSTS.length,
           hasMore: STATIC_FALLBACK_POSTS.length > INITIAL_FALLBACK_POSTS.length,
         })
-        setSidebarPosts(INITIAL_FALLBACK_POSTS)
-
         if (activeFilterRef.current.category) {
           loadCategoryFirstBatch(activeFilterRef.current, 'fallback')
         }
@@ -255,28 +259,16 @@ function Inspire() {
         const term = `${searchQuery}*`
 
         if (sourceStatus === 'fallback') {
-          const q = searchQuery.toLowerCase()
-          const filtered = STATIC_FALLBACK_POSTS.filter((post) => {
-            const title = (post.title || '').toLowerCase()
-            const description = (post.description || '').toLowerCase()
-            const eyebrow = (post.eyebrow || '').toLowerCase()
-            return title.includes(q) || description.includes(q) || eyebrow.includes(q)
-          })
-          setSearchResults(filtered)
+          setSearchResults(rankInspireSearchResults(STATIC_FALLBACK_POSTS, searchQuery))
         } else {
-          const results = await client.fetch(SEARCH_QUERY, { term })
-          setSearchResults(sortByDate(results || []))
+          const broadTerm = buildInspireBroadPattern(searchQuery)
+          const foldedTerm = buildInspireSearchPattern(searchQuery)
+          const results = await client.fetch(SEARCH_QUERY, { broadTerm, foldedTerm, term })
+          setSearchResults(rankInspireSearchResults(sortByDate(results || []), searchQuery))
         }
       } catch (error) {
         console.error('Search error:', error)
-        const q = searchQuery.toLowerCase()
-        const localFiltered = allFeed.posts.filter((post) => {
-          const title = (post.title || '').toLowerCase()
-          const description = (post.description || '').toLowerCase()
-          const eyebrow = (post.eyebrow || '').toLowerCase()
-          return title.includes(q) || description.includes(q) || eyebrow.includes(q)
-        })
-        setSearchResults(localFiltered)
+        setSearchResults(rankInspireSearchResults(allFeed.posts, searchQuery))
       } finally {
         setSearchLoading(false)
       }
@@ -399,33 +391,6 @@ function Inspire() {
     return visibleFeed.posts
   }, [searchQuery, searchResults, visibleFeed.posts])
 
-  const staffPicks = useMemo(() => sidebarPosts.slice(0, 3), [sidebarPosts])
-
-  const recommendedTopics = useMemo(
-    () => deriveCategoryOptions(sidebarPosts).slice(0, 7).map((option) => option.label),
-    [sidebarPosts],
-  )
-
-  const whoToFollow = useMemo(() => {
-    const unique = new Map()
-
-    sidebarPosts.forEach((post, index) => {
-      const label = post.eyebrow || `Fonte Inspire ${index + 1}`
-
-      if (!unique.has(label)) {
-        unique.set(label, {
-          name: label,
-          description:
-            index % 2 === 0
-              ? 'Curadoria editorial sobre sistemas, crescimento e design.'
-              : 'Publica notas práticas para quem constrói com consistência.',
-        })
-      }
-    })
-
-    return [...unique.values()].slice(0, 3)
-  }, [sidebarPosts])
-
   function buildPostState(post) {
     return {
       postPreview: {
@@ -445,7 +410,7 @@ function Inspire() {
     <div className="inspire-page">
       <h1 className="sr-only">Inspire: conteúdos sobre gestão e processos</h1>
       <div className="inspire-page__grid">
-        <section className="inspire-page__feed">
+        <section className="inspire-page__feed" data-lenis-prevent-wheel>
           {!isSearching && (
             <div
               className="inspire-page__tabs"
@@ -461,6 +426,7 @@ function Inspire() {
                     type="button"
                     aria-pressed={isActive}
                     className={`inspire-page__tab ${isActive ? 'is-active' : ''}`.trim()}
+                    data-inspire-tooltip={`Filtrar por ${filter.label}`}
                     onClick={() => selectFilter(filter)}
                   >
                     {filter.label}
@@ -521,10 +487,11 @@ function Inspire() {
                         </div>
 
                         <div className="inspire-story__actions">
-                          <button type="button" className="inspire-story__action-button">
-                            <Share2 size={16} strokeWidth={1.8} />
-                            <span>Compartilhar</span>
-                          </button>
+                          <InspireShareButton
+                            className="inspire-story__action-button"
+                            title={post.title}
+                            url={post.link || `/inspire/${post.slug}`}
+                          />
                         </div>
                       </div>
                     </div>
@@ -562,6 +529,7 @@ function Inspire() {
                     <button
                       type="button"
                       className="inspire-page__load-more-retry"
+                      data-inspire-tooltip="Tentar novamente"
                       onClick={retryCurrentFeed}
                     >
                       Tentar carregar novamente
@@ -577,51 +545,7 @@ function Inspire() {
         </section>
 
         <aside className="inspire-sidebar">
-          <section className="inspire-sidebar__section">
-            <h2 className="inspire-sidebar__title">Seleções da redação</h2>
-            <div className="inspire-sidebar__stack">
-              {staffPicks.map((post, index) => (
-                <Link
-                  key={post.slug || `${post.title}-${index}`}
-                  to={post.link || `/inspire/${post.slug}`}
-                  state={buildPostState(post)}
-                  className="inspire-sidebar__story"
-                >
-                  <p className="inspire-sidebar__eyebrow">{post.eyebrow || 'Inspire'}</p>
-                  <h3 className="inspire-sidebar__story-title">{post.title}</h3>
-                  <p className="inspire-sidebar__story-date">{formatStoryDate(post.publishedAt)}</p>
-                </Link>
-              ))}
-            </div>
-          </section>
-
-          <section className="inspire-sidebar__section">
-            <h2 className="inspire-sidebar__title">Tópicos recomendados</h2>
-            <div className="inspire-sidebar__topics">
-              {recommendedTopics.map((topic) => (
-                <button key={topic} type="button" className="inspire-sidebar__topic">
-                  {topic}
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section className="inspire-sidebar__section">
-            <h2 className="inspire-sidebar__title">Quem seguir</h2>
-            <div className="inspire-sidebar__follow-list">
-              {whoToFollow.map((person) => (
-                <div key={person.name} className="inspire-sidebar__follow-card">
-                  <div>
-                    <p className="inspire-sidebar__follow-name">{person.name}</p>
-                    <p className="inspire-sidebar__follow-copy">{person.description}</p>
-                  </div>
-                  <button type="button" className="inspire-sidebar__follow-button">
-                    Seguir
-                  </button>
-                </div>
-              ))}
-            </div>
-          </section>
+          <InspireNewsletterSignup />
         </aside>
       </div>
     </div>

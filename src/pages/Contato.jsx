@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { ArrowUpRight, Mail, Phone } from 'lucide-react'
+import { Mail, Phone } from 'lucide-react'
 import ContactMap from '../components/ContactMap'
 
 const contactSocialLinks = [
@@ -126,23 +126,23 @@ function Contato() {
             <form ref={formRef} onSubmit={handleSubmit}>
               <div className="contact-form__names">
                 <label>
-                  <span>Nome</span>
-                  <input name="firstName" autoComplete="given-name" maxLength="80" required />
+                  <span className="sr-only">Nome</span>
+                  <input className="contact-form__field" name="firstName" placeholder="Nome" autoComplete="given-name" maxLength="80" required />
                 </label>
                 <label>
-                  <span>Sobrenome</span>
-                  <input name="lastName" autoComplete="family-name" maxLength="80" required />
+                  <span className="sr-only">Sobrenome</span>
+                  <input className="contact-form__field" name="lastName" placeholder="Sobrenome" autoComplete="family-name" maxLength="80" required />
                 </label>
               </div>
 
               <label>
-                <span>E-mail</span>
-                <input name="email" type="email" autoComplete="email" maxLength="254" required />
+                <span className="sr-only">E-mail</span>
+                <input className="contact-form__field" name="email" type="email" placeholder="E-mail" autoComplete="email" maxLength="254" required />
               </label>
 
               <label>
-                <span>Comentário ou mensagem</span>
-                <textarea name="message" rows="6" maxLength="5000" required />
+                <span className="sr-only">Comentário ou mensagem</span>
+                <textarea className="contact-form__field" name="message" placeholder="Digite sua mensagem..." rows="2" maxLength="5000" required />
               </label>
 
               <label className="contact-honeypot" aria-hidden="true">
@@ -153,7 +153,6 @@ function Contato() {
               <div className="contact-form__footer">
                 <button type="submit" disabled={isSubmitting}>
                   {isSubmitting ? 'Enviando…' : 'Enviar'}
-                  {!isSubmitting && <ArrowUpRight aria-hidden="true" />}
                 </button>
                 {status.message ? (
                   <p

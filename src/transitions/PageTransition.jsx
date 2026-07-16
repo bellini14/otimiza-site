@@ -28,7 +28,7 @@ function PageTransition({ children }) {
   const iconControls = useAnimationControls()
 
   const runTransition = useCallback(async (newLocation, commitNavigation = null) => {
-    if (!shouldAnimatePageTransition()) {
+    if (!shouldAnimatePageTransition(window, prevPathRef.current, newLocation.pathname)) {
       flushSync(() => {
         setDisplayedLocation(newLocation)
         prevPathRef.current = newLocation.pathname
@@ -151,7 +151,6 @@ function PageTransition({ children }) {
       return
     }
 
-    prevPathRef.current = location.pathname
     runTransition(location)
   }, [location, runTransition])
 

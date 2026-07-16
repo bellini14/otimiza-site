@@ -1,22 +1,55 @@
 import { ArrowLeft, Mail, Search, X } from 'lucide-react'
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
-import { Link, Outlet, useLocation, useSearchParams } from 'react-router-dom'
+import { Link, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 
 import InspireAnimatedLogo from './InspireAnimatedLogo'
+import InspireCursorTooltip from './InspireCursorTooltip'
+import {
+  buildInspireBroadPattern,
+  buildInspireSearchPattern,
+  rankInspireSearchResults,
+} from '../lib/inspireSearch'
+import { client } from '../lib/sanity'
 import usePageTransitionNavigate from '../transitions/usePageTransitionNavigate'
 
 const INTERNAL_SEARCH_UPDATE_STATE_KEY = '__otimizaInspireSearchUpdateId'
+const SEARCH_SUGGESTIONS_DELAY_MS = 180
+const SEARCH_SUGGESTIONS_QUERY = `*[_type == "post" && (
+  title match $term ||
+  title match $foldedTerm ||
+  title match $broadTerm ||
+  description match $term ||
+  description match $foldedTerm ||
+  description match $broadTerm ||
+  eyebrow match $term ||
+  eyebrow match $foldedTerm ||
+  eyebrow match $broadTerm
+)] | order(publishedAt desc) {
+  title,
+  description,
+  "imgSrc": mainImage.asset->url,
+  "slug": slug.current,
+  eyebrow,
+  publishedAt
+}`
 
 function InspireLayout() {
   const location = useLocation()
+  const navigate = useNavigate()
   const navigateWithTransition = usePageTransitionNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const isLandingPage = location.pathname === '/inspire'
 
   const [searchValue, setSearchValue] = useState(() => searchParams.get('q') || '')
+  const [suggestions, setSuggestions] = useState([])
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false)
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false)
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1)
   const searchComponentInstanceId = useId()
+  const searchShellRef = useRef(null)
   const searchUpdateCounterRef = useRef(0)
   const pendingInternalSearchUpdatesRef = useRef(new Map())
+  const suggestionRequestVersionRef = useRef(0)
 
   const handleBackClick = (event) => {
     if (isLandingPage) {
@@ -32,20 +65,43 @@ function InspireLayout() {
       searchUpdateCounterRef.current += 1
       const updateId = `inspire-search-${searchComponentInstanceId}-${searchUpdateCounterRef.current}`
       pendingInternalSearchUpdatesRef.current.set(updateId, searchUpdateCounterRef.current)
+      const navigationState = {
+        ...(location.state ?? {}),
+        [INTERNAL_SEARCH_UPDATE_STATE_KEY]: updateId,
+      }
+
+      if (!isLandingPage) {
+        const currentParams = new URLSearchParams(searchParams)
+        const nextParams = typeof update === 'function' ? update(currentParams) : update
+        const serializedParams = new URLSearchParams(nextParams).toString()
+
+        navigate(
+          {
+            pathname: '/inspire',
+            search: serializedParams ? `?${serializedParams}` : '',
+          },
+          {
+            ...options,
+            replace: false,
+            state: navigationState,
+          },
+        )
+        return
+      }
 
       setSearchParams(update, {
         ...options,
-        state: {
-          ...(location.state ?? {}),
-          [INTERNAL_SEARCH_UPDATE_STATE_KEY]: updateId,
-        },
+        state: navigationState,
       })
     },
-    [location.state, searchComponentInstanceId, setSearchParams],
+    [isLandingPage, location.state, navigate, searchComponentInstanceId, searchParams, setSearchParams],
   )
 
   const clearSearch = useCallback(() => {
     setSearchValue('')
+    setSuggestions([])
+    setSuggestionsOpen(false)
+    setActiveSuggestionIndex(-1)
     writeSearchParams((prev) => {
       prev.delete('q')
       return prev
@@ -57,6 +113,8 @@ function InspireLayout() {
       const value = e.target.value
       const normalizedValue = value.trim()
       setSearchValue(value)
+      setSuggestionsOpen(Boolean(normalizedValue))
+      setActiveSuggestionIndex(-1)
 
       writeSearchParams(
         (prev) => {
@@ -76,13 +134,115 @@ function InspireLayout() {
 
   const handleSearchKeyDown = useCallback(
     (e) => {
+      if (e.key === 'ArrowDown' && suggestionsOpen && suggestions.length > 0) {
+        e.preventDefault()
+        setActiveSuggestionIndex((currentIndex) =>
+          currentIndex >= suggestions.length - 1 ? 0 : currentIndex + 1,
+        )
+        return
+      }
+
+      if (e.key === 'ArrowUp' && suggestionsOpen && suggestions.length > 0) {
+        e.preventDefault()
+        setActiveSuggestionIndex((currentIndex) =>
+          currentIndex <= 0 ? suggestions.length - 1 : currentIndex - 1,
+        )
+        return
+      }
+
+      if (e.key === 'Enter') {
+        if (suggestionsOpen && activeSuggestionIndex >= 0) {
+          const selectedSuggestion = suggestions[activeSuggestionIndex]
+
+          if (selectedSuggestion?.slug) {
+            e.preventDefault()
+            setSuggestionsOpen(false)
+            setActiveSuggestionIndex(-1)
+            navigate(`/inspire/${selectedSuggestion.slug}`, {
+              state: { postPreview: selectedSuggestion },
+            })
+          }
+          return
+        }
+
+        setSuggestionsOpen(false)
+        setActiveSuggestionIndex(-1)
+        return
+      }
+
       if (e.key === 'Escape') {
-        clearSearch()
+        e.preventDefault()
+        setSuggestionsOpen(false)
+        setActiveSuggestionIndex(-1)
         e.target.blur()
       }
     },
-    [clearSearch],
+    [activeSuggestionIndex, navigate, suggestions, suggestionsOpen],
   )
+
+  useEffect(() => {
+    const normalizedValue = searchValue.trim()
+    suggestionRequestVersionRef.current += 1
+    const requestVersion = suggestionRequestVersionRef.current
+
+    if (!normalizedValue) {
+      setSuggestions([])
+      setSuggestionsLoading(false)
+      setSuggestionsOpen(false)
+      setActiveSuggestionIndex(-1)
+      return undefined
+    }
+
+    if (!suggestionsOpen) {
+      setSuggestionsLoading(false)
+      return undefined
+    }
+
+    setSuggestionsLoading(true)
+    setActiveSuggestionIndex(-1)
+
+    const timerId = window.setTimeout(async () => {
+      try {
+        const nextSuggestions = await client.fetch(SEARCH_SUGGESTIONS_QUERY, {
+          broadTerm: buildInspireBroadPattern(normalizedValue),
+          foldedTerm: buildInspireSearchPattern(normalizedValue),
+          term: `${normalizedValue}*`,
+        })
+
+        if (suggestionRequestVersionRef.current !== requestVersion) return
+
+        setSuggestions(
+          rankInspireSearchResults(
+            (nextSuggestions || []).filter((suggestion) => suggestion.slug),
+            normalizedValue,
+          ).slice(0, 5),
+        )
+      } catch (error) {
+        if (suggestionRequestVersionRef.current !== requestVersion) return
+
+        console.error('Erro ao carregar sugestões do Inspire:', error)
+        setSuggestions([])
+      } finally {
+        if (suggestionRequestVersionRef.current === requestVersion) {
+          setSuggestionsLoading(false)
+        }
+      }
+    }, SEARCH_SUGGESTIONS_DELAY_MS)
+
+    return () => window.clearTimeout(timerId)
+  }, [searchValue, suggestionsOpen])
+
+  useEffect(() => {
+    const handlePointerDown = (event) => {
+      if (!searchShellRef.current?.contains(event.target)) {
+        setSuggestionsOpen(false)
+        setActiveSuggestionIndex(-1)
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [])
 
   useEffect(() => {
     const q = searchParams.get('q') || ''
@@ -115,6 +275,7 @@ function InspireLayout() {
               type="button"
               className="inspire-shell__icon-button inspire-shell__back-link"
               aria-label="Voltar para a página anterior"
+              data-inspire-tooltip="Voltar"
               onClick={handleBackClick}
             >
               <ArrowLeft size={22} strokeWidth={1.8} />
@@ -153,7 +314,7 @@ function InspireLayout() {
             </Link>
           </div>
 
-          <div className="inspire-shell__search">
+          <div className="inspire-shell__search" ref={searchShellRef}>
             <Search size={18} strokeWidth={1.8} className="inspire-shell__search-icon" />
             <input
               type="text"
@@ -162,7 +323,16 @@ function InspireLayout() {
               value={searchValue}
               onChange={handleSearchChange}
               onKeyDown={handleSearchKeyDown}
+              onFocus={() => setSuggestionsOpen(Boolean(searchValue.trim()))}
               aria-label="Pesquisar no Inspire"
+              aria-autocomplete="list"
+              aria-controls="inspire-search-suggestions"
+              aria-expanded={suggestionsOpen}
+              aria-activedescendant={
+                activeSuggestionIndex >= 0
+                  ? `inspire-search-suggestion-${activeSuggestionIndex}`
+                  : undefined
+              }
             />
             {searchValue && (
               <button
@@ -170,14 +340,79 @@ function InspireLayout() {
                 className="inspire-shell__search-clear"
                 onClick={clearSearch}
                 aria-label="Limpar pesquisa"
+                data-inspire-tooltip="Limpar pesquisa"
               >
                 <X size={16} strokeWidth={2} />
               </button>
             )}
+
+            {suggestionsOpen && searchValue.trim() && (
+              <div id="inspire-search-suggestions" className="inspire-search-suggestions">
+                {suggestionsLoading && (
+                  <p className="inspire-search-suggestions__status" role="status">
+                    Buscando artigos…
+                  </p>
+                )}
+
+                {!suggestionsLoading && suggestions.length === 0 && (
+                  <p className="inspire-search-suggestions__status">
+                    Nenhuma sugestão encontrada.
+                  </p>
+                )}
+
+                {!suggestionsLoading && suggestions.length > 0 && (
+                  <div role="listbox" aria-label="Sugestões de artigos">
+                    {suggestions.map((suggestion, index) => {
+                      const category = suggestion.eyebrow || 'Otimiza Editorial'
+
+                      return (
+                        <Link
+                          key={suggestion.slug}
+                          id={`inspire-search-suggestion-${index}`}
+                          to={`/inspire/${suggestion.slug}`}
+                          state={{ postPreview: suggestion }}
+                          role="option"
+                          aria-selected={activeSuggestionIndex === index}
+                          aria-label={`${suggestion.title} ${category}`}
+                          className={`inspire-search-suggestion${
+                            activeSuggestionIndex === index ? ' is-active' : ''
+                          }`}
+                          onMouseEnter={() => setActiveSuggestionIndex(index)}
+                          onClick={() => {
+                            setSuggestionsOpen(false)
+                            setActiveSuggestionIndex(-1)
+                          }}
+                        >
+                          <span className="inspire-search-suggestion__title">
+                            {suggestion.title}
+                          </span>
+                          <span className="inspire-search-suggestion__category">{category}</span>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+
+                <Link
+                  to={`/inspire?q=${encodeURIComponent(searchValue.trim())}`}
+                  className="inspire-search-suggestions__all"
+                  onClick={() => {
+                    setSuggestionsOpen(false)
+                    setActiveSuggestionIndex(-1)
+                  }}
+                >
+                  Ver todos os resultados
+                </Link>
+              </div>
+            )}
           </div>
 
           <div className="inspire-shell__actions">
-            <Link to="/inspire/newsletter" className="inspire-shell__app-pill">
+            <Link
+              to="/inspire/newsletter"
+              className="inspire-shell__app-pill"
+              data-inspire-tooltip="Assinar newsletter"
+            >
               <Mail size={16} strokeWidth={1.8} />
               <span>Assinar newsletter</span>
             </Link>
@@ -188,6 +423,7 @@ function InspireLayout() {
       <main className="inspire-shell__main px-4 sm:px-6 lg:px-8">
         <Outlet />
       </main>
+      <InspireCursorTooltip />
     </div>
   )
 }

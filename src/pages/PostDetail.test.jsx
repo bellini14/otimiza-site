@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import PostDetail from './PostDetail'
@@ -92,6 +92,56 @@ afterEach(() => {
 })
 
 describe('PostDetail', () => {
+  it('lets native mouse-wheel scrolling reach the article column', () => {
+    client.fetch.mockReturnValue(new Promise(() => {}))
+
+    renderPostDetail()
+
+    expect(document.querySelector('.post-detail__main')).toHaveAttribute('data-lenis-prevent-wheel')
+  })
+
+  it('keeps the entrance animation on an inner article layer', () => {
+    client.fetch.mockReturnValue(new Promise(() => {}))
+
+    renderPostDetail()
+
+    expect(document.querySelector('.post-detail__main > .post-detail__content')).not.toBeNull()
+  })
+
+  it('starts the article entrance only after the Sanity content resolves', async () => {
+    let resolvePost
+    client.fetch.mockReturnValue(new Promise((resolve) => {
+      resolvePost = resolve
+    }))
+
+    renderPostDetail({
+      pathname: '/inspire/post-com-imagem-inline',
+      state: {
+        postPreview: {
+          title: 'Post com imagem inline',
+          description: 'Resumo do post',
+          publishedAt: '2026-04-13T12:00:00Z',
+          eyebrow: 'Insights',
+        },
+      },
+    })
+
+    expect(document.querySelector('.post-detail__content')).toHaveClass('post-detail__content--loading')
+    expect(document.querySelector('.post-detail__content')).not.toHaveClass('post-detail__content--ready')
+    expect(document.querySelector('.post-detail__sidebar-actions')).toHaveClass('post-detail__sidebar-actions--loading')
+    expect(document.querySelector('.post-detail__sidebar-actions-placeholder')).not.toBeNull()
+
+    resolvePost(buildPostResponse())
+
+    await waitFor(() => {
+      expect(document.querySelector('.post-detail__content')).toHaveClass('post-detail__content--ready')
+    })
+    expect(document.querySelector('.post-detail__sidebar-actions')).toHaveClass('post-detail__sidebar-actions--ready')
+    expect(document.querySelector('.post-detail__sidebar-actions-row')).toHaveClass('post-detail__sidebar-actions-row--enter')
+    expect(document.querySelector('.post-detail__sidebar-actions-placeholder')).toBeNull()
+    expect(screen.getByText('Paragrafo de abertura.')).toBeInTheDocument()
+  })
+
   it('renders an article loading shell immediately while the Sanity detail request is pending', () => {
     client.fetch.mockReturnValue(new Promise(() => {}))
 
@@ -118,8 +168,32 @@ describe('PostDetail', () => {
     })
 
     expect(screen.getByRole('heading', { name: 'Post com imagem inline' })).toBeInTheDocument()
-    expect(screen.getByText('Resumo do post')).toBeInTheDocument()
+    expect(screen.queryByText('Resumo do post')).not.toBeInTheDocument()
     expect(document.querySelector('.animate-spin')).toBeNull()
+  })
+
+  it('keeps the navigation preview visible when the Sanity refresh fails', async () => {
+    client.fetch.mockRejectedValueOnce(new Error('sanity unavailable'))
+
+    renderPostDetail({
+      pathname: '/inspire/post-com-imagem-inline',
+      state: {
+        postPreview: {
+          title: 'Post com imagem inline',
+          description: 'Resumo do post',
+          publishedAt: '2026-04-13T12:00:00Z',
+          eyebrow: 'Insights',
+        },
+      },
+    })
+
+    await waitFor(() => {
+      expect(client.fetch).toHaveBeenCalledTimes(1)
+    })
+
+    expect(screen.getByRole('heading', { name: 'Post com imagem inline' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Post nao encontrado' })).not.toBeInTheDocument()
+    expect(document.querySelector('.post-detail__sidebar-actions')).not.toBeNull()
   })
 
   it('renders inline body images, captions, and the fetched global like count', async () => {
@@ -127,7 +201,12 @@ describe('PostDetail', () => {
 
     const { container } = renderPostDetail()
 
-    expect(await screen.findByRole('heading', { name: 'Post com imagem inline' })).toBeInTheDocument()
+    const articleTitle = await screen.findByRole('heading', { name: 'Post com imagem inline' })
+    expect(articleTitle).toBeInTheDocument()
+    expect(articleTitle).toHaveClass('font-medium')
+    expect(articleTitle).toHaveClass('tracking-[-0.015em]')
+    expect(articleTitle).not.toHaveClass('tracking-[-0.04em]')
+    expect(articleTitle).not.toHaveClass('font-bold')
     expect(screen.getByText('Paragrafo de abertura.')).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'Equipe em workshop' })).toHaveAttribute(
       'src',
@@ -144,6 +223,141 @@ describe('PostDetail', () => {
     expect(count?.textContent).toBe('7')
     expect(likeButton.contains(count)).toBe(false)
     expect(fetchMock).toHaveBeenCalledWith('/api/posts/post-com-imagem-inline/likes', { method: 'GET' })
+  })
+
+  it('places the post actions before the shared newsletter form in the right sidebar', async () => {
+    fetchMock.mockResolvedValueOnce(createJsonResponse({ slug: 'post-com-imagem-inline', count: 7 }))
+
+    renderPostDetail()
+
+    expect(await screen.findByRole('heading', { name: 'Post com imagem inline' })).toBeInTheDocument()
+
+    const sidebar = document.querySelector('.post-detail__sidebar')
+    const actions = sidebar?.querySelector('.post-detail__sidebar-actions')
+    const newsletter = sidebar?.querySelector('.inspire-sidebar__newsletter')
+
+    expect(sidebar).not.toBeNull()
+    expect(actions).not.toBeNull()
+    expect(newsletter).not.toBeNull()
+    expect(actions.compareDocumentPosition(newsletter) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(actions.querySelectorAll('.post-detail__sidebar-action-item')).toHaveLength(3)
+    expect(within(actions).queryByText('Gostou?')).not.toBeInTheDocument()
+    expect(within(actions).queryByText('Compartilhe!')).not.toBeInTheDocument()
+    expect(within(actions).queryByText('Conte pra gente')).not.toBeInTheDocument()
+    expect(await within(actions).findByRole('button', { name: /7 curtidas/i })).toBeInTheDocument()
+    expect(within(actions).getByText('Curtir')).toBeInTheDocument()
+    expect(within(actions).getByRole('button', { name: 'Compartilhar' })).toHaveAttribute('data-inspire-tooltip', 'Compartilhar artigo')
+    const contactButton = within(actions).getByRole('button', { name: 'Contato' })
+    expect(contactButton).toHaveAttribute('data-inspire-tooltip', 'Enviar mensagem')
+    expect(contactButton).toHaveAttribute('aria-expanded', 'false')
+    expect(contactButton.querySelector('svg')).not.toBeNull()
+    expect(within(newsletter).getByRole('heading', { name: 'Assine o Inspire' })).toBeInTheDocument()
+    expect(within(newsletter).getByRole('textbox', { name: 'Email' })).toBeInTheDocument()
+    expect(document.querySelector('.post-detail__footer-actions')).toBeNull()
+  })
+
+  it('opens an article-aware contact form below the action buttons and sends its message', async () => {
+    fetchMock
+      .mockResolvedValueOnce(createJsonResponse({ slug: 'post-com-imagem-inline', count: 7 }))
+      .mockResolvedValueOnce(createJsonResponse({ message: 'Mensagem recebida.' }))
+
+    renderPostDetail()
+
+    expect(await screen.findByRole('heading', { name: 'Post com imagem inline' })).toBeInTheDocument()
+
+    const contactButton = screen.getByRole('button', { name: 'Contato' })
+    expect(screen.queryByRole('region', { name: 'Enviar mensagem sobre o artigo' })).not.toBeInTheDocument()
+
+    fireEvent.click(contactButton)
+
+    const panel = screen.getByRole('region', { name: 'Enviar mensagem sobre o artigo' })
+    expect(contactButton).toHaveAttribute('aria-expanded', 'true')
+    expect(within(panel).getByRole('heading', { name: 'Converse sobre este artigo' })).toBeInTheDocument()
+    expect(within(panel).getByText('Sobre o artigo')).toBeInTheDocument()
+    expect(within(panel).getByText('Post com imagem inline')).toHaveClass('post-detail__contact-article-title')
+    expect(within(panel).getByText(/dúvida, percepção ou aplicação prática/i)).toBeInTheDocument()
+
+    fireEvent.change(within(panel).getByRole('textbox', { name: 'Email' }), {
+      target: { value: 'leitor@example.com' },
+    })
+    fireEvent.change(within(panel).getByRole('textbox', { name: 'Mensagem' }), {
+      target: { value: 'Quero conversar sobre este tema.' },
+    })
+    const submitButton = within(panel).getByRole('button', { name: 'Enviar mensagem' })
+    fireEvent.click(submitButton)
+
+    expect(submitButton).toBeDisabled()
+    expect(submitButton).toHaveTextContent('Enviando...')
+    expect(within(panel).getByRole('textbox', { name: 'Email' })).toBeDisabled()
+    expect(within(panel).getByRole('textbox', { name: 'Mensagem' })).toBeDisabled()
+    expect(within(panel).getByRole('status')).toHaveTextContent('Enviando sua mensagem...')
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(2)
+    })
+
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/contact', expect.objectContaining({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    }))
+    const requestBody = JSON.parse(fetchMock.mock.calls[1][1].body)
+    expect(requestBody.email).toBe('leitor@example.com')
+    expect(requestBody.message).toContain('Post com imagem inline')
+    expect(requestBody.message).toContain('Link: /inspire/post-com-imagem-inline')
+    expect(requestBody.message).toContain('Quero conversar sobre este tema.')
+    expect(await within(panel).findByText(/mensagem enviada.*responderá pelo seu e-mail/i)).toBeInTheDocument()
+
+    fireEvent.change(within(panel).getByRole('textbox', { name: 'Mensagem' }), {
+      target: { value: 'Uma nova mensagem.' },
+    })
+    expect(within(panel).queryByText(/mensagem enviada.*responderá pelo seu e-mail/i)).not.toBeInTheDocument()
+  })
+
+  it('keeps the contextual message available and explains how to retry after a contact failure', async () => {
+    fetchMock
+      .mockResolvedValueOnce(createJsonResponse({ slug: 'post-com-imagem-inline', count: 7 }))
+      .mockResolvedValueOnce(createJsonResponse({ error: 'Serviço indisponível.' }, false, 503))
+
+    renderPostDetail()
+
+    expect(await screen.findByRole('heading', { name: 'Post com imagem inline' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Contato' }))
+
+    const panel = screen.getByRole('region', { name: 'Enviar mensagem sobre o artigo' })
+    const emailField = within(panel).getByRole('textbox', { name: 'Email' })
+    const messageField = within(panel).getByRole('textbox', { name: 'Mensagem' })
+
+    fireEvent.change(emailField, { target: { value: 'leitor@example.com' } })
+    fireEvent.change(messageField, { target: { value: 'Minha reflexão sobre o artigo.' } })
+    fireEvent.click(within(panel).getByRole('button', { name: 'Enviar mensagem' }))
+
+    const alert = await within(panel).findByRole('alert')
+    expect(alert).toHaveTextContent('Serviço indisponível.')
+    expect(alert).toHaveTextContent('Sua mensagem continua no formulário para você tentar novamente.')
+    expect(emailField).toHaveValue('leitor@example.com')
+    expect(messageField).toHaveValue('Minha reflexão sobre o artigo.')
+    expect(within(panel).getByRole('button', { name: 'Enviar mensagem' })).toBeEnabled()
+  })
+
+  it('closes the contact panel with one stable collapsed layout state', async () => {
+    fetchMock.mockResolvedValueOnce(createJsonResponse({ slug: 'post-com-imagem-inline', count: 7 }))
+
+    renderPostDetail()
+
+    expect(await screen.findByRole('heading', { name: 'Post com imagem inline' })).toBeInTheDocument()
+
+    const contactButton = screen.getByRole('button', { name: 'Contato' })
+    fireEvent.click(contactButton)
+
+    const panel = screen.getByRole('region', { name: 'Enviar mensagem sobre o artigo' })
+    const panelShell = panel.parentElement
+    fireEvent.click(contactButton)
+
+    expect(contactButton).toHaveAttribute('aria-expanded', 'false')
+    expect(panelShell).toHaveClass('post-detail__contact-panel-shell--closed')
+    expect(panelShell).toHaveAttribute('aria-hidden', 'true')
+    expect(panel).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Enviar mensagem sobre o artigo' })).not.toBeInTheDocument()
   })
 
   it('highlights the category inside the post with the same yellow strip', async () => {

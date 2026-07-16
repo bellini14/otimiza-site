@@ -113,6 +113,14 @@ afterEach(() => {
 })
 
 describe('Inspire', () => {
+  it('lets native mouse-wheel scrolling reach the editorial feed', () => {
+    client.fetch.mockResolvedValue([])
+
+    renderInspirePage()
+
+    expect(document.querySelector('.inspire-page__feed')).toHaveAttribute('data-lenis-prevent-wheel')
+  })
+
   it('renders exactly one descriptive H1 for the editorial page', async () => {
     client.fetch.mockResolvedValue([])
 
@@ -184,16 +192,25 @@ describe('Inspire', () => {
     expect(nav).toHaveClass('px-6', 'sm:px-8', 'lg:px-12')
     expect(main).toHaveClass('px-4', 'sm:px-6', 'lg:px-8')
     expect(screen.queryByRole('navigation', { name: 'Main navigation' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /voltar para a p.+gina anterior/i })).toBeInTheDocument()
-    expect(await screen.findAllByRole('heading', { name: 'Should You Still Learn to Code in 2026?' })).toHaveLength(2)
+    expect(screen.getByRole('button', { name: /voltar para a p.+gina anterior/i })).toHaveAttribute('data-inspire-tooltip', 'Voltar')
+    expect(await screen.findAllByRole('heading', { name: 'Should You Still Learn to Code in 2026?' })).toHaveLength(1)
     expect(screen.getByRole('textbox', { name: 'Pesquisar no Inspire' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Assinar newsletter' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Assinar newsletter' })).toHaveAttribute('data-inspire-tooltip', 'Assinar newsletter')
     const filters = screen.getByRole('group', { name: 'Filtrar artigos por categoria' })
     expect(within(filters).getByRole('button', { name: 'Tudo' })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(filters).getByRole('button', { name: 'Tudo' })).toHaveAttribute('data-inspire-tooltip', 'Filtrar por Tudo')
     expect(within(filters).getByRole('button', { name: 'Artigos' })).toHaveAttribute('aria-pressed', 'false')
-    expect(screen.getByText('Seleções da redação')).toBeInTheDocument()
-    expect(screen.getByText('Tópicos recomendados')).toBeInTheDocument()
-    expect(screen.getByText('Quem seguir')).toBeInTheDocument()
+    const sidebar = document.querySelector('.inspire-sidebar')
+    expect(within(sidebar).getByRole('heading', { name: 'Assine o Inspire' })).toBeInTheDocument()
+    expect(within(sidebar).getByRole('textbox', { name: 'Email' })).toHaveAttribute('placeholder', 'Email')
+    expect(within(sidebar).getByRole('checkbox', { name: 'Eu aceito receber atualizações.' })).toBeRequired()
+    expect(sidebar.querySelector('.inspire-sidebar__newsletter-checkmark')).not.toBeInTheDocument()
+    expect(within(sidebar).getByRole('button', { name: 'Assinar newsletter' })).toHaveAttribute('data-inspire-tooltip', 'Assinar newsletter')
+    expect(within(sidebar).getByText(/todo dia 10 enviamos o Inspire Editorial/i)).toBeInTheDocument()
+    expect(within(sidebar).getByText(/todo dia 25, uma nova edição do Inspire/i)).toBeInTheDocument()
+    expect(within(sidebar).queryByText('Seleções da redação')).not.toBeInTheDocument()
+    expect(within(sidebar).queryByText('Tópicos recomendados')).not.toBeInTheDocument()
+    expect(within(sidebar).queryByText('Quem seguir')).not.toBeInTheDocument()
   })
 
   it('filters the Inspire feed by the requested categories', async () => {
@@ -443,11 +460,33 @@ describe('Inspire', () => {
     expect(screen.getByText('1 resultado para "resultado"')).toBeInTheDocument()
   })
 
+  it('finds accented titles when the search is typed without accents', async () => {
+    client.fetch
+      .mockResolvedValueOnce([makePost(1, { eyebrow: 'Artigos' })])
+      .mockResolvedValueOnce([
+        makePost(40, { title: 'Gestão sem ruído', eyebrow: 'Editorial' }),
+        makePost(41, { title: 'Tecnologia industrial', eyebrow: 'Artigos' }),
+      ])
+
+    renderInspirePage('/inspire?q=gestao')
+
+    expect(await screen.findByRole('heading', { name: 'Gestão sem ruído' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Tecnologia industrial' })).not.toBeInTheDocument()
+    expect(client.fetch).toHaveBeenLastCalledWith(expect.stringContaining('match $broadTerm'), {
+      broadTerm: 'g*s*t*',
+      foldedTerm: 'g*st*',
+      term: 'gestao*',
+    })
+  })
+
   it('restores the selected category after search is cleared', async () => {
     client.fetch
       .mockResolvedValueOnce([makePost(1, { eyebrow: 'Artigos' })])
       .mockResolvedValueOnce([
         makePost(50, { title: 'Leitura selecionada', eyebrow: 'Dica de leitura' }),
+      ])
+      .mockResolvedValueOnce([
+        makePost(51, { title: 'Resultado temporário', eyebrow: 'Artigos' }),
       ])
       .mockResolvedValueOnce([
         makePost(51, { title: 'Resultado temporário', eyebrow: 'Artigos' }),
@@ -551,8 +590,9 @@ describe('Inspire', () => {
     expect(likeButton).not.toHaveTextContent('1')
     expect(count?.textContent).toBe('1')
     expect(likeButton.contains(count)).toBe(false)
+    expect(likeButton).toHaveAttribute('data-inspire-tooltip', 'Curtir artigo')
     expect(within(firstStory).queryByText(/^Curtir$/i)).not.toBeInTheDocument()
-    expect(within(firstStory).getByRole('button', { name: 'Compartilhar' })).toBeInTheDocument()
+    expect(within(firstStory).getByRole('button', { name: 'Compartilhar' })).toHaveAttribute('data-inspire-tooltip', 'Compartilhar artigo')
     expect(within(firstStory).queryByText(/notes/i)).not.toBeInTheDocument()
     expect(within(firstStory).queryByText(/min read/i)).not.toBeInTheDocument()
     expect(firstStory.querySelector('.inspire-story__date svg')).toBeNull()
@@ -566,7 +606,7 @@ describe('Inspire', () => {
 
     renderInspirePage()
 
-    expect(await screen.findAllByRole('heading', { name: 'Post 15' })).toHaveLength(2)
+    expect(await screen.findAllByRole('heading', { name: 'Post 15' })).toHaveLength(1)
     expect(screen.queryByRole('heading', { name: 'Post 16' })).not.toBeInTheDocument()
 
     expect(client.fetch).toHaveBeenNthCalledWith(1, expect.stringContaining('[$start...$end]'), {
@@ -581,41 +621,6 @@ describe('Inspire', () => {
     expect(client.fetch).toHaveBeenNthCalledWith(2, expect.stringContaining('[$start...$end]'), {
       start: 15,
       end: 20,
-    })
-  })
-
-  it('keeps the sidebar fixed from the initial load when later batches arrive', async () => {
-    client.fetch
-      .mockResolvedValueOnce([
-        makePost(1, {
-          title: 'Initial Lead',
-          eyebrow: 'Initial Author',
-          publishedAt: '2026-04-30T12:00:00Z',
-        }),
-        ...Array.from({ length: 14 }, (_, index) => makePost(index + 2)),
-      ])
-      .mockResolvedValueOnce([
-        makePost(16, { title: 'Late Arrival', eyebrow: 'Late Topic' }),
-        makePost(17, { title: 'Late Arrival 2', eyebrow: 'Late Topic 2' }),
-        makePost(18, { title: 'Late Arrival 3', eyebrow: 'Late Topic 3' }),
-        makePost(19, { title: 'Late Arrival 4', eyebrow: 'Late Topic 4' }),
-        makePost(20, { title: 'Late Arrival 5', eyebrow: 'Late Topic 5' }),
-      ])
-
-    renderInspirePage()
-
-    const sidebar = document.querySelector('.inspire-sidebar')
-    expect(await screen.findAllByRole('heading', { name: 'Initial Lead' })).toHaveLength(2)
-    expect(within(sidebar).getAllByText('Initial Author').length).toBeGreaterThanOrEqual(1)
-
-    const sentinel = document.querySelector('.inspire-page__sentinel')
-    triggerIntersection(sentinel)
-
-    expect(await screen.findByRole('heading', { name: 'Late Arrival' })).toBeInTheDocument()
-
-    await waitFor(() => {
-      expect(within(sidebar).queryByText('Late Topic')).not.toBeInTheDocument()
-      expect(within(sidebar).getAllByText('Initial Author').length).toBeGreaterThanOrEqual(1)
     })
   })
 

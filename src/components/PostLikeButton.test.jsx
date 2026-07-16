@@ -145,6 +145,38 @@ describe('PostLikeButton', () => {
     )
   })
 
+  it('confirms a like immediately with a filled heart, pulse and updated label', async () => {
+    const pendingLikeRequest = createDeferred()
+
+    fetchMock
+      .mockResolvedValueOnce(createJsonResponse({ slug: 'post-com-imagem-inline', count: 7 }))
+      .mockReturnValueOnce(pendingLikeRequest.promise)
+
+    const { container } = render(
+      <PostLikeButton slug="post-com-imagem-inline" showLabel />
+    )
+
+    const button = await screen.findByRole('button', { name: /7 curtidas/i })
+    fireEvent.click(button)
+
+    expect(screen.getByText('Curtido')).toHaveClass('post-like-button__label')
+    expect(screen.getByRole('status')).toHaveTextContent('Artigo curtido')
+    expect(button).toHaveClass('post-like-button--feedback')
+    expect(container.querySelector('.post-like-button__icon--popping')).not.toBeNull()
+    expect(container.querySelector('.post-like-button__icon svg')).toHaveAttribute(
+      'fill',
+      'currentColor'
+    )
+
+    pendingLikeRequest.resolve(
+      createJsonResponse({ slug: 'post-com-imagem-inline', count: 8, liked: true })
+    )
+
+    await waitFor(() => {
+      expect(window.localStorage.getItem('post-like:post-com-imagem-inline')).toBe('true')
+    })
+  })
+
   it('decrements the count and removes local state after a successful unlike', async () => {
     window.localStorage.setItem('post-like:post-com-imagem-inline', 'true')
     fetchMock
@@ -202,7 +234,7 @@ describe('PostLikeButton', () => {
       .mockResolvedValueOnce(createJsonResponse({ slug: 'post-com-imagem-inline', count: 7 }))
       .mockResolvedValueOnce(createJsonResponse({ error: 'boom' }, false, 500))
 
-    render(<PostLikeButton slug="post-com-imagem-inline" />)
+    render(<PostLikeButton slug="post-com-imagem-inline" showLabel />)
 
     const button = await screen.findByRole('button', { name: /7 curtidas/i })
     fireEvent.click(button)
@@ -212,6 +244,8 @@ describe('PostLikeButton', () => {
     })
 
     expect(screen.getByRole('button', { name: /7 curtidas/i })).toBeEnabled()
+    expect(screen.getByText('Curtir')).toHaveClass('post-like-button__label')
+    expect(screen.getByRole('status')).toHaveTextContent('Não foi possível curtir. Tente novamente.')
     expect(window.localStorage.getItem('post-like:post-com-imagem-inline')).toBeNull()
   })
 

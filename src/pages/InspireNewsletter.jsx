@@ -55,7 +55,11 @@ function InspireNewsletter() {
             />
           </label>
 
-          <button type="submit" className="inspire-newsletter__submit">
+          <button
+            type="submit"
+            className="inspire-newsletter__submit"
+            data-inspire-tooltip="Assinar newsletter"
+          >
             Assinar newsletter
           </button>
         </form>
