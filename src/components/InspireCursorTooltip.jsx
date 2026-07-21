@@ -4,6 +4,10 @@ import { createPortal } from 'react-dom'
 const POINTER_OFFSET = 14
 const EXIT_DURATION_MS = 110
 
+function hasTouchInput() {
+  return typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0
+}
+
 function findTooltipTarget(target) {
   return target instanceof Element
     ? target.closest('.inspire-shell [data-inspire-tooltip]')
@@ -16,6 +20,8 @@ function InspireCursorTooltip() {
   const exitTimeoutRef = useRef(null)
 
   useEffect(() => {
+    if (hasTouchInput()) return undefined
+
     function commitTooltip(nextTooltip) {
       tooltipRef.current = nextTooltip
       setTooltip(nextTooltip)
