@@ -599,6 +599,21 @@ describe('Inspire', () => {
     expect(within(firstStory).getByRole('link', { name: 'Ler Post 1' })).toBeInTheDocument()
   })
 
+  it('turns an unavailable article image into the neutral Inspire placeholder', async () => {
+    client.fetch.mockResolvedValue([makePost(1)])
+
+    renderInspirePage()
+
+    await screen.findByRole('heading', { name: 'Post 1' })
+    const image = document.querySelector('.inspire-story__thumb')
+    fireEvent.error(image)
+
+    expect(image).toHaveClass('is-unavailable')
+    expect(image.closest('.inspire-story__thumb-link')).toHaveClass(
+      'inspire-story__thumb-link--placeholder',
+    )
+  })
+
   it('loads 15 posts first and appends 5 more when the scroll sentinel intersects', async () => {
     client.fetch
       .mockResolvedValueOnce(Array.from({ length: 15 }, (_, index) => makePost(index + 1)))

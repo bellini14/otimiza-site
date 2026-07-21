@@ -128,17 +128,17 @@ describe('PostDetail', () => {
 
     expect(document.querySelector('.post-detail__content')).toHaveClass('post-detail__content--loading')
     expect(document.querySelector('.post-detail__content')).not.toHaveClass('post-detail__content--ready')
-    expect(document.querySelector('.post-detail__sidebar-actions')).toHaveClass('post-detail__sidebar-actions--loading')
-    expect(document.querySelector('.post-detail__sidebar-actions-placeholder')).not.toBeNull()
+    expect(document.querySelector('.post-detail__hero-actions')).toHaveClass('post-detail__hero-actions--loading')
+    expect(document.querySelector('.post-detail__hero-actions-placeholder')).not.toBeNull()
 
     resolvePost(buildPostResponse())
 
     await waitFor(() => {
       expect(document.querySelector('.post-detail__content')).toHaveClass('post-detail__content--ready')
     })
-    expect(document.querySelector('.post-detail__sidebar-actions')).toHaveClass('post-detail__sidebar-actions--ready')
-    expect(document.querySelector('.post-detail__sidebar-actions-row')).toHaveClass('post-detail__sidebar-actions-row--enter')
-    expect(document.querySelector('.post-detail__sidebar-actions-placeholder')).toBeNull()
+    expect(document.querySelector('.post-detail__hero-actions')).toHaveClass('post-detail__hero-actions--ready')
+    expect(document.querySelector('.post-detail__hero-actions-row')).toHaveClass('post-detail__hero-actions-row--enter')
+    expect(document.querySelector('.post-detail__hero-actions-placeholder')).toBeNull()
     expect(screen.getByText('Paragrafo de abertura.')).toBeInTheDocument()
   })
 
@@ -193,7 +193,7 @@ describe('PostDetail', () => {
 
     expect(screen.getByRole('heading', { name: 'Post com imagem inline' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Post nao encontrado' })).not.toBeInTheDocument()
-    expect(document.querySelector('.post-detail__sidebar-actions')).not.toBeNull()
+    expect(document.querySelector('.post-detail__hero-actions')).not.toBeNull()
   })
 
   it('renders inline body images, captions, and the fetched global like count', async () => {
@@ -225,22 +225,27 @@ describe('PostDetail', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/posts/post-com-imagem-inline/likes', { method: 'GET' })
   })
 
-  it('places the post actions before the shared newsletter form in the right sidebar', async () => {
+  it('places the post actions inside the article hero before the body', async () => {
     fetchMock.mockResolvedValueOnce(createJsonResponse({ slug: 'post-com-imagem-inline', count: 7 }))
 
     renderPostDetail()
 
     expect(await screen.findByRole('heading', { name: 'Post com imagem inline' })).toBeInTheDocument()
 
+    const hero = document.querySelector('.post-detail__hero')
+    const actions = hero?.querySelector('.post-detail__hero-actions')
+    const articleBody = document.querySelector('.post-detail__article-body')
     const sidebar = document.querySelector('.post-detail__sidebar')
-    const actions = sidebar?.querySelector('.post-detail__sidebar-actions')
     const newsletter = sidebar?.querySelector('.inspire-sidebar__newsletter')
 
+    expect(hero).not.toBeNull()
     expect(sidebar).not.toBeNull()
     expect(actions).not.toBeNull()
+    expect(articleBody).not.toBeNull()
     expect(newsletter).not.toBeNull()
-    expect(actions.compareDocumentPosition(newsletter) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(actions.querySelectorAll('.post-detail__sidebar-action-item')).toHaveLength(3)
+    expect(sidebar).not.toContainElement(actions)
+    expect(hero.compareDocumentPosition(articleBody) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(actions.querySelectorAll('.post-detail__hero-action-item')).toHaveLength(3)
     expect(within(actions).queryByText('Gostou?')).not.toBeInTheDocument()
     expect(within(actions).queryByText('Compartilhe!')).not.toBeInTheDocument()
     expect(within(actions).queryByText('Conte pra gente')).not.toBeInTheDocument()

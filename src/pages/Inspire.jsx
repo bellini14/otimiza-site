@@ -462,7 +462,7 @@ function Inspire() {
 
                 return (
                   <article key={post.slug || `${post.title}-${index}`} className="inspire-story">
-                    <div className="inspire-story__content">
+                    <div className="inspire-story__header">
                       <p className="inspire-category-label inspire-story__kicker">
                         {post.inspireCategory || post.eyebrow || 'Otimiza Editorial'}
                       </p>
@@ -474,26 +474,6 @@ function Inspire() {
                       >
                         <h2 className="inspire-story__title">{post.title}</h2>
                       </Link>
-
-                      {post.description && (
-                        <p className="inspire-story__summary">{post.description}</p>
-                      )}
-
-                      <div className="inspire-story__meta-row">
-                        <div className="inspire-story__stats">
-                          <span className="inspire-story__date">{formatStoryDate(post.publishedAt)}</span>
-                          <span>{stats.readTime} min de leitura</span>
-                          <PostLikeButton slug={post.slug} variant="feed" />
-                        </div>
-
-                        <div className="inspire-story__actions">
-                          <InspireShareButton
-                            className="inspire-story__action-button"
-                            title={post.title}
-                            url={post.link || `/inspire/${post.slug}`}
-                          />
-                        </div>
-                      </div>
                     </div>
 
                     <Link
@@ -509,11 +489,39 @@ function Inspire() {
                           className="inspire-story__thumb"
                           loading="lazy"
                           decoding="async"
+                          onError={(event) => {
+                            event.currentTarget.classList.add('is-unavailable')
+                            event.currentTarget.parentElement?.classList.add(
+                              'inspire-story__thumb-link--placeholder',
+                            )
+                          }}
                         />
                       ) : (
                         <div className="inspire-story__thumb inspire-story__thumb--placeholder" />
                       )}
                     </Link>
+
+                    <div className="inspire-story__body">
+                      {post.description && (
+                        <p className="inspire-story__summary">{post.description}</p>
+                      )}
+
+                      <div className="inspire-story__meta-row">
+                        <div className="inspire-story__stats">
+                          <span className="inspire-story__date">{formatStoryDate(post.publishedAt)}</span>
+                          <span>{stats.readTime} min de leitura</span>
+                        </div>
+
+                        <div className="inspire-story__actions">
+                          <PostLikeButton slug={post.slug} variant="feed" />
+                          <InspireShareButton
+                            className="inspire-story__action-button"
+                            title={post.title}
+                            url={post.link || `/inspire/${post.slug}`}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </article>
                 )
               })}

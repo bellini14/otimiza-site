@@ -134,11 +134,11 @@ function PostArticleContactPanel({ postTitle, postPath }) {
 
   return (
     <>
-      <div className="post-detail__sidebar-action-item">
+      <div className="post-detail__hero-action-item">
         <button
           ref={triggerRef}
           type="button"
-          className="post-detail__sidebar-action-control post-detail__sidebar-contact-button"
+          className="post-detail__hero-action-control post-detail__hero-contact-button"
           aria-haspopup="dialog"
           aria-expanded={isOpen}
           aria-controls={dialogId}

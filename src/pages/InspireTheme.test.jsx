@@ -21,7 +21,7 @@ describe('Inspire theme text color', () => {
   })
 
   it('presents the article contact form as a centered accessible dialog', () => {
-    expect(indexCss).toMatch(/\.post-detail__sidebar-actions-row\s*\{[^}]*column-gap:\s*0\.5rem;[^}]*row-gap:\s*0;/s)
+    expect(indexCss).toMatch(/\.post-detail__hero-actions-row\s*\{[^}]*column-gap:\s*0\.5rem;[^}]*row-gap:\s*0;/s)
     expect(indexCss).toMatch(/\.post-detail__contact-screen\s*\{[^}]*position:\s*fixed;[^}]*inset:\s*0;[^}]*z-index:\s*910;[^}]*display:\s*grid;[^}]*place-items:\s*center;/s)
     expect(indexCss).toMatch(/\.post-detail__contact-dialog\s*\{[^}]*width:\s*min\(32rem,\s*100%\);[^}]*max-height:\s*calc\(100dvh\s*-\s*2rem\);[^}]*overflow-y:\s*auto;/s)
     expect(indexCss).toMatch(/\.post-detail__contact-dialog-header\s*\{[^}]*display:\s*flex;[^}]*justify-content:\s*space-between;/s)
@@ -53,7 +53,7 @@ describe('Inspire theme text color', () => {
 
   it('aligns the post actions with the back link and keeps their lower spacing compact', () => {
     expect(indexCss).toMatch(/\.post-detail__sidebar\s*\{[^}]*padding:\s*2\.5rem\s+0\s+0\s+2\.4rem;/s)
-    expect(indexCss).toMatch(/\.post-detail__sidebar-actions\s*\{[^}]*margin-bottom:\s*1\.75rem;[^}]*padding-bottom:\s*1\.5rem;/s)
+    expect(indexCss).toMatch(/\.post-detail__hero-actions\s*\{[^}]*margin-top:\s*1\.75rem;[^}]*padding-top:\s*1\.25rem;/s)
     expect(indexCss).toMatch(/\.post-detail__contact-dialog\s*\{[^}]*padding:\s*1\.35rem;[^}]*border:\s*1px solid #e1e6ea;[^}]*background:\s*#fff(?:fff)?;/s)
   })
 
@@ -62,7 +62,7 @@ describe('Inspire theme text color', () => {
     expect(indexCss).toMatch(/\.inspire-story__thumb-link\s*\{[^}]*min-width:\s*0;[^}]*max-width:\s*100%;/s)
   })
 
-  it('lays out the mobile filters in two rows without widening the page', () => {
+  it('lays out the mobile filters and stories without widening the page', () => {
     const inspireStart = indexCss.indexOf('Inspire Editorial Shell')
     const mobileStart = indexCss.indexOf('@media (max-width: 720px)', inspireStart)
     const mobileEnd = indexCss.indexOf('@keyframes inspire-spin', mobileStart)
@@ -75,7 +75,24 @@ describe('Inspire theme text color', () => {
     expect(mobileCss).toMatch(/\.inspire-page__tab\s*\{[^}]*font-size:\s*0\.9rem;[^}]*white-space:\s*nowrap;/s)
     expect(compactStart).toBeGreaterThan(-1)
     expect(compactCss).toMatch(/\.inspire-page__tabs\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/s)
-    expect(mobileCss).toMatch(/\.inspire-story\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+5\.75rem;[^}]*gap:\s*0\.75rem;/s)
+    expect(mobileCss).toMatch(/\.inspire-story\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\);[^}]*grid-template-areas:\s*"header"\s*"thumb"\s*"body";/s)
+    expect(mobileCss).toMatch(/\.inspire-story__thumb-link\s*\{[^}]*grid-area:\s*thumb;[^}]*margin:\s*1rem\s+0;/s)
+    expect(mobileCss).toMatch(/\.inspire-story__thumb\s*\{[^}]*height:\s*auto;[^}]*aspect-ratio:\s*16\s*\/\s*9;/s)
+    expect(mobileCss).toMatch(/\.inspire-story__meta-row\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+auto;/s)
+    expect(mobileCss).toMatch(/\.inspire-story__action-button\s+span\s*\{[^}]*display:\s*none;/s)
+  })
+
+  it('brings post actions into a compact, readable mobile hero', () => {
+    const inspireStart = indexCss.indexOf('Inspire Editorial Shell')
+    const mobileStart = indexCss.indexOf('@media (max-width: 720px)', inspireStart)
+    const mobileEnd = indexCss.indexOf('@keyframes inspire-spin', mobileStart)
+    const mobileCss = indexCss.slice(mobileStart, mobileEnd)
+
+    expect(mobileCss).toMatch(/\.post-detail__hero\s*\{[^}]*margin-bottom:\s*2rem;[^}]*padding:\s*1\.25rem\s+0\s+1\.75rem;/s)
+    expect(mobileCss).toMatch(/\.post-detail__back-link\s*\{[^}]*display:\s*none;/s)
+    expect(mobileCss).toMatch(/\.post-detail__title\s*\{[^}]*font-size:\s*clamp\(2\.15rem,\s*10vw,\s*3rem\);[^}]*line-height:\s*1\.02;/s)
+    expect(mobileCss).toMatch(/\.post-detail__hero-actions-row\s*\{[^}]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);/s)
+    expect(mobileCss).toMatch(/\.post-detail__article-body\s*>\s*p\s*\{[^}]*font-size:\s*1\.05rem;[^}]*line-height:\s*1\.7;/s)
   })
 
   it('highlights article category labels with a yellow strip', () => {
@@ -88,14 +105,14 @@ describe('Inspire theme text color', () => {
     expect(indexCss).not.toMatch(/\.inspire-sidebar__newsletter(?:-input|-submit)?[^}]*box-shadow:/s)
   })
 
-  it('uses three equal columns and one shared button treatment for post sidebar actions', () => {
-    expect(indexCss).toMatch(/\.post-detail__sidebar-actions-row\s*\{[^}]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);/s)
-    expect(indexCss).toMatch(/\.post-detail__sidebar-action-control\s*\{[^}]*width:\s*100%;[^}]*min-height:\s*2\.7rem;[^}]*border-radius:\s*999px;[^}]*background:\s*var\(--inspire-button-surface\);/s)
+  it('uses three equal columns and one shared button treatment for post hero actions', () => {
+    expect(indexCss).toMatch(/\.post-detail__hero-actions-row\s*\{[^}]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);/s)
+    expect(indexCss).toMatch(/\.post-detail__hero-action-control\s*\{[^}]*width:\s*100%;[^}]*min-height:\s*2\.7rem;[^}]*border-radius:\s*999px;[^}]*background:\s*var\(--inspire-button-surface\);/s)
   })
 
   it('uses the subtle gray for secondary actions and stronger contrast for the modal submit', () => {
     expect(indexCss).toMatch(/--inspire-button-surface:\s*#eef1f3;/i)
-    expect(indexCss).toMatch(/\.post-detail__sidebar-action-control\s*\{[^}]*border:\s*1px solid var\(--inspire-button-surface\);[^}]*background:\s*var\(--inspire-button-surface\);/s)
+    expect(indexCss).toMatch(/\.post-detail__hero-action-control\s*\{[^}]*border:\s*1px solid var\(--inspire-button-surface\);[^}]*background:\s*var\(--inspire-button-surface\);/s)
     expect(indexCss).toMatch(/\.post-detail__contact-footer button\s*\{[^}]*border:\s*1px solid var\(--inspire-text\);[^}]*background:\s*var\(--inspire-text\);/s)
     expect(indexCss).toMatch(/\.inspire-sidebar__newsletter-submit\s*\{[^}]*border:\s*1px solid var\(--inspire-button-surface\);[^}]*background:\s*var\(--inspire-button-surface\);/s)
   })
@@ -149,11 +166,11 @@ describe('Inspire theme text color', () => {
   })
 
   it('reserves the post action space and softly reveals the buttons', () => {
-    expect(indexCss).toMatch(/\.post-detail__sidebar-actions-placeholder\s*\{[^}]*min-height:\s*2\.7rem;/s)
-    expect(indexCss).toMatch(/\.post-detail__sidebar-actions-row--enter\s*\{[^}]*animation:\s*inspire-post-actions-enter\s+320ms\s+cubic-bezier\(0\.22,\s*1,\s*0\.36,\s*1\);/s)
-    expect(indexCss).not.toMatch(/\.post-detail__sidebar-actions-row--enter\s*\{[^}]*(?:will-change|animation:[^;]*\bboth\b)/s)
+    expect(indexCss).toMatch(/\.post-detail__hero-actions-placeholder\s*\{[^}]*min-height:\s*2\.7rem;/s)
+    expect(indexCss).toMatch(/\.post-detail__hero-actions-row--enter\s*\{[^}]*animation:\s*inspire-post-actions-enter\s+320ms\s+cubic-bezier\(0\.22,\s*1,\s*0\.36,\s*1\);/s)
+    expect(indexCss).not.toMatch(/\.post-detail__hero-actions-row--enter\s*\{[^}]*(?:will-change|animation:[^;]*\bboth\b)/s)
     expect(indexCss).toMatch(/@keyframes\s+inspire-post-actions-enter\s*\{[\s\S]*?from\s*\{[^}]*opacity:\s*0;[^}]*transform:\s*translate3d\(0,\s*8px,\s*0\);[\s\S]*?to\s*\{[^}]*opacity:\s*1;[^}]*transform:\s*none;/s)
-    expect(indexCss).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{[\s\S]*?\.post-detail__sidebar-actions-row--enter\s*\{[^}]*animation:\s*none;/s)
+    expect(indexCss).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{[\s\S]*?\.post-detail__hero-actions-row--enter\s*\{[^}]*animation:\s*none;/s)
   })
 
   it('moves the shared newsletter smoothly between the feed and post positions', () => {

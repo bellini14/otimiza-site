@@ -169,10 +169,10 @@ function PostDetail() {
           key={`${slug}-${contentPhase}`}
           className={`post-detail__content post-detail__content--${contentPhase}`}
         >
-        <header className="mb-12 border-b border-[#ececec] pb-10 pt-8 sm:pt-10">
+        <header className="post-detail__hero">
           <Link
             to="/inspire"
-            className="mb-10 inline-flex items-center gap-2 text-sm font-medium text-[#5A6572] transition-opacity hover:opacity-80"
+            className="post-detail__back-link"
           >
             <ArrowLeft className="h-4 w-4" /> Voltar para Inspire
           </Link>
@@ -194,7 +194,7 @@ function PostDetail() {
             </div>
           ) : (
             <>
-              <div className="mb-6 flex flex-wrap items-center gap-4 text-[#5A6572]">
+              <div className="post-detail__hero-meta">
                 {post.eyebrow && (
                   <span className="inspire-category-label">{post.eyebrow}</span>
                 )}
@@ -210,12 +210,46 @@ function PostDetail() {
                 )}
               </div>
 
-              <h1 className="text-[2.6rem] font-medium leading-[1.05] tracking-[-0.015em] text-[#5A6572] sm:text-[3.6rem] lg:text-[4.6rem]">
+              <h1 className="post-detail__title font-medium tracking-[-0.015em]">
                 {post.title}
               </h1>
 
             </>
           )}
+
+          <section
+            className={`post-detail__hero-actions post-detail__hero-actions--${loading ? 'loading' : 'ready'}`}
+            aria-labelledby="post-detail-actions-title"
+            aria-busy={loading}
+          >
+            <h2 id="post-detail-actions-title" className="sr-only">Ações do artigo</h2>
+            {loading ? (
+              <div className="post-detail__hero-actions-placeholder" aria-hidden="true" />
+            ) : (
+              <div className="post-detail__hero-actions-row post-detail__hero-actions-row--enter">
+                <div className="post-detail__hero-action-item">
+                  <PostLikeButton
+                    slug={slug}
+                    variant="detail"
+                    className="post-detail__hero-like"
+                    buttonClassName="post-detail__hero-action-control"
+                    showLabel
+                  />
+                </div>
+                <div className="post-detail__hero-action-item">
+                  <InspireShareButton
+                    className="post-detail__hero-action-control post-detail__hero-action-button"
+                    title={post.title}
+                    url={`/inspire/${slug}`}
+                  />
+                </div>
+                <PostArticleContactPanel
+                  postTitle={post.title}
+                  postPath={`/inspire/${slug}`}
+                />
+              </div>
+            )}
+          </section>
         </header>
 
         {isShellLoading ? (
@@ -230,7 +264,7 @@ function PostDetail() {
         ) : (
           <>
             <div
-              className="mx-auto max-w-4xl
+              className="post-detail__article-body mx-auto max-w-4xl
               [&_h1]:text-[#5A6572] [&_h1]:font-bold [&_h1]:tracking-[-0.02em]
               [&_h2]:mt-12 [&_h2]:mb-6 [&_h2]:text-3xl [&_h2]:font-bold [&_h2]:tracking-[-0.02em] [&_h2]:text-[#5A6572]
               [&_h3]:mt-8 [&_h3]:mb-4 [&_h3]:text-2xl [&_h3]:font-bold [&_h3]:tracking-[-0.02em] [&_h3]:text-[#5A6572]
@@ -298,40 +332,6 @@ function PostDetail() {
         </div>
 
         <aside className="post-detail__sidebar">
-          <section
-            className={`post-detail__sidebar-actions post-detail__sidebar-actions--${loading ? 'loading' : 'ready'}`}
-            aria-labelledby="post-detail-actions-title"
-            aria-busy={loading}
-          >
-            <h2 id="post-detail-actions-title" className="sr-only">Ações do artigo</h2>
-            {loading ? (
-              <div className="post-detail__sidebar-actions-placeholder" aria-hidden="true" />
-            ) : (
-              <div className="post-detail__sidebar-actions-row post-detail__sidebar-actions-row--enter">
-                <div className="post-detail__sidebar-action-item">
-                  <PostLikeButton
-                    slug={slug}
-                    variant="detail"
-                    className="post-detail__sidebar-like"
-                    buttonClassName="post-detail__sidebar-action-control"
-                    showLabel
-                  />
-                </div>
-                <div className="post-detail__sidebar-action-item">
-                  <InspireShareButton
-                    className="post-detail__sidebar-action-control post-detail__sidebar-action-button"
-                    title={post.title}
-                    url={`/inspire/${slug}`}
-                  />
-                </div>
-                <PostArticleContactPanel
-                  postTitle={post.title}
-                  postPath={`/inspire/${slug}`}
-                />
-              </div>
-            )}
-          </section>
-
           <InspireNewsletterSignup />
         </aside>
       </div>
