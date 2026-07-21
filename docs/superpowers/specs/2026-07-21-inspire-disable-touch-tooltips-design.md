@@ -34,5 +34,6 @@ Add focused component tests for `InspireCursorTooltip`:
 
 1. Set `navigator.maxTouchPoints` to a positive value, trigger both mouse movement and focus on an Inspire tooltip target, and verify that no tooltip is rendered.
 2. Set `navigator.maxTouchPoints` to zero and verify that the existing desktop mouse behavior still renders the tooltip.
+3. With `navigator.maxTouchPoints` at zero, focus an Inspire tooltip target and verify that the existing desktop keyboard tooltip still renders.
 
 Tests restore the original navigator property after each case to avoid leaking device state into other suites. The focused tests and the existing Inspire page/theme tests must pass before completion.
