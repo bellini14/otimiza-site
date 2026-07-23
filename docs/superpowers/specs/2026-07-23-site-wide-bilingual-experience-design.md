@@ -70,13 +70,10 @@ A small locale module owns:
 
 A React locale provider reads the displayed router location and exposes
 `locale`, `language`, `t(key, values)`, and path helpers. The URL, not
-`localStorage`, determines rendered content. The provider updates
-`document.documentElement.lang` to `pt-BR` or `en-US`.
-
-`localStorage` continues to remember the latest explicit choice for continuity,
-but it never redirects `/` and never overrides a URL. Both desktop and mobile
-controls consume the same provider, which removes the current duplicated header
-state.
+browser preferences or stored client state, determines rendered content. The
+provider updates `document.documentElement.lang` to `pt-BR` or `en-US`. Both
+desktop and mobile controls consume the same provider, which removes the current
+duplicated header state and the existing locale value in `localStorage`.
 
 ## Interface translation catalogue
 
@@ -152,11 +149,14 @@ and non-empty `contentEn` exist. A case is English-publishable only when
 the English group when any English editorial field is started, preventing
 partially translated records from being mistaken for published content.
 
-Sanity queries select only the active locale's projected field names. English
-queries include the completeness predicate. They do not download both language
-versions and choose in the browser. Search suggestions, search results,
-categories, related posts, cards, feeds, and case listings all use the same
-predicate.
+Sanity queries select only the active locale's projected content field names.
+Detail projections also retain the stable document `_id`, Portuguese slug, and
+English slug as small routing metadata so the selector can build the paired
+detail URL without a second request. They do not download both language
+versions of titles, descriptions, or Portable Text and choose in the browser.
+English queries include the completeness predicate. Search suggestions, search
+results, categories, related posts, cards, feeds, and case listings all use the
+same predicate.
 
 Static fallback posts and cases are reshaped to contain explicit locale
 variants. English fallbacks exist only for records with complete reviewed
@@ -169,14 +169,15 @@ translations; untranslated fallbacks are omitted from English lists.
 3. Static UI reads only the active local catalogue.
 4. Locale-aware queries request only the active Sanity projection.
 5. Lists and search exclude incomplete English records at the query boundary.
-6. The language selector resolves an equivalent static or dynamic path and
+6. Detail responses keep both locale slugs as routing metadata.
+7. The language selector resolves an equivalent static or dynamic path and
    navigates to it.
-7. SEO receives the same locale, translated content, canonical URL, and
+8. SEO receives the same locale, translated content, canonical URL, and
    available alternate URL.
 
-Changing locale invalidates locale-keyed Inspire caches, searches, and pending
-requests. Results from an earlier locale request cannot overwrite the current
-locale state.
+Changing locale selects the matching locale-keyed Inspire cache and cancels or
+ignores pending searches and content requests from the prior locale. Results
+from an earlier locale request cannot overwrite the current locale state.
 
 ## Error and incomplete-content behavior
 
@@ -225,7 +226,7 @@ Automated tests cover:
 - localized link construction and dynamic alternate resolution;
 - Portuguese default behavior without browser-language redirection;
 - shared selector behavior in the main and Inspire headers;
-- persistence without URL override;
+- URL authority without browser-language or stored-state override;
 - `html lang`, translated accessibility labels, and menu keyboard behavior;
 - complete catalogue parity and missing-key detection;
 - localized dates, filters, forms, validation, empty states, and error states;
