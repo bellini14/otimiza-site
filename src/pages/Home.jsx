@@ -14,7 +14,6 @@ const homeClientLogoQuery = `*[_type == "clientLogo" && isVisible != false && sh
   _id,
   name,
   logoAlt,
-  website,
   "logoUrl": logo.asset->url
 }`
 
@@ -108,13 +107,7 @@ function HomeClientLogo({ logo, isDecorative = false }) {
       className="home-client-logo-card group/logo flex h-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-3 transition hover:border-slate-300 sm:h-16 sm:px-8"
       aria-hidden={isDecorative ? 'true' : undefined}
     >
-      {logo.website ? (
-        <a href={logo.website} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center">
-          {logoImage}
-        </a>
-      ) : (
-        logoImage
-      )}
+      {logoImage}
     </div>
   )
 }

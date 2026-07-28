@@ -40,6 +40,7 @@ describe('Home client logos', () => {
         name: 'Banco Azul',
         logoAlt: 'Marca Banco Azul',
         logoUrl: 'https://cdn.sanity.io/images/prod/banco-azul.svg',
+        website: 'https://banco-azul.example.com',
       },
       {
         _id: 'distribuidora-alfa',
@@ -58,10 +59,12 @@ describe('Home client logos', () => {
     expect(client.fetch).toHaveBeenCalledWith(expect.stringContaining('_type == "clientLogo"'))
     expect(client.fetch).toHaveBeenCalledWith(expect.stringContaining('showOnHome == true'))
 
-    expect(await screen.findByRole('img', { name: 'Marca Banco Azul' })).toHaveAttribute(
+    const bancoAzulLogo = await screen.findByRole('img', { name: 'Marca Banco Azul' })
+    expect(bancoAzulLogo).toHaveAttribute(
       'src',
       'https://cdn.sanity.io/images/prod/banco-azul.svg',
     )
+    expect(bancoAzulLogo.closest('a')).toBeNull()
     expect(screen.getByRole('img', { name: 'Distribuidora Alfa' })).toHaveAttribute(
       'src',
       'https://cdn.sanity.io/images/prod/distribuidora-alfa.svg',
