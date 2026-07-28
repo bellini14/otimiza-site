@@ -45,9 +45,11 @@ change. The site URL is the brand's official public homepage.
 
 - Preserve every logo's aspect ratio and approved visual identity.
 - Remove excess transparent or near-white outer padding.
-- Add transparent clear space equal to 8% of the trimmed mark's larger
-  dimension on every side, then export a lossless PNG with a maximum long edge
-  of 1200 px. The canvas keeps the mark's natural aspect ratio.
+- Add horizontal transparent clear space equal to 8% of the trimmed mark's
+  width and vertical clear space equal to 8% of its height, then export a
+  lossless PNG with a maximum long edge of 1200 px. This proportional treatment
+  keeps very wide wordmarks from becoming artificially small. Use a 2 px
+  minimum before resizing so very thin source files retain clear space.
 - The non-transparent visible bounding box must occupy at least 82% of one
   canvas dimension. This is checked by script for every output.
 - The existing frontend display box (`max-width` 8.5rem and `max-height`

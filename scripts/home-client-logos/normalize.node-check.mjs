@@ -46,10 +46,20 @@ test('normalized logos are transparent, compact and optically filled', async () 
 
     const visibleWidthRatio = (maxX - minX + 1) / info.width
     const visibleHeightRatio = (maxY - minY + 1) / info.height
+    const visibleWidth = maxX - minX + 1
+    const visibleHeight = maxY - minY + 1
+    const horizontalPaddingRatios = [minX / visibleWidth, (info.width - 1 - maxX) / visibleWidth]
+    const verticalPaddingRatios = [minY / visibleHeight, (info.height - 1 - maxY) / visibleHeight]
     assert.ok(
       Math.max(visibleWidthRatio, visibleHeightRatio) >= 0.82,
       `${logo.name} visible bounding box is too small`,
     )
+    for (const ratio of [...horizontalPaddingRatios, ...verticalPaddingRatios]) {
+      assert.ok(
+        ratio >= 0.05 && ratio <= 0.14,
+        `${logo.name} clear space ratio ${ratio.toFixed(3)} is not approximately 8%`,
+      )
+    }
   }
 
   const outputFiles = await fs.readdir(normalizedDirectory)

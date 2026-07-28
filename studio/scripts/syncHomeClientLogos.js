@@ -6,8 +6,10 @@ import { getCliClient } from 'sanity/cli'
 const client = getCliClient({ apiVersion: '2024-03-21' })
 const isDryRun = process.argv.includes('--dry-run')
 const isVerifyOnly = process.argv.includes('--verify-only')
-const resultPath = path.resolve(process.cwd(), '../scripts/home-client-logos/sanity-result.json')
-const manifestPath = path.resolve(process.cwd(), '../scripts/home-client-logos/sanity-manifest.json')
+const scriptDirectory = path.dirname(path.resolve(process.argv[1]))
+const repositoryRoot = path.resolve(scriptDirectory, '../..')
+const resultPath = path.join(repositoryRoot, 'scripts/home-client-logos/sanity-result.json')
+const manifestPath = path.join(repositoryRoot, 'scripts/home-client-logos/sanity-manifest.json')
 const homeClientLogos = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
 
 function normalize(value = '') {
@@ -76,6 +78,7 @@ async function main() {
     _id,
     name,
     logoAlt,
+    website,
     showOnHome
   }`)
   const claimedDocumentIds = new Set()
@@ -95,7 +98,12 @@ async function main() {
     }
     claimedDocumentIds.add(documentId)
 
-    return { logo, documentId, matchedName: matches[0]?.name || null }
+    return {
+      logo,
+      documentId,
+      existingWebsite: matches[0]?.website || null,
+      matchedName: matches[0]?.name || null,
+    }
   })
 
   console.table(resolutions.map(({ logo, documentId, matchedName }) => ({
@@ -114,10 +122,10 @@ async function main() {
     return
   }
 
-  for (const { logo, documentId } of resolutions) {
-    const normalizedPath = path.resolve(
-      process.cwd(),
-      '../scripts/home-client-logos/normalized',
+  for (const { logo, documentId, existingWebsite } of resolutions) {
+    const normalizedPath = path.join(
+      repositoryRoot,
+      'scripts/home-client-logos/normalized',
       logo.outputFile,
     )
     const asset = await client.assets.upload('image', fs.createReadStream(normalizedPath), {
@@ -139,7 +147,7 @@ async function main() {
       name: logo.name,
       sector: logo.sector,
       logoAlt: logo.logoAlt,
-      website: logo.website,
+      website: existingWebsite || logo.website,
       sortOrder: logo.sortOrder,
       isVisible: true,
       showOnHome: true,
