@@ -78,9 +78,45 @@ describe('Home client logos', () => {
       </MemoryRouter>,
     )
 
-    expect(await screen.findByRole('img', { name: 'Moneo' })).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: 'Lojas Colombo' })).toBeInTheDocument()
-    expect(screen.getByTestId('home-client-logo-carousel')).toBeInTheDocument()
+    expect(await screen.findByRole('img', { name: 'Banco Moneo' })).toBeInTheDocument()
+
+    const carousel = screen.getByTestId('home-client-logo-carousel')
+    const fallbackLogoNames = Array.from(new Set(
+      Array.from(carousel.querySelectorAll('img[alt]:not([alt=""])'))
+        .map((logo) => logo.getAttribute('alt')),
+    )).sort((left, right) => left.localeCompare(right, 'pt-BR'))
+    const approvedLogoNames = [
+      'AES',
+      'Banco Moneo',
+      'Bontempo',
+      'Brametal',
+      'Controil',
+      'Dell Anno',
+      'ENGIE',
+      'FIERGS',
+      'Fischer',
+      'Fruki Bebidas',
+      'Grendene',
+      'Hacker',
+      'Lojas Colombo',
+      'Marcopolo',
+      'Moinho do Nordeste',
+      'Pisani',
+      'Roni Chaves',
+      'Roseflor',
+      'Santa Clara',
+      'SCA',
+      'SIM Rede de Postos',
+      'Skymsen',
+      'Sulmaq',
+      'Tesouro do Estado RS',
+      'Unimed Porto Alegre',
+      'Unimed VTRP',
+      'ZEN',
+    ].sort((left, right) => left.localeCompare(right, 'pt-BR'))
+
+    expect(fallbackLogoNames).toEqual(approvedLogoNames)
+    expect(fallbackLogoNames).not.toEqual(expect.arrayContaining(['Cinex', 'Randon', 'Sicredi']))
   })
 
   it('repeats a short client logo list enough to fill the home carousel', async () => {

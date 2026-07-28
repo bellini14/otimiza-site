@@ -29,7 +29,7 @@ Vercel.
 
 **Files:**
 - Create: `scripts/home-client-logos/manifest.mjs`
-- Create: `scripts/home-client-logos/manifest.test.mjs`
+- Create: `scripts/home-client-logos/manifest.node-check.mjs`
 
 1. Encode the 27 ordered records, sectors, source paths, alt text, aliases and
    verified websites.
@@ -41,7 +41,7 @@ Vercel.
 
 **Files:**
 - Create: `scripts/home-client-logos/normalize.mjs`
-- Create: `scripts/home-client-logos/normalize.test.mjs`
+- Create: `scripts/home-client-logos/normalize.node-check.mjs`
 - Create: `public/client-logos/home/*.png`
 
 1. Add failing tests for lossless PNG output, transparent padding, maximum long
@@ -86,4 +86,3 @@ Vercel.
    project.
 6. Open production, verify the deployment is healthy and confirm the carousel
    contains the 27 approved brands without old extras or duplicates.
-

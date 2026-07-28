@@ -7,6 +7,7 @@ import { BlogHighlights } from '../components/ui/blog-highlights'
 import { StaggerTestimonials } from '../components/ui/stagger-testimonials'
 import { ScrollVelocity } from '../components/ui/ScrollVelocity'
 import { client } from '../lib/sanity'
+import { HOME_CLIENT_LOGO_FALLBACKS } from '../data/homeClientLogoFallbacks'
 
 
 const homeClientLogoQuery = `*[_type == "clientLogo" && isVisible != false && showOnHome == true && defined(logo.asset)] | order(coalesce(sortOrder, 9999) asc, name asc) {
@@ -26,78 +27,6 @@ const homeCasesQuery = `*[_type == "clientLogo" && isVisible != false && showOnC
   "caseSlug": caseSlug.current,
   "logoUrl": logo.asset->url
 }`
-
-const HOME_CLIENT_LOGO_FALLBACKS = [
-  {
-    _id: 'fallback-banco-moneo',
-    name: 'Banco Moneo',
-    logoAlt: 'Moneo',
-    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/14ada562c98ddb5d2c60222e9288035ac02e1a03-2270x635.png',
-  },
-  {
-    _id: 'fallback-cinex',
-    name: 'Cinex',
-    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/8c12d0700da0b40cdf73dcea8d4f489ef3859176-1609x608.png',
-  },
-  {
-    _id: 'fallback-fruki',
-    name: 'Fruki',
-    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/79c4f8a6b0fad8e2514ca15d4a8f2ff1d2a49345-329x315.jpg',
-  },
-  {
-    _id: 'fallback-lojas-colombo',
-    name: 'Lojas Colombo',
-    logoAlt: 'Lojas Colombo',
-    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/9f1b13dbd4e018c6e2837784b2bbfbd43aca25fc-850x261.png',
-  },
-  {
-    _id: 'fallback-marcopolo',
-    name: 'Marcopolo',
-    logoAlt: 'Marcopolo',
-    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/dd2091b629f7bbec58fff53f6ba2e2da23401338-1628x297.svg',
-  },
-  {
-    _id: 'fallback-masterpower-turbo',
-    name: 'Masterpower Turbo',
-    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/68ee44abb22c64e0592de20a325451ba01208b1b-317x143.svg',
-  },
-  {
-    _id: 'fallback-postos-sim',
-    name: 'Postos SIM',
-    logoAlt: 'Postos SIM',
-    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/1cc404eacdd8f4ee3ab08e27d9acb3bcd612b69e-1612x1103.png',
-  },
-  {
-    _id: 'fallback-randon',
-    name: 'Randon',
-    logoAlt: 'Randon',
-    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/288a1b5f9372c157732913225bb28a38b15d278a-1471x365.jpg',
-  },
-  {
-    _id: 'fallback-sicredi',
-    name: 'Sicredi',
-    logoAlt: 'Sicredi',
-    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/d40d71f5cef53f1c4d008d82cb7d2006bcd1773a-3500x823.png',
-  },
-  {
-    _id: 'fallback-unimed-nacional',
-    name: 'Unimed Nacional',
-    logoAlt: 'Unimed',
-    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/a10f978d72a9d3b41ba68ae9f4d865921ab763ab-1184x422.png',
-  },
-  {
-    _id: 'fallback-universidade-feevale',
-    name: 'Universidade Feevale',
-    logoAlt: 'Feevale',
-    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/7a0583270438adefccdf6943e478c606855d1c87-960x240.png',
-  },
-  {
-    _id: 'fallback-universidade-de-caxias-do-sul',
-    name: 'Universidade de Caxias do Sul',
-    logoAlt: 'UCS',
-    logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/1fe23ac3f948001964c133103f7470b985d0865f-2500x1264.png',
-  },
-]
 
 const MIN_HOME_LOGOS_PER_ROW = 6
 
