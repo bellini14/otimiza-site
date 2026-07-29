@@ -52,25 +52,33 @@ describe('Silvana memorial Otimiza identity', () => {
     expect(ruleFor('.memorial-subtitle')).toContain('margin: 2rem auto 0')
   })
 
-  it('keeps the video close to the surrounding content throughout its timeline', () => {
+  it('reveals a fixed full-size video through a Motto-style animated mask', () => {
     expect(ruleFor('.memorial-video-section')).toContain('height: 300svh')
     expect(ruleFor('.memorial-video-frame')).toContain(
       'var(--memorial-video-expand-progress) * 52%',
     )
     expect(ruleFor('.memorial-video-frame')).toContain(
-      'var(--memorial-video-contract-progress) * 36%',
+      'var(--memorial-video-contract-progress) * 18%',
     )
     expect(ruleFor('.memorial-video-frame')).toContain(
-      'var(--memorial-video-expand-progress) * (100vw - 29rem)',
+      'width: calc(100vw - 3rem)',
     )
     expect(ruleFor('.memorial-video-frame')).toContain(
-      'var(--memorial-video-contract-progress) * (100vw - 29rem)',
+      'height: min(62vw, 37.5rem)',
     )
     expect(ruleFor('.memorial-video-frame')).toContain(
-      'var(--memorial-video-contract-progress) * 21.25rem',
+      'clip-path: inset(',
+    )
+    expect(ruleFor('.memorial-video-frame')).toContain(
+      'var(--memorial-video-contract-progress) * 29%',
+    )
+    expect(ruleFor('.memorial-video-frame video')).toContain(
+      'var(--memorial-video-contract-progress) * 33%',
     )
     expect(ruleFor('.memorial-contribution')).toContain('margin: -10svh auto 5rem')
-    expect(css).toContain('var(--memorial-video-contract-progress) * 4rem')
+    expect(ruleFor('.memorial-video-frame')).not.toContain(
+      'var(--memorial-video-expand-progress) * (100vw - 29rem)',
+    )
   })
 
   it('keeps the floating dust soft and non-interactive', () => {

@@ -95,31 +95,51 @@
   top: calc(
     64%
     - (var(--memorial-video-expand-progress) * 52%)
-    + (var(--memorial-video-contract-progress) * 36%)
+    + (var(--memorial-video-contract-progress) * 18%)
   );
-  width: calc(
-    25rem
-    + (var(--memorial-video-expand-progress) * (100vw - 29rem))
-    - (var(--memorial-video-contract-progress) * (100vw - 29rem))
-  );
-  height: calc(
-    16.25rem
-    + (var(--memorial-video-expand-progress) * 21.25rem)
-    - (var(--memorial-video-contract-progress) * 21.25rem)
+  width: calc(100vw - 3rem);
+  height: min(62vw, 37.5rem);
+  clip-path: inset(
+    calc(
+      28%
+      - (var(--memorial-video-expand-progress) * 28%)
+      + (var(--memorial-video-contract-progress) * 30%)
+    )
+    calc(
+      33%
+      - (var(--memorial-video-expand-progress) * 33%)
+      + (var(--memorial-video-contract-progress) * 33%)
+    )
+    calc(
+      28%
+      - (var(--memorial-video-expand-progress) * 28%)
+      + (var(--memorial-video-contract-progress) * 29%)
+    )
+    calc(
+      33%
+      - (var(--memorial-video-expand-progress) * 33%)
+      + (var(--memorial-video-contract-progress) * 33%)
+    )
+    round 1.25rem
   );
   overflow: hidden;
   transform: translateX(-50%);
   border: 1px solid rgb(67 75 84 / 10%);
-  border-radius: calc(
-    1.5rem
-    - (var(--memorial-video-expand-progress) * .5rem)
-    + (var(--memorial-video-contract-progress) * .5rem)
-  );
+  border-radius: 1.25rem;
   background: #E5E9F1;
   box-shadow: 0 2rem 5rem rgb(67 75 84 / 18%);
+  will-change: clip-path, top;
 }
 .memorial-video-frame video,
 .memorial-video-placeholder { width: 100%; height: 100%; object-fit: cover; }
+.memorial-video-frame video {
+  transform: translate3d(
+    calc(var(--memorial-video-contract-progress) * 33%),
+    0,
+    0
+  );
+  will-change: transform;
+}
 .memorial-video-placeholder {
   display: grid;
   place-content: center;
@@ -274,17 +294,38 @@
       - (var(--memorial-video-expand-progress) * 56%)
       + (var(--memorial-video-contract-progress) * 40%)
     );
-    width: calc(
-      19rem
-      + (var(--memorial-video-expand-progress) * (100vw - 20rem))
-      - (var(--memorial-video-contract-progress) * (100vw - 20rem))
+    width: calc(100vw - 1rem);
+    height: 17rem;
+    clip-path: inset(
+      calc(
+        12%
+        - (var(--memorial-video-expand-progress) * 12%)
+        + (var(--memorial-video-contract-progress) * 10%)
+      )
+      calc(
+        15%
+        - (var(--memorial-video-expand-progress) * 15%)
+        + (var(--memorial-video-contract-progress) * 15%)
+      )
+      calc(
+        12%
+        - (var(--memorial-video-expand-progress) * 12%)
+        + (var(--memorial-video-contract-progress) * 14%)
+      )
+      calc(
+        15%
+        - (var(--memorial-video-expand-progress) * 15%)
+        + (var(--memorial-video-contract-progress) * 15%)
+      )
+      round 1.1rem
     );
-    height: calc(
-      13rem
-      + (var(--memorial-video-expand-progress) * 4rem)
-      - (var(--memorial-video-contract-progress) * 4rem)
+  }
+  .memorial-video-frame video {
+    transform: translate3d(
+      calc(var(--memorial-video-contract-progress) * 15%),
+      0,
+      0
     );
-    max-width: calc(100vw - 1rem);
   }
   .memorial-board { grid-template-columns: 1fr; gap: 2rem; padding: 2.3rem 1.4rem; }
   .memorial-note { transform: rotate(calc(var(--note-rotation) * .5)); }
