@@ -1,14 +1,23 @@
-const INVITE = {
-  email: 'convidada@example.com',
-  name: 'Convidada Exemplo',
-}
+const INVITES = [
+  {
+    email: 'convidada@example.com',
+    name: 'Convidada Exemplo',
+  },
+  {
+    email: 'joaoabellini107@gmail.com',
+    name: 'João Abellini',
+  },
+]
 
 export function createMemorialQaState() {
   let note = null
+  let activeInvite = null
   return {
     handle(method, path, body = {}) {
       if (path === '/api/memorial/access' && method === 'POST') {
-        if (String(body.email || '').trim().toLowerCase() !== INVITE.email) {
+        const normalizedEmail = String(body.email || '').trim().toLowerCase()
+        activeInvite = INVITES.find((invite) => invite.email === normalizedEmail) || null
+        if (!activeInvite) {
           return {
             status: 403,
             body: { error: { code: 'INVITE_NOT_FOUND', message: 'E-mail não autorizado.' } },
@@ -17,7 +26,7 @@ export function createMemorialQaState() {
         return {
           status: 200,
           body: {
-            name: INVITE.name,
+            name: activeInvite.name,
             hasNote: Boolean(note),
             sessionToken: note ? 'qa-manage-token' : 'qa-contribute-token',
             note,
@@ -37,7 +46,7 @@ export function createMemorialQaState() {
         note = {
           id: 'qa-note',
           message: String(body.message || '').trim(),
-          name: body.showName ? INVITE.name : null,
+          name: body.showName ? activeInvite?.name || null : null,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         }
@@ -50,13 +59,13 @@ export function createMemorialQaState() {
         note = {
           ...note,
           message: String(body.message || '').trim(),
-          name: body.showName ? INVITE.name : null,
+          name: body.showName ? activeInvite?.name || null : null,
           updatedAt: new Date().toISOString(),
         }
         return { status: 200, body: { note } }
       }
       if (path === '/api/memorial/notes/qa-note' && method === 'DELETE' && note) {
-        if (String(body.emailConfirmation || '').trim().toLowerCase() !== INVITE.email) {
+        if (String(body.emailConfirmation || '').trim().toLowerCase() !== activeInvite?.email) {
           return {
             status: 403,
             body: { error: { code: 'INVITE_NOT_FOUND', message: 'E-mail não corresponde.' } },

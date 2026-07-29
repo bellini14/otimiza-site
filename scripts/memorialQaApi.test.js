@@ -18,4 +18,21 @@ describe('memorial QA API', () => {
     }).status).toBe(200)
     expect(state.handle('GET', '/api/memorial/notes').body.count).toBe(0)
   })
+
+  it('authorizes João Abellini and associates his name with the post-it', () => {
+    const state = createMemorialQaState()
+    const access = state.handle('POST', '/api/memorial/access', {
+      email: 'joaoabellini107@gmail.com',
+      intent: 'contribute',
+    })
+
+    expect(access.status).toBe(200)
+    expect(access.body.name).toBe('João Abellini')
+
+    const published = state.handle('POST', '/api/memorial/notes', {
+      message: 'Uma lembrança',
+      showName: true,
+    })
+    expect(published.body.note.name).toBe('João Abellini')
+  })
 })
