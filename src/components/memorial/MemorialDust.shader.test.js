@@ -26,4 +26,8 @@ describe('MemorialDust shader', () => {
     )
     expect(source).toContain('col += star * size * opacityVariation * base;')
   })
+
+  it('keeps the particles small and delicate', () => {
+    expect(source).toContain('float edge = 0.024 + uGlowIntensity * 0.03;')
+  })
 })

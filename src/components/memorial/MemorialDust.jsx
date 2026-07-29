@@ -57,7 +57,7 @@ float trisn(float x) {
 
 float Star(vec2 uv) {
   float d = length(uv);
-  float edge = 0.045 + uGlowIntensity * 0.08;
+  float edge = 0.024 + uGlowIntensity * 0.03;
   return 1.0 - smoothstep(edge * 0.35, edge, d);
 }
 
