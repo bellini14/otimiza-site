@@ -16,7 +16,7 @@ describe('Silvana memorial route', () => {
     window.history.replaceState({}, '', '/silvana-bettiol')
     render(<App />)
     expect(await screen.findByRole('heading', {
-      name: 'Silvana, hoje é o seu dia.',
+      name: 'silvana tiburi bettiol. Hoje é dia dela',
     })).toBeInTheDocument()
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
     expect(document.head.querySelector('meta[name="robots"]')).toHaveAttribute(

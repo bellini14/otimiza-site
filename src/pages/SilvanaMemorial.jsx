@@ -59,7 +59,9 @@ function SilvanaMemorial({ api = memorialApi }) {
       />
       <header className="memorial-hero">
         <p className="memorial-eyebrow">05 de agosto · Um dia para lembrar dela</p>
-        <h1 aria-label="Silvana, hoje é o seu dia.">Silvana,<br />hoje é o seu dia.</h1>
+        <h1 aria-label="silvana tiburi bettiol. Hoje é dia dela">
+          silvana tiburi bettiol.<br />Hoje é dia dela
+        </h1>
         <p className="memorial-subtitle">
           A saudade é grande, mas cada lembrança guardada aqui é um jeito de manter você por perto.
         </p>
