@@ -1,5 +1,8 @@
 import { useEffect, useRef } from 'react'
-import { getScrollProgress } from '../../lib/memorialPresentation'
+import {
+  getScrollProgress,
+  getVideoScrollPhases,
+} from '../../lib/memorialPresentation'
 import {
   MEMORIAL_VIDEO_PLAYBACK_RATE,
   resolveVideoDefaults,
@@ -29,7 +32,10 @@ function MemorialVideo({ src = videoDefaults.src }) {
       frame = 0
       const rect = section.getBoundingClientRect()
       const progress = getScrollProgress(-rect.top, Math.max(1, rect.height - window.innerHeight))
+      const phases = getVideoScrollPhases(progress)
       section.style.setProperty('--memorial-video-progress', String(progress))
+      section.style.setProperty('--memorial-video-expand-progress', String(phases.expansion))
+      section.style.setProperty('--memorial-video-contract-progress', String(phases.contraction))
     }
     const onScroll = () => {
       if (!frame) frame = window.requestAnimationFrame(update)

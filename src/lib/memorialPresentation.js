@@ -17,3 +17,13 @@ export function getScrollProgress(offset, distance) {
   if (distance <= 0) return 1
   return Math.max(0, Math.min(1, offset / distance))
 }
+
+export function getVideoScrollPhases(progress) {
+  const clamped = Math.max(0, Math.min(1, progress))
+  const peak = 0.7
+
+  return {
+    expansion: Math.min(1, clamped / peak),
+    contraction: Math.max(0, (clamped - peak) / (1 - peak)),
+  }
+}

@@ -76,6 +76,8 @@
 }
 .memorial-video-section {
   --memorial-video-progress: 0;
+  --memorial-video-expand-progress: 0;
+  --memorial-video-contract-progress: 0;
   position: relative;
   z-index: 3;
   height: 180svh;
@@ -91,7 +93,11 @@
   position: absolute;
   left: 50%;
   top: calc(64% - (var(--memorial-video-progress) * 52%));
-  width: calc(25rem + (var(--memorial-video-progress) * (100vw - 29rem)));
+  width: calc(
+    25rem
+    + (var(--memorial-video-expand-progress) * (100vw - 29rem))
+    - (var(--memorial-video-contract-progress) * 18vw)
+  );
   height: calc(16.25rem + (var(--memorial-video-progress) * 21.25rem));
   overflow: hidden;
   transform: translateX(-50%);
@@ -252,7 +258,11 @@
   .memorial-video-section { margin-top: -88svh; }
   .memorial-video-frame {
     top: calc(68% - (var(--memorial-video-progress) * 56%));
-    width: calc(19rem + (var(--memorial-video-progress) * (100vw - 20rem)));
+    width: calc(
+      19rem
+      + (var(--memorial-video-expand-progress) * (100vw - 20rem))
+      - (var(--memorial-video-contract-progress) * 12vw)
+    );
     height: calc(13rem + (var(--memorial-video-progress) * 30rem));
     max-width: calc(100vw - 1rem);
   }
