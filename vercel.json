@@ -52,6 +52,10 @@
       "destination": "/inspire/newsletter.html"
     },
     {
+      "source": "/silvana-bettiol",
+      "destination": "/index.html"
+    },
+    {
       "source": "/cases/:slug",
       "destination": "/index.html"
     },

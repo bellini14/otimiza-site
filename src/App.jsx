@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
 import Layout from './components/Layout'
 import InspireLayout from './components/InspireLayout'
 import SmoothScroll from './components/SmoothScroll'
@@ -14,6 +14,7 @@ import QuemSomos from './pages/QuemSomos'
 import Tecnologia from './pages/Tecnologia'
 import CaseDetail from './pages/CaseDetail'
 import PostDetail from './pages/PostDetail'
+import SilvanaMemorial from './pages/SilvanaMemorial'
 import PageTransition from './transitions/PageTransition'
 import { useTransitionLocation } from './transitions/transitionLocationContext'
 import SeoHead from './seo/SeoHead'
@@ -77,11 +78,23 @@ function AppRoutes() {
 function App() {
   return (
     <BrowserRouter>
+      <AppShell />
+    </BrowserRouter>
+  )
+}
+
+function AppShell() {
+  const location = useLocation()
+  if (location.pathname === '/silvana-bettiol') {
+    return <SilvanaMemorial />
+  }
+  return (
+    <>
       <SmoothScroll />
       <PageTransition>
         <AppRoutes />
       </PageTransition>
-    </BrowserRouter>
+    </>
   )
 }
 

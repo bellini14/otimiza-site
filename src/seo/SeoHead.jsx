@@ -7,7 +7,26 @@ function SeoHead({
   imageUrl,
   ogType = 'website',
   structuredData,
+  robots,
 }) {
+  useEffect(() => {
+    if (!robots) return undefined
+    let element = document.head.querySelector('meta[name="robots"]')
+    const existed = Boolean(element)
+    const previous = element?.getAttribute('content')
+    if (!element) {
+      element = document.createElement('meta')
+      element.setAttribute('name', 'robots')
+      document.head.appendChild(element)
+    }
+    element.setAttribute('content', robots)
+    return () => {
+      if (!existed) element.remove()
+      else if (previous == null) element.removeAttribute('content')
+      else element.setAttribute('content', previous)
+    }
+  }, [robots])
+
   useEffect(() => {
     if (title) {
       document.title = title

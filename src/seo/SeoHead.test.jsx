@@ -126,4 +126,14 @@ describe('SeoHead title management', () => {
     ))
     expect(document.head.querySelectorAll('meta[name^="twitter:"]')).toHaveLength(4)
   })
+
+  it('sets and cleans up a robots directive', async () => {
+    const { unmount } = render(<SeoHead title="Memorial" robots="noindex, nofollow" />)
+    await waitFor(() => expect(document.head.querySelector('meta[name="robots"]')).toHaveAttribute(
+      'content',
+      'noindex, nofollow',
+    ))
+    unmount()
+    expect(document.head.querySelector('meta[name="robots"]')).not.toBeInTheDocument()
+  })
 })
