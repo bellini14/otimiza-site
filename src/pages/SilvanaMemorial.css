@@ -301,41 +301,38 @@
   .memorial-video-section { margin-top: -88svh; }
   .memorial-video-frame {
     top: calc(
-      68%
-      - (var(--memorial-video-expand-progress) * 56%)
+      32%
+      - (var(--memorial-video-expand-progress) * 29%)
     );
-    width: calc(100vw - 1rem);
+    width: min(calc(100vw - 1.5rem), 53svh);
     height: auto;
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 9 / 16;
     clip-path: inset(
       calc(
-        15%
-        - (var(--memorial-video-expand-progress) * 15%)
+        28%
+        - (var(--memorial-video-expand-progress) * 28%)
       )
       calc(
-        15%
-        - (var(--memorial-video-expand-progress) * 15%)
-        + (var(--memorial-video-contract-progress) * 15%)
+        28%
+        - (var(--memorial-video-expand-progress) * 28%)
+        + (var(--memorial-video-contract-progress) * 28%)
       )
       calc(
-        15%
-        - (var(--memorial-video-expand-progress) * 15%)
-        + (var(--memorial-video-contract-progress) * 30%)
+        28%
+        - (var(--memorial-video-expand-progress) * 28%)
+        + (var(--memorial-video-contract-progress) * 56%)
       )
       calc(
-        15%
-        - (var(--memorial-video-expand-progress) * 15%)
-        + (var(--memorial-video-contract-progress) * 15%)
+        28%
+        - (var(--memorial-video-expand-progress) * 28%)
+        + (var(--memorial-video-contract-progress) * 28%)
       )
       round 1.1rem
     );
   }
   .memorial-video-frame video {
-    transform: translate3d(
-      calc(var(--memorial-video-contract-progress) * 15%),
-      calc(var(--memorial-video-contract-progress) * -10%),
-      0
-    );
+    object-position: left center;
+    transform: none;
   }
   .memorial-board { grid-template-columns: 1fr; gap: 2rem; padding: 2.3rem 1.4rem; }
   .memorial-note { transform: rotate(calc(var(--note-rotation) * .5)); }
