@@ -66,7 +66,7 @@
   position: relative;
   z-index: 3;
   height: 180svh;
-  margin-top: -22svh;
+  margin-top: -92svh;
 }
 .memorial-video-stage {
   position: sticky;
@@ -186,8 +186,9 @@
 .memorial-counter strong { color: white; font-size: 1.2em; }
 .memorial-board {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 13.5rem), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13.5rem), 15.6rem));
   align-items: start;
+  justify-content: center;
   gap: 2.2rem 1.8rem;
   min-height: 18rem;
   padding: clamp(2rem, 5vw, 4rem);
@@ -249,7 +250,7 @@
 
 @media (max-width: 640px) {
   .memorial-hero { min-height: 88svh; padding-bottom: 9rem; }
-  .memorial-video-section { margin-top: -18svh; }
+  .memorial-video-section { margin-top: -88svh; }
   .memorial-video-frame {
     top: calc(77% - (var(--memorial-video-progress) * 65%));
     width: calc(19rem + (var(--memorial-video-progress) * (100vw - 20rem)));
