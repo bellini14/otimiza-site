@@ -16,12 +16,13 @@ describe('memorial presentation', () => {
     expect(getScrollProgress(200, 100)).toBe(1)
   })
 
-  it('gives the video a long, gradual contraction after reaching full width', () => {
+  it('holds the video full width until late and eases the contraction', () => {
     expect(getVideoScrollPhases(0)).toEqual({ expansion: 0, contraction: 0 })
-    expect(getVideoScrollPhases(0.275).expansion).toBeCloseTo(0.5)
-    expect(getVideoScrollPhases(0.55)).toEqual({ expansion: 1, contraction: 0 })
-    expect(getVideoScrollPhases(0.7).contraction).toBeCloseTo(1 / 3)
-    expect(getVideoScrollPhases(0.85).contraction).toBeCloseTo(2 / 3)
+    expect(getVideoScrollPhases(0.36).expansion).toBeCloseTo(0.5)
+    expect(getVideoScrollPhases(0.72)).toEqual({ expansion: 1, contraction: 0 })
+    expect(getVideoScrollPhases(0.79).contraction).toBeCloseTo(0.15625)
+    expect(getVideoScrollPhases(0.86).contraction).toBeCloseTo(0.5)
+    expect(getVideoScrollPhases(0.93).contraction).toBeCloseTo(0.84375)
     expect(getVideoScrollPhases(1)).toEqual({ expansion: 1, contraction: 1 })
   })
 })

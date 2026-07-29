@@ -20,10 +20,12 @@ export function getScrollProgress(offset, distance) {
 
 export function getVideoScrollPhases(progress) {
   const clamped = Math.max(0, Math.min(1, progress))
-  const peak = 0.55
+  const peak = 0.72
+  const contractionProgress = Math.max(0, (clamped - peak) / (1 - peak))
+  const easedContraction = contractionProgress ** 2 * (3 - (2 * contractionProgress))
 
   return {
     expansion: Math.min(1, clamped / peak),
-    contraction: Math.max(0, (clamped - peak) / (1 - peak)),
+    contraction: easedContraction,
   }
 }
