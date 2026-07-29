@@ -40,6 +40,12 @@ describe('Silvana memorial Otimiza identity', () => {
     expect(ruleFor('.memorial-form-card')).toContain('background: #ffffff')
   })
 
+  it('keeps the page background neutral without a red radial glow', () => {
+    expect(ruleFor('.silvana-memorial')).not.toContain(
+      'radial-gradient(circle at 82% 10%, rgb(224 32 32 / 7%)',
+    )
+  })
+
   it('keeps the video clearly visible inside the initial hero viewport', () => {
     expect(ruleFor('.memorial-video-frame')).toContain(
       'top: calc(64% - (var(--memorial-video-progress) * 52%))',

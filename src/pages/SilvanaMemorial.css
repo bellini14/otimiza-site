@@ -10,7 +10,6 @@
   min-height: 100svh;
   overflow: clip;
   background:
-    radial-gradient(circle at 82% 10%, rgb(224 32 32 / 7%), transparent 28rem),
     radial-gradient(circle at 8% 42%, rgb(90 101 114 / 8%), transparent 32rem),
     linear-gradient(180deg, #ffffff 0%, #EFEFF4 46%, #E5E9F1 100%);
   color: #5a6572;
