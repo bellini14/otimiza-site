@@ -1,14 +1,30 @@
 import { useEffect, useRef, useState } from 'react'
 import { Volume2, VolumeX } from 'lucide-react'
 import { getScrollProgress } from '../../lib/memorialPresentation'
+import {
+  MEMORIAL_VIDEO_PLAYBACK_RATE,
+  resolveVideoDefaults,
+} from '../../lib/memorialVideoConfig'
+
+const videoDefaults = resolveVideoDefaults(import.meta.env)
 
 function MemorialVideo({
-  src = import.meta.env.VITE_SILVANA_VIDEO_URL || '',
-  hasAudio = import.meta.env.VITE_SILVANA_VIDEO_HAS_AUDIO === 'true',
+  src = videoDefaults.src,
+  hasAudio = videoDefaults.hasAudio,
 }) {
   const sectionRef = useRef(null)
   const videoRef = useRef(null)
   const [muted, setMuted] = useState(true)
+
+  const setSlowPlayback = () => {
+    if (!videoRef.current) return
+    videoRef.current.defaultPlaybackRate = MEMORIAL_VIDEO_PLAYBACK_RATE
+    videoRef.current.playbackRate = MEMORIAL_VIDEO_PLAYBACK_RATE
+  }
+
+  useEffect(() => {
+    setSlowPlayback()
+  }, [src])
 
   useEffect(() => {
     const section = sectionRef.current
@@ -57,6 +73,7 @@ function MemorialVideo({
               autoPlay
               loop
               playsInline
+              onLoadedMetadata={setSlowPlayback}
               aria-label="Vídeo em homenagem à Silvana"
             >
               Seu navegador não suporta a reprodução deste vídeo.
