@@ -60,7 +60,7 @@ function SilvanaMemorial({ api = memorialApi }) {
       />
       <MemorialDust
         starSpeed={0}
-        density={1.4}
+        density={0.8}
         hueShift={140}
         speed={0.4}
         glowIntensity={0.05}

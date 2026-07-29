@@ -72,6 +72,7 @@ vec3 StarLayer(vec2 uv) {
       vec2 si = id + offset;
       float seed = Hash21(si);
       float size = fract(seed * 345.32);
+      float opacityVariation = mix(0.3, 1.0, Hash21(si + 7.13));
       vec3 base = vec3(1.0);
 
       vec2 pad = vec2(
@@ -83,7 +84,7 @@ vec3 StarLayer(vec2 uv) {
       float twinkle = trisn(uTime * uSpeed + seed * 6.2831) * 0.5 + 1.0;
       twinkle = mix(1.0, twinkle, uTwinkleIntensity);
       star *= twinkle;
-      col += star * size * base;
+      col += star * size * opacityVariation * base;
     }
   }
 
