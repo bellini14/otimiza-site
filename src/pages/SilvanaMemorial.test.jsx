@@ -10,7 +10,7 @@ describe('Silvana memorial page', () => {
     }
     render(<SilvanaMemorial api={api} />)
     expect(screen.getByRole('heading', {
-      name: 'silvana tiburi bettiol. Hoje é dia dela',
+      name: 'Silvana Tiburi Bettiol. Hoje é dia dela',
     })).toBeInTheDocument()
     expect(document.querySelector('.memorial-dust-layer')).toHaveAttribute('aria-hidden', 'true')
     expect(screen.getByRole('region', { name: 'Vídeo em homenagem à Silvana' })).toBeInTheDocument()

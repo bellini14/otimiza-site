@@ -43,7 +43,7 @@
   text-align: center;
 }
 .memorial-eyebrow {
-  margin: 0 0 1.4rem;
+  margin: 0 0 1.8rem;
   color: #e02020;
   font-size: .72rem;
   font-weight: 700;
@@ -56,11 +56,11 @@
   font-size: clamp(3.2rem, 8vw, 7.4rem);
   font-weight: 200;
   letter-spacing: -.055em;
-  line-height: .88;
+  line-height: .96;
 }
 .memorial-subtitle {
   max-width: 40rem;
-  margin: 1.6rem auto 0;
+  margin: 2rem auto 0;
   color: #5a6572;
   font-family: "elza", sans-serif;
   font-size: clamp(1.05rem, 2.2vw, 1.35rem);

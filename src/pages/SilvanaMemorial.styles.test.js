@@ -46,6 +46,12 @@ describe('Silvana memorial Otimiza identity', () => {
     )
   })
 
+  it('gives the hero copy comfortable vertical breathing room', () => {
+    expect(ruleFor('.memorial-eyebrow')).toContain('margin: 0 0 1.8rem')
+    expect(ruleFor('.memorial-hero h1')).toContain('line-height: .96')
+    expect(ruleFor('.memorial-subtitle')).toContain('margin: 2rem auto 0')
+  })
+
   it('keeps the video clearly visible inside the initial hero viewport', () => {
     expect(ruleFor('.memorial-video-frame')).toContain(
       'top: calc(64% - (var(--memorial-video-progress) * 52%))',
