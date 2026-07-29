@@ -53,6 +53,7 @@ describe('Silvana memorial Otimiza identity', () => {
   })
 
   it('animates the video from small to full width and back to small', () => {
+    expect(ruleFor('.memorial-video-section')).toContain('height: 210svh')
     expect(ruleFor('.memorial-video-frame')).toContain(
       'top: calc(64% - (var(--memorial-video-progress) * 52%))',
     )
