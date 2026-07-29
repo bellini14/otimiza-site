@@ -52,16 +52,17 @@ describe('Silvana memorial Otimiza identity', () => {
     expect(ruleFor('.memorial-subtitle')).toContain('margin: 2rem auto 0')
   })
 
-  it('keeps the video clearly visible inside the initial hero viewport', () => {
+  it('expands the video to the full page width without narrowing again', () => {
     expect(ruleFor('.memorial-video-frame')).toContain(
       'top: calc(64% - (var(--memorial-video-progress) * 52%))',
     )
     expect(ruleFor('.memorial-video-frame')).toContain(
-      'var(--memorial-video-contract-progress) * 18vw',
+      'var(--memorial-video-expand-progress) * (100vw - 29rem)',
     )
-    expect(ruleFor('.memorial-video-frame')).toContain(
-      'var(--memorial-video-contract-progress) * 12rem',
+    expect(ruleFor('.memorial-video-frame')).not.toContain(
+      'var(--memorial-video-contract-progress)',
     )
+    expect(css).toContain('height: calc(13rem + (var(--memorial-video-progress) * 4rem))')
   })
 
   it('keeps the floating dust soft and non-interactive', () => {
