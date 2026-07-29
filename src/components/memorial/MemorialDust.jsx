@@ -38,18 +38,11 @@ uniform bool uTransparent;
 varying vec2 vUv;
 
 #define NUM_LAYER 4.0
-#define STAR_COLOR_CUTOFF 0.2
-#define MAT45 mat2(0.7071, -0.7071, 0.7071, 0.7071)
-#define PERIOD 3.0
 
 float Hash21(vec2 p) {
   p = fract(p * vec2(123.34, 456.21));
   p += dot(p, p + 45.32);
   return fract(p.x * p.y);
-}
-
-float tri(float x) {
-  return abs(fract(x) * 2.0 - 1.0);
 }
 
 float tris(float x) {
@@ -62,22 +55,10 @@ float trisn(float x) {
   return 2.0 * (1.0 - smoothstep(0.0, 1.0, abs(2.0 * t - 1.0))) - 1.0;
 }
 
-vec3 hsv2rgb(vec3 c) {
-  vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-  vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
-  return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
-}
-
-float Star(vec2 uv, float flare) {
+float Star(vec2 uv) {
   float d = length(uv);
-  float m = (0.05 * uGlowIntensity) / d;
-  float rays = smoothstep(0.0, 1.0, 1.0 - abs(uv.x * uv.y * 1000.0));
-  m += rays * flare * uGlowIntensity;
-  uv *= MAT45;
-  rays = smoothstep(0.0, 1.0, 1.0 - abs(uv.x * uv.y * 1000.0));
-  m += rays * 0.3 * flare * uGlowIntensity;
-  m *= smoothstep(1.0, 0.2, d);
-  return m;
+  float edge = 0.045 + uGlowIntensity * 0.08;
+  return 1.0 - smoothstep(edge * 0.35, edge, d);
 }
 
 vec3 StarLayer(vec2 uv) {
@@ -91,26 +72,14 @@ vec3 StarLayer(vec2 uv) {
       vec2 si = id + offset;
       float seed = Hash21(si);
       float size = fract(seed * 345.32);
-      float glossLocal = tri(uStarSpeed / (PERIOD * seed + 1.0));
-      float flareSize = smoothstep(0.9, 1.0, size) * glossLocal;
-
-      float red = smoothstep(STAR_COLOR_CUTOFF, 1.0, Hash21(si + 1.0)) + STAR_COLOR_CUTOFF;
-      float blu = smoothstep(STAR_COLOR_CUTOFF, 1.0, Hash21(si + 3.0)) + STAR_COLOR_CUTOFF;
-      float grn = min(red, blu) * seed;
-      vec3 base = vec3(red, grn, blu);
-
-      float hue = atan(base.g - base.r, base.b - base.r) / (2.0 * 3.14159) + 0.5;
-      hue = fract(hue + uHueShift / 360.0);
-      float sat = length(base - vec3(dot(base, vec3(0.299, 0.587, 0.114)))) * uSaturation;
-      float val = max(max(base.r, base.g), base.b);
-      base = hsv2rgb(vec3(hue, sat, val));
+      vec3 base = vec3(1.0);
 
       vec2 pad = vec2(
         tris(seed * 34.0 + uTime * uSpeed / 10.0),
         tris(seed * 38.0 + uTime * uSpeed / 30.0)
       ) - 0.5;
 
-      float star = Star(gv - offset - pad, flareSize);
+      float star = Star(gv - offset - pad);
       float twinkle = trisn(uTime * uSpeed + seed * 6.2831) * 0.5 + 1.0;
       twinkle = mix(1.0, twinkle, uTwinkleIntensity);
       star *= twinkle;
@@ -157,11 +126,13 @@ void main() {
     col += StarLayer(uv * scale + i * 453.32) * fade;
   }
 
+  float alpha = smoothstep(0.0, 0.3, length(col));
+  vec3 particleColor = vec3(0.78, 0.81, 0.84);
+
   if (uTransparent) {
-    float alpha = smoothstep(0.0, 0.3, length(col));
-    gl_FragColor = vec4(col, min(alpha, 1.0));
+    gl_FragColor = vec4(particleColor, alpha * 0.5);
   } else {
-    gl_FragColor = vec4(col, 1.0);
+    gl_FragColor = vec4(mix(vec3(1.0), particleColor, alpha), 1.0);
   }
 }
 `
