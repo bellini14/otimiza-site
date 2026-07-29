@@ -59,10 +59,17 @@ function SilvanaMemorial({ api = memorialApi }) {
         robots="noindex, nofollow"
       />
       <MemorialDust
+        starSpeed={0}
         density={1.4}
         hueShift={140}
         speed={0.4}
+        glowIntensity={0.05}
         saturation={1}
+        mouseRepulsion={false}
+        repulsionStrength={0}
+        twinkleIntensity={0.9}
+        rotationSpeed={0}
+        transparent
       />
       <header className="memorial-hero">
         <p className="memorial-eyebrow">05 de agosto · Um dia para lembrar dela</p>

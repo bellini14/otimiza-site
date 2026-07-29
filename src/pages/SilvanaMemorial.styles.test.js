@@ -48,7 +48,7 @@ describe('Silvana memorial Otimiza identity', () => {
 
   it('keeps the floating dust soft and non-interactive', () => {
     expect(ruleFor('.memorial-dust-layer')).toContain('pointer-events: none')
-    expect(ruleFor('.memorial-dust-layer')).toContain('opacity: .55')
+    expect(ruleFor('.memorial-dust-layer')).toContain('opacity: 1')
     expect(ruleFor('.memorial-dust-layer')).not.toMatch(/glow|filter|drop-shadow/i)
   })
 })
