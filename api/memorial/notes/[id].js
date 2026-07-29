@@ -5,6 +5,7 @@ import {
 } from '../../_lib/memorialAuth.js'
 import { MemorialError, sendMemorialError } from '../../_lib/memorialErrors.js'
 import { findMemorialInvite, parseMemorialInvites } from '../../_lib/memorialInvites.js'
+import { parseMemorialBody } from '../../_lib/memorialRequest.js'
 import { getMemorialStore } from '../../_lib/memorialStore.js'
 
 function bearer(req) {
@@ -49,7 +50,7 @@ export function createNoteMutationHandler(overrides = {}) {
       if (authorization.inviteKey !== note.inviteKey) {
         throw new MemorialError('SESSION_INVALID', 'Você não pode alterar esta lembrança.', 401)
       }
-      const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
+      const body = parseMemorialBody(req)
       if (req.method === 'PATCH') {
         const message = typeof body?.message === 'string' ? body.message.trim() : ''
         if (!message || message.length > 280 || typeof body?.showName !== 'boolean') {

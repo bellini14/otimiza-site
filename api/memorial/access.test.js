@@ -32,10 +32,30 @@ describe('memorial access handler', () => {
   })
 
   it('returns a generic forbidden error for an unknown email', async () => {
-    const handler = createAccessHandler({ findInvite: () => null })
+    const handler = createAccessHandler({
+      findInvite: () => null,
+      deriveKey: () => 'opaque-key',
+    })
     const res = response()
     await handler({ method: 'POST', body: { email: 'no@example.com', intent: 'contribute' } }, res)
     expect(res.statusCode).toBe(403)
     expect(res.body.error.code).toBe('INVITE_NOT_FOUND')
+  })
+
+  it('throttles repeated failed access attempts', async () => {
+    const handler = createAccessHandler({
+      findInvite: () => null,
+      deriveKey: () => 'opaque-key',
+      limiterOptions: { maxFailures: 1, windowMs: 60_000, now: () => 10 },
+    })
+    await handler({
+      method: 'POST', body: { email: 'no@example.com', intent: 'contribute' },
+    }, response())
+    const res = response()
+    await handler({
+      method: 'POST', body: { email: 'no@example.com', intent: 'contribute' },
+    }, res)
+    expect(res.statusCode).toBe(429)
+    expect(res.body.error.code).toBe('RATE_LIMITED')
   })
 })

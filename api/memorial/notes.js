@@ -6,6 +6,7 @@ import {
 } from '../_lib/memorialAuth.js'
 import { MemorialError, sendMemorialError } from '../_lib/memorialErrors.js'
 import { parseMemorialInvites } from '../_lib/memorialInvites.js'
+import { parseMemorialBody } from '../_lib/memorialRequest.js'
 import { getMemorialStore } from '../_lib/memorialStore.js'
 
 function bearer(req) {
@@ -39,7 +40,7 @@ export function createNotesHandler(overrides = {}) {
         res.setHeader('Allow', 'GET, POST')
         throw new MemorialError('INVALID_REQUEST', 'Método não permitido.', 405)
       }
-      const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
+      const body = parseMemorialBody(req)
       const message = typeof body?.message === 'string' ? body.message.trim() : ''
       if (!message || message.length > 280 || typeof body?.showName !== 'boolean') {
         throw new MemorialError(

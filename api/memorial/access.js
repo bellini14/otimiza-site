@@ -1,6 +1,7 @@
 import { createMemorialSession, deriveInviteKey } from '../_lib/memorialAuth.js'
 import { MemorialError, sendMemorialError } from '../_lib/memorialErrors.js'
 import { findMemorialInvite } from '../_lib/memorialInvites.js'
+import { createFailureLimiter, parseMemorialBody } from '../_lib/memorialRequest.js'
 import { getMemorialStore } from '../_lib/memorialStore.js'
 
 export function createAccessHandler(overrides = {}) {
@@ -12,6 +13,7 @@ export function createAccessHandler(overrides = {}) {
   const createSession = overrides.createSession || ((payload) => (
     createMemorialSession(payload, process.env.SILVANA_SESSION_SECRET)
   ))
+  const limiter = overrides.limiter || createFailureLimiter(overrides.limiterOptions)
 
   return async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -21,17 +23,20 @@ export function createAccessHandler(overrides = {}) {
       })
     }
     try {
-      const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
+      const body = parseMemorialBody(req)
       const intent = body?.intent === 'manage' ? 'manage' : 'contribute'
+      const inviteKey = deriveKey(body?.email)
+      limiter.assertAllowed(inviteKey)
       const invite = findInvite(body?.email)
       if (!invite) {
+        limiter.recordFailure(inviteKey)
         throw new MemorialError(
           'INVITE_NOT_FOUND',
           'Este e-mail não está na lista desta homenagem.',
           403,
         )
       }
-      const inviteKey = deriveKey(body.email)
+      limiter.clear(inviteKey)
       const store = configuredStore || getMemorialStore()
       const note = await store.findByInviteKey(inviteKey)
       const effectiveIntent = note ? 'manage' : intent
