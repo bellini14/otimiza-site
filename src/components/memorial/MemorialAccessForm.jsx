@@ -11,6 +11,7 @@ function MemorialAccessForm({
   const [mode, setMode] = useState(editingNote ? 'edit' : 'access')
   const [intent, setIntent] = useState(initialIntent)
   const [email, setEmail] = useState('')
+  const [deleteEmail, setDeleteEmail] = useState('')
   const [name, setName] = useState('')
   const [message, setMessage] = useState(editingNote?.message || '')
   const [showName, setShowName] = useState(Boolean(editingNote?.name ?? true))
@@ -18,6 +19,7 @@ function MemorialAccessForm({
   const [activeNote, setActiveNote] = useState(editingNote)
   const [status, setStatus] = useState('')
   const [busy, setBusy] = useState(false)
+  const [preservedDraft, setPreservedDraft] = useState(null)
 
   useEffect(() => {
     if (editingNote) {
@@ -38,12 +40,14 @@ function MemorialAccessForm({
       setSessionToken(result.sessionToken)
       if (result.hasNote) {
         setActiveNote(result.note)
-        setMessage(result.note.message)
-        setShowName(Boolean(result.note.name))
+        setMessage(preservedDraft?.message ?? result.note.message)
+        setShowName(preservedDraft?.showName ?? Boolean(result.note.name))
         setMode('edit')
       } else {
         setMode('contribute')
       }
+      setPreservedDraft(null)
+      setEmail('')
       setStatus('')
     } catch (error) {
       setStatus(error.message)
@@ -58,7 +62,9 @@ function MemorialAccessForm({
     setStatus(mode === 'edit' ? 'Atualizando sua lembrança…' : 'Colando no mural…')
     try {
       if (mode === 'edit') {
-        const authorization = ownership?.receipt || sessionToken
+        const authorization = ownership?.noteId === activeNote.id
+          ? ownership.receipt
+          : sessionToken
         await api.updateNote({
           id: activeNote.id, authorization, message, showName,
         })
@@ -74,7 +80,14 @@ function MemorialAccessForm({
         })
       }
     } catch (error) {
-      setStatus(error.message)
+      if (error.code === 'SESSION_INVALID') {
+        setPreservedDraft({ message, showName })
+        setIntent(activeNote ? 'manage' : 'contribute')
+        setMode('access')
+        setStatus('Sua validação expirou. Confirme o e-mail novamente; seu texto foi preservado.')
+      } else {
+        setStatus(error.message)
+      }
     } finally {
       setBusy(false)
     }
@@ -87,13 +100,16 @@ function MemorialAccessForm({
     try {
       await api.deleteNote({
         id: activeNote.id,
-        authorization: ownership?.receipt || sessionToken,
-        emailConfirmation: email,
+        authorization: ownership?.noteId === activeNote.id
+          ? ownership.receipt
+          : sessionToken,
+        emailConfirmation: deleteEmail,
       })
       setStatus('Sua lembrança foi excluída. Você pode publicar novamente quando quiser.')
       setMode('access')
       setActiveNote(null)
       setMessage('')
+      setDeleteEmail('')
       await onChanged?.({ deleted: true })
     } catch (error) {
       setStatus(error.message)
@@ -169,7 +185,10 @@ function MemorialAccessForm({
           <button
             className="memorial-delete-toggle"
             type="button"
-            onClick={() => setMode('delete')}
+            onClick={() => {
+              setDeleteEmail('')
+              setMode('delete')
+            }}
           >
             Excluir minha lembrança
           </button>
@@ -188,8 +207,8 @@ function MemorialAccessForm({
             id="memorial-delete-email"
             type="email"
             required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            value={deleteEmail}
+            onChange={(event) => setDeleteEmail(event.target.value)}
           />
           <button type="button" className="memorial-danger" onClick={deleteMemory}>
             Confirmar exclusão
