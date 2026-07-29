@@ -13,7 +13,8 @@ da homenagem, com câmera lenta e o comportamento expansível já aprovado.
   `VITE_SILVANA_VIDEO_URL`.
 - Reproduzir automaticamente em `0.65×`, silencioso, em loop e com
   `playsInline`.
-- Manter o botão de som, pois o arquivo contém trilhas de vídeo e áudio.
+- Manter o botão de som, pois o arquivo contém trilhas de vídeo e áudio. O vídeo
+  bundled assume `hasAudio: true` por padrão.
 - Manter `object-fit: cover`, o enquadramento central e a expansão progressiva
   ao rolar.
 - Não recodificar o arquivo: a câmera lenta será aplicada no navegador para não
@@ -26,9 +27,15 @@ O componente ajustará `video.playbackRate` e `video.defaultPlaybackRate` para
 Isso protege o comportamento caso o navegador redefina a velocidade ao carregar
 a fonte.
 
+Quando `VITE_SILVANA_VIDEO_URL` substituir o arquivo bundled,
+`VITE_SILVANA_VIDEO_HAS_AUDIO=true` exibirá o botão e qualquer outro valor o
+ocultará. Assim, a mídia padrão funciona sem configuração e fontes externas
+continuam declarando explicitamente se possuem áudio.
+
 ## Verificação
 
-- Um teste do componente deve exigir a fonte padrão e a velocidade `0.65`.
+- Um teste do componente deve exigir a fonte padrão, a velocidade `0.65` e o
+  botão de som habilitado para a mídia bundled.
 - O build deve incluir o vídeo estático.
 - No localhost, o vídeo deve carregar, iniciar silencioso, expandir ao scroll e
   oferecer o controle de som.
