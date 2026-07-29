@@ -27,11 +27,10 @@ describe('Silvana memorial Otimiza identity', () => {
     expect(ruleFor('.memorial-form-card')).toContain('color: #5a6572')
   })
 
-  it('uses the Otimiza red for accents and primary actions', () => {
+  it('uses the Otimiza red for accents and destructive actions', () => {
     expect(ruleFor('.memorial-eyebrow')).toContain('color: #e02020')
     expect(ruleFor('.memorial-divider')).toContain('background: #e02020')
-    expect(ruleFor('.memorial-form-card > button[type="submit"],\n.memorial-danger'))
-      .toContain('background: #e02020')
+    expect(ruleFor('.memorial-danger')).toContain('background: #e02020')
   })
 
   it('uses the Otimiza light surfaces throughout the page', () => {
@@ -50,6 +49,21 @@ describe('Silvana memorial Otimiza identity', () => {
     expect(ruleFor('.memorial-eyebrow')).toContain('margin: 0 0 1.8rem')
     expect(ruleFor('.memorial-hero h1')).toContain('line-height: .96')
     expect(ruleFor('.memorial-subtitle')).toContain('margin: 2rem auto 0')
+  })
+
+  it('uses the larger minimal form treatment found across the Otimiza site', () => {
+    expect(ruleFor('.memorial-contribution'))
+      .toContain('width: min(100% - 2rem, 48rem)')
+    expect(ruleFor('.memorial-form-card')).toContain('border: 0')
+    expect(ruleFor('.memorial-form-card')).toContain('box-shadow: none')
+    expect(ruleFor('.memorial-form-card input[type="email"],\n.memorial-form-card textarea'))
+      .toContain('border-bottom: 1px solid rgb(90 101 114 / 28%)')
+    expect(ruleFor('.memorial-form-card input[type="email"],\n.memorial-form-card textarea'))
+      .toContain('background: transparent')
+    expect(ruleFor('.memorial-form-card > button[type="submit"]'))
+      .toContain('background: #5a6572')
+    expect(ruleFor('.memorial-form-card > button[type="submit"]'))
+      .toContain('width: auto')
   })
 
   it('reveals a fixed full-size video through a Motto-style animated mask', () => {
