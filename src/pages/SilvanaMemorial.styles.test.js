@@ -59,6 +59,9 @@ describe('Silvana memorial Otimiza identity', () => {
     expect(ruleFor('.memorial-video-frame')).toContain(
       'var(--memorial-video-contract-progress) * 18vw',
     )
+    expect(ruleFor('.memorial-video-frame')).toContain(
+      'var(--memorial-video-contract-progress) * 12rem',
+    )
   })
 
   it('keeps the floating dust soft and non-interactive', () => {
