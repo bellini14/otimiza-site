@@ -34,7 +34,7 @@ function MemorialDust({
             style={{
               '--dust-x': `${seededRandom(seed) * 100}%`,
               '--dust-y': `${seededRandom(seed * 2) * 118 - 9}%`,
-              '--dust-size': `${0.7 + seededRandom(seed * 3) * 1.8}px`,
+              '--dust-size': `${1.4 + seededRandom(seed * 3) * 3.4}px`,
               '--dust-opacity': 0.28 + seededRandom(seed * 4) * 0.42,
               '--dust-drift': `${(seededRandom(seed * 6) - 0.5) * 5}rem`,
               '--dust-duration': `${duration}s`,
