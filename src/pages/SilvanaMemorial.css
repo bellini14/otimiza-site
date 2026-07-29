@@ -305,11 +305,12 @@
       - (var(--memorial-video-expand-progress) * 56%)
     );
     width: calc(100vw - 1rem);
-    height: 17rem;
+    height: auto;
+    aspect-ratio: 16 / 9;
     clip-path: inset(
       calc(
-        12%
-        - (var(--memorial-video-expand-progress) * 12%)
+        15%
+        - (var(--memorial-video-expand-progress) * 15%)
       )
       calc(
         15%
@@ -317,9 +318,9 @@
         + (var(--memorial-video-contract-progress) * 15%)
       )
       calc(
-        12%
-        - (var(--memorial-video-expand-progress) * 12%)
-        + (var(--memorial-video-contract-progress) * 24%)
+        15%
+        - (var(--memorial-video-expand-progress) * 15%)
+        + (var(--memorial-video-contract-progress) * 30%)
       )
       calc(
         15%

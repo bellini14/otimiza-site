@@ -98,6 +98,17 @@ describe('Silvana memorial Otimiza identity', () => {
     )
   })
 
+  it('preserves the original 16:9 video format on mobile', () => {
+    expect(ruleFor('.memorial-video-frame')).toContain('aspect-ratio: 16 / 9')
+    expect(ruleFor('.memorial-video-frame')).not.toContain('height: 17rem')
+    expect(ruleFor('.memorial-video-frame')).toContain(
+      'var(--memorial-video-contract-progress) * 30%',
+    )
+    expect(ruleFor('.memorial-video-frame')).not.toContain(
+      'var(--memorial-video-contract-progress) * 24%',
+    )
+  })
+
   it('keeps the floating dust soft and non-interactive', () => {
     expect(ruleFor('.memorial-dust-layer')).toContain('pointer-events: none')
     expect(ruleFor('.memorial-dust-layer')).toContain('opacity: 1')
