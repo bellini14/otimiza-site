@@ -58,7 +58,7 @@ describe('Silvana memorial Otimiza identity', () => {
       'var(--memorial-video-expand-progress) * 52%',
     )
     expect(ruleFor('.memorial-video-frame')).toContain(
-      'var(--memorial-video-contract-progress) * 18%',
+      'top: calc(\n    64%\n    - (var(--memorial-video-expand-progress) * 52%)\n  )',
     )
     expect(ruleFor('.memorial-video-frame')).toContain(
       'width: calc(100vw - 3rem)',
@@ -70,12 +70,15 @@ describe('Silvana memorial Otimiza identity', () => {
       'clip-path: inset(',
     )
     expect(ruleFor('.memorial-video-frame')).toContain(
-      'var(--memorial-video-contract-progress) * 29%',
+      'var(--memorial-video-contract-progress) * 59%',
     )
     expect(ruleFor('.memorial-video-frame video')).toContain(
       'var(--memorial-video-contract-progress) * 33%',
     )
-    expect(ruleFor('.memorial-contribution')).toContain('margin: -10svh auto 5rem')
+    expect(ruleFor('.memorial-video-frame video')).toContain(
+      'var(--memorial-video-contract-progress) * -30%',
+    )
+    expect(ruleFor('.memorial-contribution')).toContain('margin: -35svh auto 5rem')
     expect(ruleFor('.memorial-video-frame')).not.toContain(
       'var(--memorial-video-expand-progress) * (100vw - 29rem)',
     )
