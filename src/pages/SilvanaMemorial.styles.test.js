@@ -39,4 +39,10 @@ describe('Silvana memorial Otimiza identity', () => {
     expect(ruleFor('.memorial-video-frame')).toContain('background: #E5E9F1')
     expect(ruleFor('.memorial-form-card')).toContain('background: #ffffff')
   })
+
+  it('keeps the video clearly visible inside the initial hero viewport', () => {
+    expect(ruleFor('.memorial-video-frame')).toContain(
+      'top: calc(64% - (var(--memorial-video-progress) * 52%))',
+    )
+  })
 })

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Exibir o vídeo enviado no hero do memorial em câmera lenta a `0.65×`.
+**Goal:** Exibir o vídeo enviado no hero do memorial em câmera lenta a `0.5×`, permanentemente sem som.
 
 **Architecture:** O MP4 será servido como asset estático em `public/media`. `MemorialVideo` ganhará defaults explícitos para a mídia bundled, áudio e velocidade, preservando overrides por variável de ambiente e o comportamento de expansão existente.
 
@@ -22,16 +22,15 @@ Renderizar `MemorialVideo` sem props e exigir:
 
 - `src="/media/silvana-homenagem.mp4"`;
 - botão “Ativar som do vídeo” presente;
-- no mount, `playbackRate` e `defaultPlaybackRate` iguais a `0.65`;
+- no mount, `playbackRate` e `defaultPlaybackRate` iguais a `0.5`;
 - após redefinir a velocidade e disparar `loadedMetadata`, ambos reaplicados
-  como `0.65`;
+  como `0.5`;
 - atributos `autoplay`, `loop`, `muted` e `playsinline`.
 
 Testar também uma função pura de resolução dos defaults:
 
-- URL externa com `VITE_SILVANA_VIDEO_HAS_AUDIO=true` exibe o botão;
-- URL externa com qualquer outro valor oculta o botão;
-- sem URL externa, o asset bundled assume áudio.
+- nenhum botão ou controle de áudio é renderizado;
+- fontes bundled e externas permanecem mudas.
 
 - [ ] **Step 2: Confirmar que o teste falha**
 
@@ -41,8 +40,8 @@ Expected: FAIL porque o componente ainda usa fonte vazia e não define velocidad
 
 - [ ] **Step 3: Implementar os defaults mínimos**
 
-Definir a fonte bundled, exportar uma pequena função pura que resolva
-`src/hasAudio` conforme a spec e aplicar `setSlowPlayback` no mount e em
+Definir a fonte bundled, exportar uma pequena função pura que resolva a fonte
+conforme a spec e aplicar `setSlowPlayback` no mount e em
 `onLoadedMetadata`.
 
 - [ ] **Step 4: Confirmar que o teste passa**
@@ -103,8 +102,8 @@ npm run dev -- --host localhost --port 5173 --strictPort
 Em `http://localhost:5173/silvana-bettiol`, confirmar que o vídeo:
 
 - inicia silencioso;
-- está em `0.65×`;
-- exibe o controle de som;
+- está em `0.5×`;
+- permanece sem som e sem controle de áudio;
 - cresce durante o scroll;
 - mantém enquadramento correto em desktop e mobile.
 

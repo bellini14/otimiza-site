@@ -1,4 +1,4 @@
-export const MEMORIAL_VIDEO_PLAYBACK_RATE = 0.65
+export const MEMORIAL_VIDEO_PLAYBACK_RATE = 0.5
 
 const BUNDLED_VIDEO_SRC = '/media/silvana-homenagem.mp4'
 
@@ -7,11 +7,11 @@ export function resolveVideoDefaults(env = {}) {
   if (!externalSrc) {
     return {
       src: BUNDLED_VIDEO_SRC,
-      hasAudio: true,
+      hasAudio: false,
     }
   }
   return {
     src: externalSrc,
-    hasAudio: env.VITE_SILVANA_VIDEO_HAS_AUDIO === 'true',
+    hasAudio: false,
   }
 }

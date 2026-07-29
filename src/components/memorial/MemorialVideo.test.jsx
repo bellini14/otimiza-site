@@ -4,7 +4,7 @@ import { resolveVideoDefaults } from '../../lib/memorialVideoConfig'
 import MemorialVideo from './MemorialVideo'
 
 describe('MemorialVideo', () => {
-  it('uses the bundled slow-motion video with audio controls by default', () => {
+  it('uses the bundled slow-motion video permanently muted', () => {
     const { container } = render(<MemorialVideo />)
     const video = container.querySelector('video')
 
@@ -14,25 +14,25 @@ describe('MemorialVideo', () => {
     expect(video.loop).toBe(true)
     expect(video.muted).toBe(true)
     expect(video.playsInline).toBe(true)
-    expect(video.playbackRate).toBe(0.65)
-    expect(video.defaultPlaybackRate).toBe(0.65)
-    expect(screen.getByRole('button', { name: 'Ativar som do vídeo' })).toBeInTheDocument()
+    expect(video.playbackRate).toBe(0.5)
+    expect(video.defaultPlaybackRate).toBe(0.5)
+    expect(screen.queryByRole('button', { name: 'Ativar som do vídeo' })).not.toBeInTheDocument()
 
     video.playbackRate = 1
     video.defaultPlaybackRate = 1
     fireEvent.loadedMetadata(video)
 
-    expect(video.playbackRate).toBe(0.65)
-    expect(video.defaultPlaybackRate).toBe(0.65)
+    expect(video.playbackRate).toBe(0.5)
+    expect(video.defaultPlaybackRate).toBe(0.5)
   })
 
-  it('requires external video sources to declare whether they contain audio', () => {
+  it('keeps bundled and external video sources without sound', () => {
     expect(resolveVideoDefaults({
       VITE_SILVANA_VIDEO_URL: 'https://cdn.example.com/silvana.mp4',
       VITE_SILVANA_VIDEO_HAS_AUDIO: 'true',
     })).toEqual({
       src: 'https://cdn.example.com/silvana.mp4',
-      hasAudio: true,
+      hasAudio: false,
     })
 
     expect(resolveVideoDefaults({
@@ -45,7 +45,7 @@ describe('MemorialVideo', () => {
 
     expect(resolveVideoDefaults({})).toEqual({
       src: '/media/silvana-homenagem.mp4',
-      hasAudio: true,
+      hasAudio: false,
     })
   })
 })

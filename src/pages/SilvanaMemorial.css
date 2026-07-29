@@ -78,7 +78,7 @@
 .memorial-video-frame {
   position: absolute;
   left: 50%;
-  top: calc(72% - (var(--memorial-video-progress) * 60%));
+  top: calc(64% - (var(--memorial-video-progress) * 52%));
   width: calc(25rem + (var(--memorial-video-progress) * (100vw - 29rem)));
   height: calc(16.25rem + (var(--memorial-video-progress) * 21.25rem));
   overflow: hidden;
@@ -101,20 +101,6 @@
 }
 .memorial-video-placeholder span { font-family: "elza", sans-serif; font-size: clamp(1.3rem, 3vw, 2.5rem); font-weight: 300; }
 .memorial-video-placeholder small { margin-top: .5rem; opacity: .65; letter-spacing: .13em; text-transform: uppercase; }
-.memorial-sound {
-  position: absolute;
-  right: 1rem;
-  bottom: 1rem;
-  display: grid;
-  width: 2.75rem;
-  height: 2.75rem;
-  place-items: center;
-  border: 1px solid rgb(67 75 84 / 14%);
-  border-radius: 50%;
-  background: rgb(255 255 255 / 82%);
-  color: #5a6572;
-}
-.memorial-sound svg { width: 1.1rem; }
 .memorial-contribution { position: relative; z-index: 5; width: min(100% - 2rem, 37rem); margin: -7svh auto 5rem; }
 .memorial-form-card {
   padding: clamp(1.5rem, 4vw, 2.2rem);
@@ -253,7 +239,7 @@
   .memorial-hero { min-height: 88svh; padding-bottom: 9rem; }
   .memorial-video-section { margin-top: -88svh; }
   .memorial-video-frame {
-    top: calc(77% - (var(--memorial-video-progress) * 65%));
+    top: calc(68% - (var(--memorial-video-progress) * 56%));
     width: calc(19rem + (var(--memorial-video-progress) * (100vw - 20rem)));
     height: calc(13rem + (var(--memorial-video-progress) * 30rem));
     max-width: calc(100vw - 1rem);
