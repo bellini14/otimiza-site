@@ -12,6 +12,7 @@ describe('Silvana memorial page', () => {
     expect(screen.getByRole('heading', {
       name: 'silvana tiburi bettiol. Hoje é dia dela',
     })).toBeInTheDocument()
+    expect(document.querySelector('.memorial-dust-layer')).toHaveAttribute('aria-hidden', 'true')
     expect(screen.getByRole('region', { name: 'Vídeo em homenagem à Silvana' })).toBeInTheDocument()
     expect(screen.getByLabelText('Seu e-mail')).toBeInTheDocument()
     expect(await screen.findByText(/seja a primeira lembrança/i)).toBeInTheDocument()

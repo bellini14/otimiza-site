@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import MemorialAccessForm from '../components/memorial/MemorialAccessForm'
 import MemorialBoard from '../components/memorial/MemorialBoard'
+import MemorialDust from '../components/memorial/MemorialDust'
 import MemorialVideo from '../components/memorial/MemorialVideo'
 import { memorialApi } from '../lib/memorialApi'
 import {
@@ -56,6 +57,12 @@ function SilvanaMemorial({ api = memorialApi }) {
         description="Um mural de lembranças dedicado à Silvana Tiburi Bettiol."
         canonicalUrl={`${window.location.origin}/silvana-bettiol`}
         robots="noindex, nofollow"
+      />
+      <MemorialDust
+        density={1.4}
+        hueShift={140}
+        speed={0.4}
+        saturation={1}
       />
       <header className="memorial-hero">
         <p className="memorial-eyebrow">05 de agosto · Um dia para lembrar dela</p>

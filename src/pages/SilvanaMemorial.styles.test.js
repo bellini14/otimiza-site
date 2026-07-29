@@ -45,4 +45,10 @@ describe('Silvana memorial Otimiza identity', () => {
       'top: calc(64% - (var(--memorial-video-progress) * 52%))',
     )
   })
+
+  it('keeps the floating dust soft and non-interactive', () => {
+    expect(ruleFor('.memorial-dust-layer')).toContain('pointer-events: none')
+    expect(ruleFor('.memorial-dust-layer')).toContain('opacity: .2')
+    expect(ruleFor('.memorial-dust-layer')).not.toMatch(/glow|filter|drop-shadow/i)
+  })
 })

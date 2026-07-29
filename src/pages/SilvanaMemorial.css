@@ -5,6 +5,8 @@
   --memorial-soft: #EFEFF4;
   --memorial-blue-soft: #E5E9F1;
   --memorial-red: #e02020;
+  position: relative;
+  isolation: isolate;
   min-height: 100svh;
   overflow: clip;
   background:
@@ -13,6 +15,33 @@
     linear-gradient(180deg, #ffffff 0%, #EFEFF4 46%, #E5E9F1 100%);
   color: #5a6572;
   font-family: "elza", sans-serif;
+}
+
+.memorial-dust-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: .2;
+}
+
+.memorial-dust-particle {
+  position: absolute;
+  top: var(--dust-y);
+  left: var(--dust-x);
+  width: var(--dust-size);
+  height: var(--dust-size);
+  border-radius: 50%;
+  background: hsl(var(--dust-hue) var(--dust-saturation) 30%);
+  opacity: var(--dust-opacity);
+  animation: memorial-dust-float var(--dust-duration) linear var(--dust-delay) infinite;
+  will-change: transform;
+}
+
+@keyframes memorial-dust-float {
+  from { transform: translate3d(calc(var(--dust-drift) * -.4), -12vh, 0); }
+  to { transform: translate3d(var(--dust-drift), 112vh, 0); }
 }
 
 .silvana-memorial *,
@@ -250,6 +279,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .memorial-dust-particle { animation: none; }
   .memorial-video-section { height: auto; margin: 0; padding: 1rem; }
   .memorial-video-stage { position: relative; height: auto; overflow: visible; }
   .memorial-video-frame {
