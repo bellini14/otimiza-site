@@ -1,5 +1,13 @@
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { getStaticRouteWordCount, renderStaticRouteHtml } from './generate-static-seo.mjs'
+import { buildCanonicalUrl, staticPageMetadata } from '../src/seo/siteMetadata.js'
+import {
+  generateStaticSeoPages,
+  getStaticRouteWordCount,
+  renderStaticRouteHtml,
+} from './generate-static-seo.mjs'
 
 const baseHtml = `<!doctype html>
 <html lang="pt-BR">
@@ -9,6 +17,26 @@ const baseHtml = `<!doctype html>
   </head>
   <body><div id="root"></div><script src="/assets/app.js"></script></body>
 </html>`
+
+function createStaticFixture({ includeMemorialImage = true } = {}) {
+  const directory = mkdtempSync(join(tmpdir(), 'silvana-seo-'))
+  mkdirSync(join(directory, 'assets'), { recursive: true })
+  mkdirSync(join(directory, 'media'), { recursive: true })
+  writeFileSync(join(directory, 'index.html'), baseHtml)
+  writeFileSync(join(directory, 'assets', 'hero-bw-test.jpg'), 'default-social-image')
+  if (includeMemorialImage) {
+    writeFileSync(
+      join(directory, 'media', 'silvana-aniversario-05-08.png'),
+      'memorial-social-image',
+    )
+  }
+  return directory
+}
+
+function readRouteHtml(directory, route) {
+  const filename = route === '/' ? 'index.html' : `${route.slice(1)}.html`
+  return readFileSync(join(directory, filename), 'utf8')
+}
 
 describe('static SEO route generation', () => {
   it('places exactly one page-specific H1 in the raw HTML response', () => {
@@ -77,5 +105,63 @@ describe('static SEO route generation', () => {
 
   it('provides at least 300 useful words on the home page', () => {
     expect(getStaticRouteWordCount('/')).toBeGreaterThanOrEqual(300)
+  })
+
+  it('generates the exact non-indexed memorial social preview', () => {
+    const directory = createStaticFixture()
+    try {
+      generateStaticSeoPages(directory, { VITE_SITE_URL: 'https://www.otimiza.test' })
+      const html = readRouteHtml(directory, '/silvana-bettiol')
+      expect(html).toContain('<title>05/08 é aniversário da Silvana</title>')
+      expect(html).toContain('<meta name="description" content="O que Silvana nos ensinou continua vivo em nós. Compartilhe uma lembrança." />')
+      expect(html).toContain('<link rel="canonical" href="https://otimiza-site.vercel.app/silvana-bettiol" />')
+      expect(html).toContain('<meta property="og:title" content="05/08 é aniversário da Silvana" />')
+      expect(html).toContain('<meta property="og:description" content="O que Silvana nos ensinou continua vivo em nós. Compartilhe uma lembrança." />')
+      expect(html).toContain('<meta property="og:url" content="https://otimiza-site.vercel.app/silvana-bettiol" />')
+      expect(html).toContain('<meta property="og:image" content="https://otimiza-site.vercel.app/media/silvana-aniversario-05-08.png" />')
+      expect(html).toContain('<meta name="twitter:title" content="05/08 é aniversário da Silvana" />')
+      expect(html).toContain('<meta name="twitter:description" content="O que Silvana nos ensinou continua vivo em nós. Compartilhe uma lembrança." />')
+      expect(html).toContain('<meta name="twitter:image" content="https://otimiza-site.vercel.app/media/silvana-aniversario-05-08.png" />')
+      expect(html).toContain('<meta name="robots" content="noindex, nofollow" />')
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
+  })
+
+  it('fails generation when the memorial social image is missing', () => {
+    const directory = createStaticFixture({ includeMemorialImage: false })
+    try {
+      expect(() => generateStaticSeoPages(directory, {
+        VITE_SITE_URL: 'https://www.otimiza.test',
+      })).toThrow('Missing memorial social image')
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
+  })
+
+  it('preserves complete metadata for every preexisting static route', () => {
+    const directory = createStaticFixture()
+    const origin = 'https://www.otimiza.test'
+    const defaultImage = `${origin}/assets/hero-bw-test.jpg`
+    try {
+      generateStaticSeoPages(directory, { VITE_SITE_URL: origin })
+      Object.entries(staticPageMetadata).forEach(([route, metadata]) => {
+        const html = readRouteHtml(directory, route)
+        const canonical = buildCanonicalUrl(route, origin)
+        expect(html).toContain(`<title>${metadata.title}</title>`)
+        expect(html).toContain(`<meta name="description" content="${metadata.description}" />`)
+        expect(html).toContain(`<link rel="canonical" href="${canonical}" />`)
+        expect(html).toContain(`<meta property="og:title" content="${metadata.title}" />`)
+        expect(html).toContain(`<meta property="og:description" content="${metadata.description}" />`)
+        expect(html).toContain(`<meta property="og:url" content="${canonical}" />`)
+        expect(html).toContain(`<meta property="og:image" content="${defaultImage}" />`)
+        expect(html).toContain(`<meta name="twitter:title" content="${metadata.title}" />`)
+        expect(html).toContain(`<meta name="twitter:description" content="${metadata.description}" />`)
+        expect(html).toContain(`<meta name="twitter:image" content="${defaultImage}" />`)
+        expect(html).not.toContain('<meta name="robots" content="noindex, nofollow" />')
+      })
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
   })
 })

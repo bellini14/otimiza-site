@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { renderRobotsTxt, renderSitemapXml } from './generate-sitemap.mjs'
+import { getIndexableRoutes, renderRobotsTxt, renderSitemapXml } from './generate-sitemap.mjs'
 
 describe('sitemap generation', () => {
   it('renders unique canonical HTTPS URLs as valid sitemap entries', () => {
@@ -24,5 +24,12 @@ describe('sitemap generation', () => {
     expect(robots).toContain('User-agent: *')
     expect(robots).toContain('Allow: /')
     expect(robots).toContain('Sitemap: https://www.otimiza.test/sitemap.xml')
+  })
+
+  it('keeps the memorial out of the generated sitemap XML', () => {
+    const routes = getIndexableRoutes()
+    const xml = renderSitemapXml(routes, 'https://otimiza-site.vercel.app')
+    expect(routes).not.toContain('/silvana-bettiol')
+    expect(xml).not.toContain('silvana-bettiol')
   })
 })

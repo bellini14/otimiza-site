@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { buildCanonicalUrl, staticPageMetadata } from '../src/seo/siteMetadata.js'
+import { memorialMetadata } from '../src/seo/memorialMetadata.js'
 import { buildStructuredData } from '../src/seo/structuredData.js'
 
 const routeHeadings = {
@@ -186,6 +187,9 @@ export function renderStaticRouteHtml(baseHtml, page) {
     `<meta name="${name}" content="${escapeHtml(content)}" />`
   )).join('\n  ')
   const jsonLd = JSON.stringify(page.structuredData).replaceAll('<', '\\u003c')
+  const robotsMeta = page.robots
+    ? `<meta name="robots" content="${escapeHtml(page.robots)}" />\n  `
+    : ''
   const links = (page.links || [])
     .map(({ href, label }) => `<a href="${escapeHtml(href)}">${escapeHtml(label)}</a>`)
     .join('')
@@ -202,7 +206,7 @@ export function renderStaticRouteHtml(baseHtml, page) {
     )
     .replace(
       '</head>',
-      `  <link rel="canonical" href="${escapeHtml(page.canonicalUrl)}" />\n  ${openGraph}\n  ${twitterCards}\n  <script type="application/ld+json" data-seo-json-ld>${jsonLd}</script>\n  </head>`,
+      `  ${robotsMeta}<link rel="canonical" href="${escapeHtml(page.canonicalUrl)}" />\n  ${openGraph}\n  ${twitterCards}\n  <script type="application/ld+json" data-seo-json-ld>${jsonLd}</script>\n  </head>`,
     )
     .replace('<div id="root"></div>', `<div id="root">${fallback}</div>`)
 }
@@ -220,10 +224,10 @@ export function getStaticRouteWordCount(route) {
   return text.trim().split(/\s+/).filter(Boolean).length
 }
 
-export function generateStaticSeoPages(distDirectory) {
+export function generateStaticSeoPages(distDirectory, environment = process.env) {
   const indexPath = path.join(distDirectory, 'index.html')
   const baseHtml = fs.readFileSync(indexPath, 'utf8')
-  const siteOrigin = resolveSiteOrigin()
+  const siteOrigin = resolveSiteOrigin(environment)
   const socialImageFile = fs.readdirSync(path.join(distDirectory, 'assets'))
     .find((file) => file.startsWith('hero-bw-') && file.endsWith('.jpg'))
   const imageUrl = new URL(`/assets/${socialImageFile}`, siteOrigin).toString()
@@ -249,6 +253,25 @@ export function generateStaticSeoPages(distDirectory) {
     fs.mkdirSync(path.dirname(outputPath), { recursive: true })
     fs.writeFileSync(outputPath, html)
   })
+
+  const memorialImageFile = path.join(
+    distDirectory,
+    memorialMetadata.imagePath.replace(/^\//, ''),
+  )
+  if (!fs.existsSync(memorialImageFile)) {
+    throw new Error(`Missing memorial social image: ${memorialImageFile}`)
+  }
+
+  const memorialPage = {
+    ...memorialMetadata,
+    sections: [],
+    links: [],
+  }
+  const memorialHtml = renderStaticRouteHtml(baseHtml, {
+    ...memorialPage,
+    structuredData: buildStructuredData(memorialMetadata.route, memorialPage),
+  })
+  fs.writeFileSync(path.join(distDirectory, 'silvana-bettiol.html'), memorialHtml)
 }
 
 const invokedFile = process.argv[1] ? pathToFileURL(path.resolve(process.argv[1])).href : ''
