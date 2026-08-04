@@ -88,7 +88,9 @@ Alternativas consideradas:
 - Desktop e tablet usam máscara horizontal; celular em retrato usa máscara 9:16, com o conteúdo do vídeo alinhado internamente à esquerda; celular em paisagem usa composição horizontal.
 - A geometria será derivada do tamanho real do contêiner e da viewport, atualizada por `ResizeObserver`, mudança de orientação e um único pipeline via `requestAnimationFrame`.
 - O vídeo permanece mudo, em loop, com reprodução inline e velocidade reduzida. Quando invisível ou com a aba oculta, deve pausar; ao voltar, retoma sem salto.
-- Com movimento reduzido, a seção deixa de ser longa/sticky e mostra uma composição estática proporcional.
+- Com movimento reduzido, a seção deixa de ser longa/sticky, o vídeo permanece pausado e mostra uma composição estática proporcional baseada no poster.
+- O poster será extraído de um quadro nítido do próprio vídeo aprovado e versionado como `public/memorial/silvana-poster.webp`, sem depender de geração em tempo de execução.
+- Erro de carregamento/reprodução e bloqueio de autoplay exibem o poster no mesmo enquadramento, sem mensagem técnica ou quebra de layout.
 
 ### 3. Formulário
 
@@ -151,11 +153,11 @@ Concentrará observação de geometria, visibilidade e reprodução. A matemáti
 
 ### `MemorialDust`
 
-Usará constantes estáveis para valores padrão, limite de DPR, observação de tamanho e suspensão do loop quando a página estiver oculta ou a animação for desabilitada. A aparência aprovada será preservada.
+Usará constantes estáveis para valores padrão, limite de DPR, observação de tamanho e suspensão do loop quando a página estiver oculta ou a animação for desabilitada. Falha na criação do contexto ou perda de contexto WebGL removerá o canvas e manterá o fundo CSS neutro da página. A aparência aprovada será preservada quando WebGL estiver disponível.
 
 ### `memorialApi`
 
-Continuará expondo as mesmas funções. A camada comum de requisição tratará resposta vazia, JSON inválido, erro HTTP, falha de rede e timeout com mensagens consistentes. Não haverá repetição automática de operações de escrita; apenas a listagem poderá ser refeita explicitamente pelo usuário.
+Continuará expondo as mesmas funções. A camada comum de requisição tratará resposta vazia, JSON inválido, erro HTTP, falha de rede e timeout com mensagens consistentes. Cada endpoint validará minimamente a forma do JSON antes de entregá-lo à interface: listagem exige coleção de notas; verificação exige os campos de autorização/sessão esperados; criação, edição e exclusão exigem o resultado correspondente. Campos ausentes, nulos ou de tipo incompatível serão tratados como resposta malformada e erro recuperável, nunca convertidos em mural vazio ou sucesso aparente. Não haverá repetição automática de operações de escrita; apenas a listagem poderá ser refeita explicitamente pelo usuário.
 
 ## Movimento e desempenho
 
@@ -166,7 +168,7 @@ Continuará expondo as mesmas funções. A camada comum de requisição tratará
 - O canvas será pausado em `visibilitychange` e quando animação estiver desabilitada.
 - DPR será limitado para equilibrar nitidez e custo de GPU.
 - Todos os observers, listeners, frames e timers serão removidos no unmount.
-- `prefers-reduced-motion` remove scroll prolongado, interpolação e destaque animado.
+- `prefers-reduced-motion` remove scroll prolongado, interpolação e destaque animado, pausa o vídeo no poster e impede o loop animado do WebGL.
 
 ## Responsividade
 
@@ -194,9 +196,9 @@ Critérios:
 - Labels visíveis e associação explícita aos campos.
 - Foco visível, navegação por teclado e foco programático apenas após ações do usuário.
 - Contador e mensagens anunciados com parcimônia.
-- Contraste mantido no padrão visual da Otimiza.
+- Contraste atende WCAG 2.2 AA: ao menos 4,5:1 para texto normal, 3:1 para texto grande e elementos visuais essenciais de controles, indicadores de foco e estados de erro.
 - Alternativa funcional completa com movimento reduzido e sem WebGL.
-- Vídeo decorativo permanece sem som e não exige controle para compreender ou usar a página.
+- Vídeo decorativo permanece sem som e não exige controle para compreender ou usar a página; animações contínuas param com movimento reduzido e quando a aba está oculta.
 
 ## Tratamento de erros
 
@@ -205,7 +207,8 @@ Critérios:
 - Sessão expirada: preservar rascunho, retornar ao acesso e explicar a necessidade de confirmar novamente.
 - Conflito de uma lembrança por e-mail: carregar a lembrança existente e oferecer edição.
 - Falha ao salvar/excluir: manter campos e estado, reabilitar ações e mostrar mensagem clara.
-- Falha de reprodução ou WebGL: a página continua funcional com quadro estático/fundo simples.
+- Falha de carregamento, reprodução, autoplay ou movimento reduzido: o vídeo mostra `public/memorial/silvana-poster.webp` no mesmo enquadramento.
+- Falha na criação do contexto ou evento de perda de contexto WebGL: remover o canvas e manter o fundo CSS neutro, sem bloquear a página.
 
 ## Estratégia de testes
 
@@ -215,7 +218,7 @@ Critérios:
 - Formulário: acesso, publicação anônima/nomeada, edição, confirmação de exclusão, cancelamento, sessão expirada e rascunho.
 - Página: carregamento, atualização sem flicker, erro com retry, gerenciamento e destaque.
 - Mural: skeleton, vazio, erro, notas e ação exclusiva do proprietário local.
-- API: sucesso, resposta vazia, JSON inválido, erro HTTP, rede e timeout.
+- API: sucesso, resposta vazia, JSON inválido, payload válido porém malformado (campos ausentes, nulos e tipos incorretos), erro HTTP, rede e timeout.
 - Dust/vídeo: limpeza de listeners/observers, aba oculta, visibilidade e movimento reduzido.
 
 ### Validação manual no navegador
@@ -242,7 +245,8 @@ Critérios:
 - Exclusão exige novo e-mail e, após excluir, o mesmo e-mail pode publicar novamente.
 - Erro do mural não aparece como vazio e oferece tentativa novamente.
 - A última lista válida não desaparece durante atualização.
-- Movimento reduzido, ausência de WebGL e falha de vídeo não impedem o uso.
+- Movimento reduzido pausa vídeo e poeira; ausência/perda de WebGL e falha/bloqueio do vídeo acionam os fallbacks definidos sem impedir o uso.
+- Textos, controles, foco e erros atendem aos contrastes mínimos de WCAG 2.2 AA.
 - Não há erros de console, vazamentos observáveis de listeners/frames ou scroll horizontal na matriz de dispositivos.
 - Testes automatizados e build passam.
 - A versão validada fica disponível em `https://otimiza-site.vercel.app/silvana-bettiol`.
