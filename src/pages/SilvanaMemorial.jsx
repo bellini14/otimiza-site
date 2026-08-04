@@ -10,6 +10,7 @@ import {
   writeMemorialOwnership,
 } from '../lib/memorialOwnership'
 import SeoHead from '../seo/SeoHead'
+import { memorialMetadata } from '../seo/memorialMetadata'
 import './SilvanaMemorial.css'
 
 function SilvanaMemorial({ api = memorialApi }) {
@@ -53,10 +54,11 @@ function SilvanaMemorial({ api = memorialApi }) {
   return (
     <main className="silvana-memorial">
       <SeoHead
-        title="Em memória de Silvana Tiburi Bettiol"
-        description="Um mural de lembranças dedicado à Silvana Tiburi Bettiol."
-        canonicalUrl={`${window.location.origin}/silvana-bettiol`}
-        robots="noindex, nofollow"
+        title={memorialMetadata.title}
+        description={memorialMetadata.description}
+        canonicalUrl={memorialMetadata.canonicalUrl}
+        imageUrl={memorialMetadata.imageUrl}
+        robots={memorialMetadata.robots}
       />
       <MemorialDust
         starSpeed={0}
