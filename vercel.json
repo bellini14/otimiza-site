@@ -53,7 +53,7 @@
     },
     {
       "source": "/silvana-bettiol",
-      "destination": "/index.html"
+      "destination": "/silvana-bettiol.html"
     },
     {
       "source": "/cases/:slug",
