@@ -13,6 +13,7 @@ inalteradas.
 - Título: `05/08 é aniversário da Silvana`
 - Descrição: `O que Silvana nos ensinou continua vivo em nós. Compartilhe uma lembrança.`
 - Imagem: arte fornecida pelo usuário com o texto “Hoje seria aniversário da Silvana.”
+- Caminho público da imagem: `/media/silvana-aniversario-05-08.png`
 - URL canônica: `https://otimiza-site.vercel.app/silvana-bettiol`
 
 ## Solução
@@ -49,9 +50,11 @@ absoluta no HTML final, conforme exigido pelos crawlers sociais.
 Testes automatizados devem confirmar que:
 
 1. `/silvana-bettiol.html` é gerado com os valores literais aprovados em
-   `og:title`, `og:description`, `og:image` e `og:url`, além da canonical exata;
-2. os metadados Open Graph e Twitter Card usam a mesma URL HTTPS absoluta para
-   a imagem;
+   `<title>`, `<meta name="description">`, `og:title`, `og:description`,
+   `twitter:title` e `twitter:description`;
+2. `og:image` e `twitter:image` usam exatamente a URL HTTPS absoluta terminada
+   em `/media/silvana-aniversario-05-08.png`, enquanto `og:url` e a canonical
+   usam exatamente a URL aprovada da rota;
 3. o HTML bruto inclui `noindex, nofollow`;
 4. a regra da Vercel encaminha `/silvana-bettiol` para o HTML exclusivo;
 5. `/silvana-bettiol` continua ausente do `sitemap.xml`;
