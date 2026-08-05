@@ -47,13 +47,19 @@ Expected: a recursive path/SHA-1 comparison reports zero differences between `cu
   - `api/_lib/memorialStore.js`
   - `api/memorial/notes.js`
   - `api/memorial/notes/[id].js`
+  - `public/memorial/silvana-poster.webp`
   - `src/components/memorial/MemorialAccessForm.jsx`
   - `src/components/memorial/MemorialBoard.jsx`
+  - `src/components/memorial/MemorialDust.jsx`
   - `src/components/memorial/MemorialVideo.jsx`
   - `src/lib/memorialApi.js`
+  - `src/lib/memorialPresentation.js`
+  - `src/lib/memorialVideoConfig.js`
   - `src/pages/SilvanaMemorial.css`
   - `src/pages/SilvanaMemorial.jsx`
+  - `src/seo/memorialMetadata.js`
 - Test files copied from the desired artifact:
+  - `scripts/generate-static-seo.test.js`
   - `api/_lib/memorialRequest.test.js`
   - `api/_lib/memorialStore.test.js`
   - `api/memorial/notes.test.js`
@@ -61,8 +67,10 @@ Expected: a recursive path/SHA-1 comparison reports zero differences between `cu
   - `src/SilvanaRoute.test.jsx`
   - `src/components/memorial/MemorialAccessForm.test.jsx`
   - `src/components/memorial/MemorialBoard.test.jsx`
+  - `src/components/memorial/MemorialDust.test.jsx`
   - `src/components/memorial/MemorialVideo.test.jsx`
   - `src/lib/memorialApi.test.js`
+  - `src/lib/memorialPresentation.test.js`
   - `src/pages/SilvanaMemorial.styles.test.js`
   - `src/pages/SilvanaMemorial.test.jsx`
 
@@ -72,13 +80,13 @@ Use `Copy-Item -LiteralPath` for each exact path. Fail if any source is missing 
 
 - [ ] **Step 2: Copy focused tests from desired to hybrid**
 
-Copy each of the eleven exact test paths listed above. Fail if any path is missing.
+Copy each of the fourteen exact test paths listed above. Fail if any path is missing.
 
 - [ ] **Step 3: Prove the source boundary**
 
 Recursively hash `current` and `hybrid`. Compare added, removed, and changed paths against the runtime and test allowlists.
 
-Expected: no added or removed runtime paths; changed paths are a subset of the explicit runtime and eleven-file test allowlists, and every allowlisted path that differs between deployments contains the desired deployment SHA-1.
+Expected: added, removed, and changed paths match the two immutable manifests and remain a subset of the explicit runtime and fourteen-file test allowlists. Every allowlisted path present in the desired deployment contains its desired deployment SHA-1; no unallowlisted path differs.
 
 ### Task 3: Verify behavior before deployment
 
@@ -121,7 +129,7 @@ Copy only `.vercel/project.json` from the workspace link into `hybrid/.vercel/pr
 
 - [ ] **Step 2: Remove validation-only test overlays**
 
-For each of the eleven test paths, restore the file from the reconstructed current snapshot if it existed there; otherwise remove only that exact file from `hybrid` after verifying the resolved target remains below `hybrid`.
+For each of the fourteen test paths, restore the file from the reconstructed current snapshot if it existed there; otherwise remove only that exact file from `hybrid` after verifying the resolved target remains below `hybrid`.
 
 Expected: no desired-deployment test file remains in the upload delta, including tests under `api/` that Vercel would otherwise expose as serverless functions.
 

@@ -21,12 +21,17 @@ Sobrepor no staging somente a allowlist abaixo, baixada diretamente do artefato 
 - `api/_lib/memorialStore.js`
 - `api/memorial/notes.js`
 - `api/memorial/notes/[id].js`
+- `public/memorial/silvana-poster.webp`
 - `src/components/memorial/MemorialAccessForm.jsx`
 - `src/components/memorial/MemorialBoard.jsx`
+- `src/components/memorial/MemorialDust.jsx`
 - `src/components/memorial/MemorialVideo.jsx`
 - `src/lib/memorialApi.js`
+- `src/lib/memorialPresentation.js`
+- `src/lib/memorialVideoConfig.js`
 - `src/pages/SilvanaMemorial.css`
 - `src/pages/SilvanaMemorial.jsx`
+- `src/seo/memorialMetadata.js`
 
 Os testes correspondentes podem ser recuperados do mesmo artefato somente para validação local; não ampliam a fronteira de runtime. `vercel.json`, geração geral de SEO, outras rotas, componentes compartilhados e mídias idênticas permanecem exatamente no artefato atual.
 
