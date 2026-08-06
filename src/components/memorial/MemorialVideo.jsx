@@ -20,14 +20,17 @@ function MemorialVideo({ src = videoDefaults.src }) {
   const [reducedMotion, setReducedMotion] = useState(() => (
     window.matchMedia?.(REDUCED_MOTION_QUERY).matches || false
   ))
-  const [failedSrc, setFailedSrc] = useState(null)
-  const fallback = failedSrc === src
+  const [fallback, setFallback] = useState(false)
 
   const setSlowPlayback = useCallback(() => {
     if (!videoRef.current) return
     videoRef.current.defaultPlaybackRate = MEMORIAL_VIDEO_PLAYBACK_RATE
     videoRef.current.playbackRate = MEMORIAL_VIDEO_PLAYBACK_RATE
   }, [])
+
+  useEffect(() => {
+    setFallback(false)
+  }, [src])
 
   useEffect(() => {
     const section = sectionRef.current
@@ -102,7 +105,7 @@ function MemorialVideo({ src = videoDefaults.src }) {
       return
     }
     const playback = video.play()
-    playback?.catch(() => setFailedSrc(src))
+    playback?.catch(() => setFallback(true))
   }, [fallback, inViewport, pageVisible, reducedMotion, setSlowPlayback, src])
 
   const showPoster = fallback || reducedMotion
@@ -133,7 +136,7 @@ function MemorialVideo({ src = videoDefaults.src }) {
               playsInline
               preload="metadata"
               onLoadedMetadata={setSlowPlayback}
-              onError={() => setFailedSrc(src)}
+              onError={() => setFallback(true)}
               aria-label="Vídeo em homenagem à Silvana"
             >
               Seu navegador não suporta a reprodução deste vídeo.

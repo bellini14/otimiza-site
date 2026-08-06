@@ -43,8 +43,7 @@ function SilvanaMemorial({ api = memorialApi }) {
   }, [api])
 
   useEffect(() => {
-    const loadTimer = window.setTimeout(loadNotes, 0)
-    return () => window.clearTimeout(loadTimer)
+    loadNotes()
   }, [loadNotes])
 
   useEffect(() => () => clearTimeout(highlightTimer.current), [])
