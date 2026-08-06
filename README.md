@@ -4,23 +4,26 @@ Aplicação React/Vite com funções serverless da Vercel.
 
 ## Formulário de contato
 
-O formulário em `/contato` usa `POST /api/contact`, que envia a mensagem pela API HTTP do SMTP2GO. As credenciais permanecem somente no servidor.
+O formulário em `/contato` usa `POST /api/contact` e entrega a mensagem pelo SMTP autenticado do SMTP2GO. As credenciais permanecem somente no servidor.
 
 ### Configuração do SMTP2GO
 
 1. No painel do SMTP2GO, acesse `Sending > Verified Senders > Sender Domains`, adicione o domínio usado no remetente e configure os registros CNAME informados.
-2. Em `Sending > API Keys`, crie uma chave com acesso ao endpoint `/email/send`.
+2. Em `Settings > SMTP Users`, crie ou obtenha as credenciais SMTP autorizadas para envio.
 3. Copie `.env.example` para `.env.local` no desenvolvimento e preencha:
 
 ```dotenv
-SMTP2GO_API_KEY=api-xxxxxxxxxxxxxxxx
+SMTP_HOST=mail.smtp2go.com
+SMTP_PORT=2525
+SMTP_USER=seu-usuario-smtp
+SMTP_PASS=sua-senha-smtp
 CONTACT_FROM_EMAIL=site@seudominio.com.br
 CONTACT_TO_EMAIL=contato@seudominio.com.br
 ```
 
 `CONTACT_FROM_EMAIL` precisa pertencer a um remetente autorizado no SMTP2GO. O e-mail preenchido pelo visitante é utilizado como `Reply-To`.
 
-Na Vercel, adicione as mesmas três variáveis em `Project Settings > Environment Variables` para Production e Preview. Faça um novo deploy depois de salvar.
+Na Vercel, adicione as mesmas seis variáveis em `Project Settings > Environment Variables` para Production e Preview. Faça um novo deploy depois de salvar. Não use o prefixo `VITE_` e nunca registre `SMTP_PASS` no Git.
 
 Para testar a função localmente com as variáveis da Vercel:
 

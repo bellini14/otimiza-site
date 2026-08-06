@@ -9,52 +9,48 @@ const contact = {
 }
 
 const configuredEnv = {
-  SMTP2GO_API_KEY: 'secret-api-key',
+  SMTP_HOST: 'mail.smtp2go.com',
+  SMTP_PORT: '2525',
+  SMTP_USER: 'mailerotm',
+  SMTP_PASS: 'smtp-password',
   CONTACT_FROM_EMAIL: 'site@otm.com.br',
   CONTACT_TO_EMAIL: 'otm@otm.com.br',
 }
 
 describe('SMTP2GO contact adapter', () => {
   it('sends a contact email with the visitor as reply-to', async () => {
-    const fetchImpl = vi.fn().mockResolvedValue({
-      ok: true,
-      json: vi.fn().mockResolvedValue({ data: { succeeded: 1, failed: 0 } }),
+    const sendMail = vi.fn().mockResolvedValue({ messageId: 'smtp-message-id' })
+    const createTransport = vi.fn().mockReturnValue({ sendMail })
+
+    await sendContactEmail(contact, { createTransport, env: configuredEnv })
+
+    expect(createTransport).toHaveBeenCalledWith({
+      host: 'mail.smtp2go.com',
+      port: 2525,
+      secure: false,
+      auth: { user: 'mailerotm', pass: 'smtp-password' },
     })
-
-    await sendContactEmail(contact, { fetchImpl, env: configuredEnv })
-
-    expect(fetchImpl).toHaveBeenCalledWith(
-      'https://api.smtp2go.com/v3/email/send',
-      expect.objectContaining({
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Smtp2go-Api-Key': 'secret-api-key',
-        },
-      }),
-    )
-
-    const payload = JSON.parse(fetchImpl.mock.calls[0][1].body)
-    expect(payload.sender).toBe('site@otm.com.br')
-    expect(payload.to).toEqual(['otm@otm.com.br'])
-    expect(payload.custom_headers).toEqual([{ header: 'Reply-To', value: 'joao@example.com' }])
-    expect(payload.subject).toContain('João Silva')
-    expect(payload.text_body).toContain('Gostaria de conversar')
+    expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({
+      from: 'site@otm.com.br',
+      to: 'otm@otm.com.br',
+      replyTo: 'joao@example.com',
+      subject: expect.stringContaining('João Silva'),
+      text: expect.stringContaining('Gostaria de conversar'),
+      html: expect.stringContaining('Gostaria de conversar'),
+    }))
   })
 
   it('throws a configuration error when credentials are absent', async () => {
-    await expect(sendContactEmail(contact, { env: {}, fetchImpl: vi.fn() }))
+    await expect(sendContactEmail(contact, { env: {}, createTransport: vi.fn() }))
       .rejects.toBeInstanceOf(ContactEmailConfigurationError)
   })
 
-  it('throws a provider error when SMTP2GO rejects the request', async () => {
-    const fetchImpl = vi.fn().mockResolvedValue({
-      ok: false,
-      status: 401,
-      json: vi.fn().mockResolvedValue({ data: { error: 'Unauthorized' } }),
+  it('throws a provider error when SMTP2GO rejects the message', async () => {
+    const createTransport = vi.fn().mockReturnValue({
+      sendMail: vi.fn().mockRejectedValue(new Error('Authentication failed')),
     })
 
-    await expect(sendContactEmail(contact, { fetchImpl, env: configuredEnv }))
+    await expect(sendContactEmail(contact, { createTransport, env: configuredEnv }))
       .rejects.toBeInstanceOf(ContactEmailProviderError)
   })
 })
