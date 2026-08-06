@@ -66,7 +66,7 @@ describe('Silvana memorial Otimiza identity', () => {
       .toContain('width: auto')
   })
 
-  it('uses a continuous sticky video section without negative layout compensation', () => {
+  it('uses a centered sticky video section with viewport-safe responsive bounds', () => {
     expect(ruleFor('.memorial-video-section')).toContain('height: 250svh')
     expect(ruleFor('.memorial-video-section')).toContain('margin: 0')
     expect(ruleFor('.memorial-video-stage')).toContain('position: sticky')
@@ -74,8 +74,9 @@ describe('Silvana memorial Otimiza identity', () => {
     expect(ruleFor('.memorial-video-frame')).toContain('aspect-ratio: 16 / 9')
     expect(ruleFor('.memorial-video-frame')).toContain('--memorial-video-expand-progress')
     expect(ruleFor('.memorial-video-frame')).toContain('--memorial-video-contract-progress')
-    expect(ruleFor('.memorial-video-frame')).toContain('* 25svh')
-    expect(ruleFor('.memorial-video-frame')).not.toContain('* 45svh')
+    expect(ruleFor('.memorial-video-frame')).toContain('transform: translate(-50%, -50%)')
+    expect(ruleFor('.memorial-video-frame')).toContain('(100% - 27.5rem)')
+    expect(ruleFor('.memorial-video-frame')).toContain('calc((100svh - 1.5rem) * 1.7778)')
     expect(ruleFor('.memorial-contribution')).not.toContain('-35svh')
     expect(ruleFor('.memorial-contribution')).toContain('margin: clamp(')
   })

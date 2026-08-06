@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { ChevronDown } from 'lucide-react'
 import MemorialAccessForm from '../components/memorial/MemorialAccessForm'
 import MemorialBoard from '../components/memorial/MemorialBoard'
 import MemorialDust from '../components/memorial/MemorialDust'
@@ -103,8 +104,9 @@ function SilvanaMemorial({ api = memorialApi }) {
         <p className="memorial-subtitle">
           A saudade é grande, mas cada lembrança guardada aqui é um jeito de manter você por perto.
         </p>
-        <span className="memorial-divider" aria-hidden="true" />
-        <span className="memorial-scroll-cue" aria-hidden="true" />
+        <span className="memorial-scroll-cue" aria-hidden="true">
+          <ChevronDown size={40} strokeWidth={1.8} />
+        </span>
       </header>
       <MemorialVideo />
       <section className="memorial-contribution" aria-label="Compartilhe uma lembrança">

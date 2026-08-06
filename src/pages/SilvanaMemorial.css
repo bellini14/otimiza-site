@@ -88,23 +88,21 @@
 }
 
 .memorial-scroll-cue {
-  display: grid;
-  width: 2rem;
-  height: 3rem;
+  position: relative;
+  width: 1.5rem;
+  height: .85rem;
   margin: 1.5rem auto 0;
-  place-items: start center;
-  border: 1px solid rgb(90 101 114 / 28%);
-  border-radius: 999px;
+  color: #4d4d4d;
+  animation: memorial-scroll-cue 1.8s ease-in-out infinite;
 }
 
-.memorial-scroll-cue::after {
-  width: .25rem;
-  height: .65rem;
-  margin-top: .55rem;
-  border-radius: 999px;
-  background: var(--memorial-red);
-  content: "";
-  animation: memorial-scroll-cue 1.8s ease-in-out infinite;
+.memorial-scroll-cue svg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2.5rem;
+  height: 2.5rem;
+  transform: translate(-50%, -50%);
 }
 
 .memorial-video-section {
@@ -135,22 +133,15 @@
   width: min(
     calc(
       24rem
-      + (var(--memorial-video-expand-progress) * (100vw - 27rem))
-      - (var(--memorial-video-contract-progress) * (100vw - 39rem))
+      + (var(--memorial-video-expand-progress) * (100% - 27.5rem))
+      - (var(--memorial-video-contract-progress) * (100% - 39.5rem))
     ),
-    calc(100vw - 2rem)
+    calc(100% - 3.5rem),
+    calc((100svh - 1.5rem) * 1.7778)
   );
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  transform: translate3d(
-    -50%,
-    calc(
-      -50%
-      + ((1 - var(--memorial-video-expand-progress)) * 16svh)
-      - (var(--memorial-video-contract-progress) * 25svh)
-    ),
-    0
-  );
+  transform: translate(-50%, -50%);
   border: 1px solid rgb(67 75 84 / 10%);
   border-radius: clamp(.9rem, 1.5vw, 1.4rem);
   background: #E5E9F1;
@@ -581,8 +572,8 @@
 }
 
 @keyframes memorial-scroll-cue {
-  0%, 100% { transform: translateY(0); opacity: .35; }
-  45% { transform: translateY(1.15rem); opacity: 1; }
+  0%, 100% { transform: translateY(0); opacity: .55; }
+  45% { transform: translateY(.45rem); opacity: 1; }
 }
 
 @keyframes memorial-spin { to { transform: rotate(1turn); } }
@@ -608,7 +599,6 @@
   .memorial-hero h1 { font-size: clamp(3rem, 15vw, 5rem); line-height: .93; }
   .memorial-eyebrow { margin-bottom: 1.35rem; font-size: .64rem; }
   .memorial-subtitle { margin-top: 1.5rem; font-size: 1rem; }
-  .memorial-divider { margin-top: 1.5rem; }
   .memorial-scroll-cue { margin-top: 1.25rem; }
 
   .memorial-video-section { height: 220svh; }
@@ -616,22 +606,13 @@
     width: min(
       calc(
         11rem
-        + (var(--memorial-video-expand-progress) * (100vw - 12.5rem))
-        - (var(--memorial-video-contract-progress) * (100vw - 19rem))
+        + (var(--memorial-video-expand-progress) * (100% - 13rem))
+        - (var(--memorial-video-contract-progress) * (100% - 19.5rem))
       ),
-      calc(100vw - 1.25rem),
+      calc(100% - 2rem),
       calc((100svh - 2rem) * .5625)
     );
     aspect-ratio: 9 / 16;
-    transform: translate3d(
-      -50%,
-      calc(
-        -50%
-        + ((1 - var(--memorial-video-expand-progress)) * 10svh)
-        - (var(--memorial-video-contract-progress) * 30svh)
-      ),
-      0
-    );
   }
   .memorial-video-frame video,
   .memorial-video-poster { object-position: left center; }
@@ -653,17 +634,16 @@
   .memorial-hero { min-height: 100svh; padding-block: 3rem 2rem; }
   .memorial-hero h1 { font-size: clamp(2.8rem, 9vw, 4.5rem); }
   .memorial-subtitle { margin-top: 1rem; font-size: .95rem; }
-  .memorial-divider,
   .memorial-scroll-cue { margin-top: 1rem; }
   .memorial-video-section { height: 210svh; }
   .memorial-video-frame {
     width: min(
       calc(
         18rem
-        + (var(--memorial-video-expand-progress) * (100vw - 20rem))
-        - (var(--memorial-video-contract-progress) * (100vw - 28rem))
+        + (var(--memorial-video-expand-progress) * (100% - 20rem))
+        - (var(--memorial-video-contract-progress) * (100% - 28rem))
       ),
-      calc(100vw - 1.5rem),
+      calc(100% - 1.5rem),
       calc(80svh * 1.7778)
     );
     aspect-ratio: 16 / 9;
@@ -690,7 +670,6 @@
   .memorial-note-skeleton { animation: none; }
   .memorial-note-dialog,
   .memorial-note-expanded { animation: none; }
-  .memorial-board-sync svg,
-  .memorial-scroll-cue::after { animation: none; }
+  .memorial-board-sync svg { animation: none; }
   .silvana-memorial * { scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
