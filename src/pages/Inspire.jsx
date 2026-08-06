@@ -13,6 +13,7 @@ import {
 import PostLikeButton from '../components/PostLikeButton'
 import InspireNewsletterSignup from '../components/InspireNewsletterSignup'
 import InspireShareButton from '../components/InspireShareButton'
+import { buildWordPressPostPath } from '../lib/postUrl'
 
 const INITIAL_POST_COUNT = 15
 const POSTS_PER_BATCH = 5
@@ -31,7 +32,6 @@ const POSTS_QUERY = `*[_type == "post"] | order(publishedAt desc) [$start...$end
   description,
   "imgSrc": mainImage.asset->url,
   "slug": slug.current,
-  "link": "/inspire/" + slug.current,
   eyebrow,
   publishedAt,
   "linkText": "Ler artigo"
@@ -42,7 +42,6 @@ const CATEGORY_POSTS_QUERY = `*[_type == "post" && eyebrow == $category] | order
   description,
   "imgSrc": mainImage.asset->url,
   "slug": slug.current,
-  "link": "/inspire/" + slug.current,
   eyebrow,
   publishedAt,
   "linkText": "Ler artigo"
@@ -63,7 +62,6 @@ const SEARCH_QUERY = `*[_type == "post" && (
   description,
   "imgSrc": mainImage.asset->url,
   "slug": slug.current,
-  "link": "/inspire/" + slug.current,
   eyebrow,
   publishedAt,
   "linkText": "Ler artigo"
@@ -459,6 +457,7 @@ function Inspire() {
             <div className="inspire-page__stories">
               {visiblePosts.map((post, index) => {
                 const stats = deriveStoryStats(post)
+                const postPath = buildWordPressPostPath(post)
 
                 return (
                   <article key={post.slug || `${post.title}-${index}`} className="inspire-story">
@@ -468,7 +467,7 @@ function Inspire() {
                       </p>
 
                       <Link
-                        to={post.link || `/inspire/${post.slug}`}
+                        to={postPath}
                         state={buildPostState(post)}
                         className="inspire-story__title-link"
                       >
@@ -477,7 +476,7 @@ function Inspire() {
                     </div>
 
                     <Link
-                      to={post.link || `/inspire/${post.slug}`}
+                      to={postPath}
                       state={buildPostState(post)}
                       className="inspire-story__thumb-link"
                       aria-label={`Ler ${post.title}`}
@@ -517,7 +516,7 @@ function Inspire() {
                           <InspireShareButton
                             className="inspire-story__action-button"
                             title={post.title}
-                            url={post.link || `/inspire/${post.slug}`}
+                            url={postPath}
                           />
                         </div>
                       </div>

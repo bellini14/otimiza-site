@@ -7,6 +7,7 @@ import { client } from '@/lib/sanity'
 import { staticBlogPosts } from '../../data/blogPosts'
 import { setCachedInspirePosts } from '../../lib/inspirePostCache'
 import { useDragCarousel } from '../../hooks/useDragCarousel'
+import { buildWordPressPostPath } from '../../lib/postUrl'
 
 
 
@@ -36,7 +37,8 @@ export function BlogHighlights() {
           title,
           description,
           "imgSrc": mainImage.asset->url,
-          "link": "/inspire/" + slug.current,
+          "slug": slug.current,
+          publishedAt,
           eyebrow,
           "linkText": "Ler artigo"
         }`
@@ -175,6 +177,7 @@ export function BlogHighlights() {
               >
                 <ProjectCard
                   {...post}
+                  link={buildWordPressPostPath(post)}
                   compact
                   disableHover
                   linkState={{

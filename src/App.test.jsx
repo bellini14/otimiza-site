@@ -6,6 +6,10 @@ vi.mock('./pages/Inspire', () => ({
   default: () => <div>Inspire feed</div>,
 }))
 
+vi.mock('./pages/PostDetail', () => ({
+  default: () => <div>Post legado</div>,
+}))
+
 import App from './App'
 
 afterEach(() => {
@@ -14,6 +18,19 @@ afterEach(() => {
 })
 
 describe('App', () => {
+  it('opens a WordPress dated post permalink', async () => {
+    const originalUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`
+
+    try {
+      window.history.pushState({}, '', '/2026/05/05/o-desgaste-da-visao')
+      render(<App />)
+
+      expect(await screen.findByText('Post legado')).toBeInTheDocument()
+    } finally {
+      window.history.replaceState({}, '', originalUrl)
+    }
+  })
+
   it('restores a superseded search entry when navigating back after a rapid clear', async () => {
     const originalUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`
 

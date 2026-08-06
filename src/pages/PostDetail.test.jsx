@@ -318,7 +318,7 @@ describe('PostDetail', () => {
     const requestBody = JSON.parse(fetchMock.mock.calls[1][1].body)
     expect(requestBody.email).toBe('leitor@example.com')
     expect(requestBody.message).toContain('Post com imagem inline')
-    expect(requestBody.message).toContain('Link: /inspire/post-com-imagem-inline')
+    expect(requestBody.message).toContain('Link: /2026/04/13/post-com-imagem-inline')
     expect(requestBody.message).toContain('Quero conversar sobre este tema.')
     expect(await within(panel).findByText(/mensagem enviada.*responderá pelo seu e-mail/i)).toBeInTheDocument()
 

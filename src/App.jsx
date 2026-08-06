@@ -21,15 +21,17 @@ import SeoHead from './seo/SeoHead'
 import { buildCanonicalUrl, staticPageMetadata } from './seo/siteMetadata'
 import defaultSocialImage from './assets/hero-bw.jpg'
 import { buildStructuredData } from './seo/structuredData'
+import { isWordPressPostPath } from './lib/postUrl'
 
 function AppRoutes() {
   const displayedLocation = useTransitionLocation()
   const isInspireRoute = displayedLocation.pathname === '/inspire'
     || displayedLocation.pathname.startsWith('/inspire/')
+    || isWordPressPostPath(displayedLocation.pathname)
   const routeMetadata = staticPageMetadata[displayedLocation.pathname]
   const fallbackTitle = displayedLocation.pathname.startsWith('/cases/')
     ? 'Case de consultoria e melhoria de processos | Otimiza'
-    : displayedLocation.pathname.startsWith('/inspire/')
+    : displayedLocation.pathname.startsWith('/inspire/') || isWordPressPostPath(displayedLocation.pathname)
       ? 'Conteúdo sobre gestão e processos | Otimiza'
       : 'Página não encontrada | Otimiza'
   const configuredSiteOrigin = import.meta.env.VITE_SITE_URL || window.location.origin
@@ -69,6 +71,7 @@ function AppRoutes() {
           <Route path="/inspire" element={<Inspire />} />
           <Route path="/inspire/newsletter" element={<InspireNewsletter />} />
           <Route path="/inspire/:slug" element={<PostDetail />} />
+          <Route path="/:year/:month/:day/:slug" element={<PostDetail />} />
         </Route>
       </Routes>
     </div>

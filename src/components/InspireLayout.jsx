@@ -11,6 +11,7 @@ import {
 } from '../lib/inspireSearch'
 import { client } from '../lib/sanity'
 import usePageTransitionNavigate from '../transitions/usePageTransitionNavigate'
+import { buildWordPressPostPath } from '../lib/postUrl'
 
 const INTERNAL_SEARCH_UPDATE_STATE_KEY = '__otimizaInspireSearchUpdateId'
 const SEARCH_SUGGESTIONS_DELAY_MS = 180
@@ -158,7 +159,7 @@ function InspireLayout() {
             e.preventDefault()
             setSuggestionsOpen(false)
             setActiveSuggestionIndex(-1)
-            navigate(`/inspire/${selectedSuggestion.slug}`, {
+            navigate(buildWordPressPostPath(selectedSuggestion), {
               state: { postPreview: selectedSuggestion },
             })
           }
@@ -369,7 +370,7 @@ function InspireLayout() {
                         <Link
                           key={suggestion.slug}
                           id={`inspire-search-suggestion-${index}`}
-                          to={`/inspire/${suggestion.slug}`}
+                          to={buildWordPressPostPath(suggestion)}
                           state={{ postPreview: suggestion }}
                           role="option"
                           aria-selected={activeSuggestionIndex === index}

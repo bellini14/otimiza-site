@@ -9,6 +9,7 @@ import InspireShareButton from '../components/InspireShareButton'
 import PostArticleContactPanel from '../components/PostArticleContactPanel'
 import SeoHead from '../seo/SeoHead'
 import { getPageDescription, getPageTitle } from '../seo/siteMetadata'
+import { buildWordPressPostPath } from '../lib/postUrl'
 
 function getPreviewPost(locationState) {
   if (!locationState?.postPreview) {
@@ -103,6 +104,7 @@ function PostDetail() {
   const postSocialImage = post?.mainImage
     ? urlFor(post.mainImage).width(1200).url()
     : post?.imgSrc
+  const postPath = buildWordPressPostPath({ publishedAt: post?.publishedAt, slug })
 
   if (!post && !isShellLoading) {
     return (
@@ -240,12 +242,12 @@ function PostDetail() {
                   <InspireShareButton
                     className="post-detail__hero-action-control post-detail__hero-action-button"
                     title={post.title}
-                    url={`/inspire/${slug}`}
+                    url={postPath}
                   />
                 </div>
                 <PostArticleContactPanel
                   postTitle={post.title}
-                  postPath={`/inspire/${slug}`}
+                  postPath={postPath}
                 />
               </div>
             )}
@@ -290,7 +292,7 @@ function PostDetail() {
                     {morePosts.map((mp, index) => (
                       <Link
                         key={mp.slug || index}
-                        to={`/inspire/${mp.slug}`}
+                        to={buildWordPressPostPath(mp)}
                         state={{
                           postPreview: {
                             title: mp.title,

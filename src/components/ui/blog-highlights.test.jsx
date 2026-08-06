@@ -37,7 +37,7 @@ describe('BlogHighlights', () => {
       </MemoryRouter>,
     )
 
-    const heading = screen.getByRole('heading', { name: /inspire para quem opera no longo prazo/i })
+    const heading = screen.getByRole('heading', { name: /inspire\. conteúdo de vanguarda/i })
     const section = heading.closest('section')
     const headerContainer = heading.parentElement?.parentElement?.parentElement
 
