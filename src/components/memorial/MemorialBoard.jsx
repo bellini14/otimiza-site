@@ -1,8 +1,30 @@
-import { Pencil } from 'lucide-react'
+import { Pencil, RefreshCw } from 'lucide-react'
 import { getNotePresentation } from '../../lib/memorialPresentation'
 
-function MemorialBoard({ notes = [], loading = false, ownedNoteId, onEdit }) {
+function LoadingNotes() {
+  return Array.from({ length: 3 }, (_, index) => (
+    <div
+      className="memorial-note memorial-note-skeleton"
+      aria-hidden="true"
+      key={index}
+    />
+  ))
+}
+
+function MemorialBoard({
+  notes = [],
+  status = 'ready',
+  error = '',
+  ownedNoteId,
+  highlightedNoteId,
+  onEdit,
+  onRetry,
+}) {
   const count = notes.length
+  const loading = status === 'loading'
+  const refreshing = status === 'refreshing'
+  const failed = status === 'error'
+
   return (
     <section className="memorial-board-section" aria-labelledby="memorial-board-title">
       <p
@@ -22,9 +44,23 @@ function MemorialBoard({ notes = [], loading = false, ownedNoteId, onEdit }) {
           </>
         )}
       </p>
-      <div className="memorial-board">
+
+      {refreshing && (
+        <p className="memorial-board-sync" role="status">
+          <RefreshCw aria-hidden="true" /> Atualizando o mural…
+        </p>
+      )}
+
+      <div className="memorial-board" aria-busy={loading || refreshing}>
         {loading ? (
-          <p className="memorial-empty">Carregando o mural…</p>
+          <LoadingNotes />
+        ) : failed ? (
+          <div className="memorial-board-error" role="alert">
+            <p>{error || 'Não foi possível carregar o mural.'}</p>
+            <button type="button" onClick={onRetry}>
+              <RefreshCw aria-hidden="true" /> Tentar novamente
+            </button>
+          </div>
         ) : count === 0 ? (
           <p className="memorial-empty">
             O mural está vazio ainda — seja a primeira lembrança guardada aqui.
@@ -32,9 +68,10 @@ function MemorialBoard({ notes = [], loading = false, ownedNoteId, onEdit }) {
         ) : notes.map((note) => {
           const presentation = getNotePresentation(note.id)
           const owned = note.id === ownedNoteId
+          const highlighted = note.id === highlightedNoteId
           return (
             <article
-              className="memorial-note"
+              className={`memorial-note${highlighted ? ' is-highlighted' : ''}`}
               key={note.id}
               style={{
                 '--note-rotation': `${presentation.rotation}deg`,

@@ -1,6 +1,8 @@
-import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import MemorialBoard from './MemorialBoard.jsx'
+
+afterEach(cleanup)
 
 describe('MemorialBoard', () => {
   it('renders variable notes and only the owned edit action', () => {
@@ -10,6 +12,7 @@ describe('MemorialBoard', () => {
         { id: 'one', message: 'Curta', name: 'Ana' },
         { id: 'two', message: 'Sem assinatura', name: null },
       ]}
+      status="ready"
       ownedNoteId="one"
       onEdit={onEdit}
     />)
@@ -21,5 +24,39 @@ describe('MemorialBoard', () => {
     expect(buttons).toHaveLength(1)
     fireEvent.click(buttons[0])
     expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 'one' }))
+  })
+
+  it('shows an initial loading skeleton without the empty invitation', () => {
+    const { container } = render(<MemorialBoard notes={[]} status="loading" />)
+
+    expect(container.querySelectorAll('.memorial-note-skeleton')).toHaveLength(3)
+    expect(screen.queryByText(/seja a primeira lembrança/i)).not.toBeInTheDocument()
+  })
+
+  it('shows a recoverable error instead of an empty mural', () => {
+    const onRetry = vi.fn()
+    render(<MemorialBoard
+      notes={[]}
+      status="error"
+      error="Não foi possível carregar o mural."
+      onRetry={onRetry}
+    />)
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Não foi possível carregar o mural.')
+    expect(screen.queryByText(/seja a primeira lembrança/i)).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }))
+    expect(onRetry).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps notes visible while refreshing and highlights a changed note', () => {
+    render(<MemorialBoard
+      notes={[{ id: 'one', message: 'Continua visível', name: null }]}
+      status="refreshing"
+      highlightedNoteId="one"
+    />)
+
+    expect(screen.getByText('Continua visível').closest('article')).toHaveClass('is-highlighted')
+    expect(screen.getByRole('status')).toHaveTextContent(/atualizando o mural/i)
+    expect(document.querySelector('.memorial-board')).toHaveAttribute('aria-busy', 'true')
   })
 })

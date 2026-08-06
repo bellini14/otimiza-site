@@ -138,9 +138,14 @@ void main() {
 }
 `
 
+const DEFAULT_FOCAL = Object.freeze([0.5, 0.5])
+const DEFAULT_ROTATION = Object.freeze([1, 0])
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
+const MAX_DPR = 1.75
+
 function MemorialDust({
-  focal = [0.5, 0.5],
-  rotation = [1, 0],
+  focal = DEFAULT_FOCAL,
+  rotation = DEFAULT_ROTATION,
   starSpeed = 0,
   density = 1.4,
   hueShift = 140,
@@ -167,8 +172,18 @@ function MemorialDust({
     if (!container) return undefined
     if (typeof window.WebGLRenderingContext === 'undefined') return undefined
 
-    const renderer = new Renderer({ alpha: transparent, premultipliedAlpha: false })
-    const gl = renderer.gl
+    let renderer
+    let gl
+    try {
+      renderer = new Renderer({
+        alpha: transparent,
+        premultipliedAlpha: false,
+        dpr: Math.min(window.devicePixelRatio || 1, MAX_DPR),
+      })
+      gl = renderer.gl
+    } catch {
+      return undefined
+    }
 
     if (transparent) {
       gl.enable(gl.BLEND)
@@ -208,19 +223,23 @@ function MemorialDust({
     const mesh = new Mesh(gl, { geometry, program })
 
     function resize() {
-      renderer.setSize(container.offsetWidth, container.offsetHeight)
+      const width = Math.max(1, container.offsetWidth)
+      const height = Math.max(1, container.offsetHeight)
+      renderer.setSize(width, height)
       program.uniforms.uResolution.value = new Color(
         gl.canvas.width,
         gl.canvas.height,
-        gl.canvas.width / gl.canvas.height,
+        gl.canvas.width / Math.max(1, gl.canvas.height),
       )
     }
 
-    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-    let animationId
+    const motionPreference = window.matchMedia?.(REDUCED_MOTION_QUERY)
+    let reduceMotion = Boolean(motionPreference?.matches)
+    let animationId = 0
+    let running = false
+    let contextLost = false
 
-    function update(time) {
-      animationId = requestAnimationFrame(update)
+    function renderFrame(time) {
       if (!disableAnimation && !reduceMotion) {
         program.uniforms.uTime.value = time * 0.001
         program.uniforms.uStarSpeed.value = (time * 0.001 * starSpeed) / 10
@@ -239,6 +258,26 @@ function MemorialDust({
       renderer.render({ scene: mesh })
     }
 
+    function update(time) {
+      animationId = 0
+      if (!running || contextLost) return
+      renderFrame(time)
+      animationId = requestAnimationFrame(update)
+    }
+
+    function startLoop() {
+      if (running || contextLost || disableAnimation || reduceMotion) return
+      if (document.visibilityState === 'hidden') return
+      running = true
+      animationId = requestAnimationFrame(update)
+    }
+
+    function stopLoop() {
+      if (animationId || running) cancelAnimationFrame(animationId)
+      running = false
+      animationId = 0
+    }
+
     function handleMouseMove(event) {
       targetMouse.current = {
         x: event.clientX / window.innerWidth,
@@ -251,7 +290,36 @@ function MemorialDust({
       targetMouseActive.current = 0
     }
 
-    window.addEventListener('resize', resize)
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'hidden') stopLoop()
+      else startLoop()
+    }
+
+    function handleMotionChange(event) {
+      reduceMotion = event.matches
+      if (reduceMotion) {
+        stopLoop()
+        renderFrame(0)
+      } else {
+        startLoop()
+      }
+    }
+
+    function handleContextLost(event) {
+      event.preventDefault()
+      contextLost = true
+      stopLoop()
+      if (container.contains(gl.canvas)) container.removeChild(gl.canvas)
+    }
+
+    const resizeObserver = typeof ResizeObserver === 'function'
+      ? new ResizeObserver(resize)
+      : null
+    resizeObserver?.observe(container)
+    if (!resizeObserver) window.addEventListener('resize', resize)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    motionPreference?.addEventListener?.('change', handleMotionChange)
+    gl.canvas.addEventListener('webglcontextlost', handleContextLost)
     if (mouseInteraction) {
       window.addEventListener('mousemove', handleMouseMove)
       document.documentElement.addEventListener('mouseleave', handleMouseLeave)
@@ -259,11 +327,16 @@ function MemorialDust({
 
     resize()
     container.appendChild(gl.canvas)
-    animationId = requestAnimationFrame(update)
+    renderFrame(0)
+    startLoop()
 
     return () => {
-      cancelAnimationFrame(animationId)
-      window.removeEventListener('resize', resize)
+      stopLoop()
+      resizeObserver?.disconnect()
+      if (!resizeObserver) window.removeEventListener('resize', resize)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      motionPreference?.removeEventListener?.('change', handleMotionChange)
+      gl.canvas.removeEventListener('webglcontextlost', handleContextLost)
       if (mouseInteraction) {
         window.removeEventListener('mousemove', handleMouseMove)
         document.documentElement.removeEventListener('mouseleave', handleMouseLeave)

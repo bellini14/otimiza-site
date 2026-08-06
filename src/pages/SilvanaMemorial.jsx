@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import MemorialAccessForm from '../components/memorial/MemorialAccessForm'
 import MemorialBoard from '../components/memorial/MemorialBoard'
 import MemorialDust from '../components/memorial/MemorialDust'
@@ -15,26 +15,44 @@ import './SilvanaMemorial.css'
 
 function SilvanaMemorial({ api = memorialApi }) {
   const [notes, setNotes] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [notesStatus, setNotesStatus] = useState('loading')
+  const [notesError, setNotesError] = useState('')
   const [ownership, setOwnership] = useState(() => readMemorialOwnership())
   const [editingNote, setEditingNote] = useState(null)
-  const [manageOpen, setManageOpen] = useState(false)
+  const [focusRequest, setFocusRequest] = useState(null)
+  const [highlightedNoteId, setHighlightedNoteId] = useState(null)
+  const focusSequence = useRef(0)
+  const highlightTimer = useRef(null)
 
-  const loadNotes = useCallback(async () => {
-    setLoading(true)
+  const loadNotes = useCallback(async ({ refresh = false } = {}) => {
+    setNotesStatus(refresh ? 'refreshing' : 'loading')
+    setNotesError('')
     try {
       const result = await api.listNotes()
-      setNotes(result.notes || [])
+      setNotes(result.notes)
+      setNotesStatus('ready')
     } catch {
-      setNotes([])
-    } finally {
-      setLoading(false)
+      if (refresh) {
+        setNotesStatus('ready')
+        setNotesError('Não foi possível atualizar o mural agora.')
+      } else {
+        setNotesStatus('error')
+        setNotesError('Não foi possível carregar o mural. Verifique sua conexão e tente novamente.')
+      }
     }
   }, [api])
 
   useEffect(() => {
-    loadNotes()
+    const loadTimer = window.setTimeout(loadNotes, 0)
+    return () => window.clearTimeout(loadTimer)
   }, [loadNotes])
+
+  useEffect(() => () => clearTimeout(highlightTimer.current), [])
+
+  const requestFormFocus = (type) => {
+    focusSequence.current += 1
+    setFocusRequest({ id: focusSequence.current, type })
+  }
 
   const handleChanged = async (change = {}) => {
     if (change.ownership) {
@@ -46,7 +64,12 @@ function SilvanaMemorial({ api = memorialApi }) {
       setOwnership(null)
       setEditingNote(null)
     }
-    await loadNotes()
+    if (change.noteId && change.type !== 'deleted') {
+      clearTimeout(highlightTimer.current)
+      setHighlightedNoteId(change.noteId)
+      highlightTimer.current = setTimeout(() => setHighlightedNoteId(null), 2500)
+    }
+    await loadNotes({ refresh: true })
   }
 
   const ownedNote = notes.find((note) => note.id === ownership?.noteId)
@@ -82,31 +105,36 @@ function SilvanaMemorial({ api = memorialApi }) {
           A saudade é grande, mas cada lembrança guardada aqui é um jeito de manter você por perto.
         </p>
         <span className="memorial-divider" aria-hidden="true" />
+        <span className="memorial-scroll-cue" aria-hidden="true" />
       </header>
       <MemorialVideo />
       <section className="memorial-contribution" aria-label="Compartilhe uma lembrança">
         <MemorialAccessForm
-          key={`${editingNote?.id || 'new'}-${manageOpen}`}
           api={api}
           onChanged={handleChanged}
           editingNote={editingNote}
           ownership={ownership}
-          initialIntent={manageOpen ? 'manage' : 'contribute'}
+          focusRequest={focusRequest}
           onCancelEdit={() => setEditingNote(null)}
         />
       </section>
       <MemorialBoard
         notes={notes}
-        loading={loading}
+        status={notesStatus}
+        error={notesError}
+        onRetry={loadNotes}
         ownedNoteId={ownedNote?.id}
-        onEdit={setEditingNote}
+        highlightedNoteId={highlightedNoteId}
+        onEdit={(note) => {
+          setEditingNote(note)
+          requestFormFocus('edit')
+        }}
       />
       <footer className="memorial-footer">
         <p>em memória de Silvana Tiburi Bettiol · feito com carinho pela equipe Otimiza</p>
         <button type="button" onClick={() => {
           setEditingNote(null)
-          setManageOpen((value) => !value)
-          document.querySelector('.memorial-contribution')?.scrollIntoView({ behavior: 'smooth' })
+          requestFormFocus('manage')
         }}>
           Gostaria de editar ou excluir minha mensagem?
         </button>

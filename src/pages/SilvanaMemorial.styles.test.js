@@ -53,7 +53,7 @@ describe('Silvana memorial Otimiza identity', () => {
 
   it('uses the larger minimal form treatment found across the Otimiza site', () => {
     expect(ruleFor('.memorial-contribution'))
-      .toContain('width: min(100% - 2rem, 48rem)')
+      .toContain('width: min(100% - 2rem, 52rem)')
     expect(ruleFor('.memorial-form-card')).toContain('border: 0')
     expect(ruleFor('.memorial-form-card')).toContain('box-shadow: none')
     expect(ruleFor('.memorial-form-card input[type="email"],\n.memorial-form-card textarea'))
@@ -66,43 +66,41 @@ describe('Silvana memorial Otimiza identity', () => {
       .toContain('width: auto')
   })
 
-  it('reveals a fixed full-size video through a Motto-style animated mask', () => {
-    expect(ruleFor('.memorial-video-section')).toContain('height: 300svh')
-    expect(ruleFor('.memorial-video-frame')).toContain(
-      'var(--memorial-video-expand-progress) * 52%',
-    )
-    expect(ruleFor('.memorial-video-frame')).toContain(
-      'top: calc(\n    64%\n    - (var(--memorial-video-expand-progress) * 52%)\n  )',
-    )
-    expect(ruleFor('.memorial-video-frame')).toContain(
-      'width: calc(100vw - 3rem)',
-    )
-    expect(ruleFor('.memorial-video-frame')).toContain(
-      'height: min(62vw, 37.5rem)',
-    )
-    expect(ruleFor('.memorial-video-frame')).toContain(
-      'clip-path: inset(',
-    )
-    expect(ruleFor('.memorial-video-frame')).toContain(
-      'var(--memorial-video-contract-progress) * 59%',
-    )
-    expect(ruleFor('.memorial-video-frame video')).toContain(
-      'var(--memorial-video-contract-progress) * 33%',
-    )
-    expect(ruleFor('.memorial-video-frame video')).toContain(
-      'var(--memorial-video-contract-progress) * -30%',
-    )
-    expect(ruleFor('.memorial-contribution')).toContain('margin: -35svh auto 5rem')
-    expect(ruleFor('.memorial-video-frame')).not.toContain(
-      'var(--memorial-video-expand-progress) * (100vw - 29rem)',
-    )
+  it('uses a continuous sticky video section without negative layout compensation', () => {
+    expect(ruleFor('.memorial-video-section')).toContain('height: 250svh')
+    expect(ruleFor('.memorial-video-section')).toContain('margin: 0')
+    expect(ruleFor('.memorial-video-stage')).toContain('position: sticky')
+    expect(ruleFor('.memorial-video-stage')).toContain('top: 0')
+    expect(ruleFor('.memorial-video-frame')).toContain('aspect-ratio: 16 / 9')
+    expect(ruleFor('.memorial-video-frame')).toContain('--memorial-video-expand-progress')
+    expect(ruleFor('.memorial-video-frame')).toContain('--memorial-video-contract-progress')
+    expect(ruleFor('.memorial-video-frame')).toContain('* 25svh')
+    expect(ruleFor('.memorial-video-frame')).not.toContain('* 45svh')
+    expect(ruleFor('.memorial-contribution')).not.toContain('-35svh')
+    expect(ruleFor('.memorial-contribution')).toContain('margin: clamp(')
   })
 
   it('uses a portrait mask focused on the left side of the video on mobile', () => {
     expect(ruleFor('.memorial-video-frame')).toContain('aspect-ratio: 9 / 16')
-    expect(ruleFor('.memorial-video-frame')).not.toContain('height: 17rem')
-    expect(ruleFor('.memorial-video-frame video')).toContain('object-position: left center')
-    expect(ruleFor('.memorial-video-frame video')).toContain('transform: none')
+    expect(ruleFor('.memorial-video-frame video,\n  .memorial-video-poster'))
+      .toContain('object-position: left center')
+    expect(css).toContain('@media (max-height: 520px) and (orientation: landscape)')
+  })
+
+  it('protects touch, safe areas and recoverable board states', () => {
+    expect(ruleFor('.memorial-footer')).toContain('env(safe-area-inset-bottom)')
+    expect(ruleFor('.memorial-form-card > button[type="submit"]')).toContain('min-height: 3.5rem')
+    expect(ruleFor('.memorial-board-error')).toContain('grid-column: 1 / -1')
+    expect(ruleFor('.memorial-note-skeleton')).toContain('animation: memorial-skeleton')
+    expect(ruleFor('.memorial-note.is-highlighted')).toContain('animation: memorial-note-highlight')
+  })
+
+  it('provides a complete reduced-motion layout', () => {
+    expect(css).toContain('@media (prefers-reduced-motion: reduce)')
+    expect(ruleFor('.memorial-video-section')).toContain('height: auto')
+    expect(ruleFor('.memorial-video-stage')).toContain('position: relative')
+    expect(ruleFor('.memorial-note,\n  .memorial-note.is-highlighted,\n  .memorial-note-skeleton'))
+      .toContain('animation: none')
   })
 
   it('keeps the floating dust soft and non-interactive', () => {

@@ -1,4 +1,5 @@
 export const MEMORIAL_VIDEO_PLAYBACK_RATE = 0.5
+export const MEMORIAL_VIDEO_POSTER = '/memorial/silvana-poster.webp'
 
 const BUNDLED_VIDEO_SRC = '/media/silvana-homenagem.mp4'
 

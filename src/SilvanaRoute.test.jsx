@@ -1,14 +1,22 @@
-import { render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 
 vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
   ok: true,
-  json: async () => ({ notes: [], count: 0 }),
+  status: 200,
+  text: async () => JSON.stringify({ notes: [], count: 0 }),
 }))
 
+beforeEach(() => {
+  vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue()
+  vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {})
+})
+
 afterEach(() => {
+  cleanup()
   window.history.replaceState({}, '', '/')
+  vi.restoreAllMocks()
 })
 
 describe('Silvana memorial route', () => {
@@ -23,5 +31,6 @@ describe('Silvana memorial route', () => {
       'content',
       'noindex, nofollow',
     )
+    expect(document.querySelector('.memorial-scroll-cue')).toHaveAttribute('aria-hidden', 'true')
   })
 })
