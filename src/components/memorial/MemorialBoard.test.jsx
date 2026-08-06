@@ -59,4 +59,20 @@ describe('MemorialBoard', () => {
     expect(screen.getByRole('status')).toHaveTextContent(/atualizando o mural/i)
     expect(document.querySelector('.memorial-board')).toHaveAttribute('aria-busy', 'true')
   })
+
+  it('opens a complete memory in a focus dialog and returns focus when closed', () => {
+    render(<MemorialBoard
+      notes={[{ id: 'one', message: 'Uma lembrança longa e especial.', name: 'Ana' }]}
+      status="ready"
+    />)
+
+    const opener = screen.getByRole('button', { name: 'Ler lembrança de Ana' })
+    fireEvent.click(opener)
+
+    expect(screen.getByRole('dialog', { name: 'Lembrança de Ana' }))
+      .toHaveTextContent('Uma lembrança longa e especial.')
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByRole('dialog', { name: 'Lembrança de Ana' })).not.toBeInTheDocument()
+    expect(opener).toHaveFocus()
+  })
 })
