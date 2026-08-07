@@ -39,7 +39,8 @@ export function resolvePublicSiteOrigin(environment = process.env) {
   if (url.hostname === 'localhost' || url.hostname.endsWith('.localhost')) {
     throw new Error('VITE_SITE_URL cannot use localhost.')
   }
-  if (url.hostname.endsWith('.vercel.app')) {
+  const isVercelPreviewAlias = /-git-[a-z0-9-]+\.vercel\.app$/i.test(url.hostname)
+  if (environment.VERCEL_ENV === 'preview' || isVercelPreviewAlias) {
     throw new Error('VITE_SITE_URL cannot use a Vercel preview host.')
   }
   if (url.pathname !== '/' || url.search || url.hash) {
