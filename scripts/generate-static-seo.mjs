@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url'
 import { buildCanonicalUrl, staticPageMetadata } from '../src/seo/siteMetadata.js'
 import { memorialMetadata } from '../src/seo/memorialMetadata.js'
 import { buildStructuredData } from '../src/seo/structuredData.js'
+import { generatePostSocialPages } from './generate-post-social-pages.mjs'
 
 const routeHeadings = {
   '/': 'Transformamos visão em método, cultura em capacidade e estratégia em operação.',
@@ -235,12 +236,20 @@ export function getStaticRouteWordCount(route) {
   return text.trim().split(/\s+/).filter(Boolean).length
 }
 
-export function generateStaticSeoPages(distDirectory, environment = process.env) {
+export async function generateStaticSeoPages(
+  distDirectory,
+  environment = process.env,
+  { fetchPosts } = {},
+) {
   const indexPath = path.join(distDirectory, 'index.html')
   const baseHtml = fs.readFileSync(indexPath, 'utf8')
   const siteOrigin = resolveSiteOrigin(environment)
   const socialImageFile = fs.readdirSync(path.join(distDirectory, 'assets'))
-    .find((file) => file.startsWith('hero-bw-') && file.endsWith('.jpg'))
+    .sort()
+    .find((file) => /^hero-bw-.+\.jpg$/.test(file))
+  if (!socialImageFile) {
+    throw new Error(`Missing Vite hero social image in ${path.join(distDirectory, 'assets')}`)
+  }
   const imageUrl = new URL(`/assets/${socialImageFile}`, siteOrigin).toString()
 
   Object.entries(staticPageMetadata).forEach(([route, metadata]) => {
@@ -283,10 +292,22 @@ export function generateStaticSeoPages(distDirectory, environment = process.env)
     structuredData: buildStructuredData(memorialMetadata.route, memorialPage),
   })
   fs.writeFileSync(path.join(distDirectory, 'silvana-bettiol.html'), memorialHtml)
+
+  await generatePostSocialPages({
+    environment,
+    fallbackImageUrl: imageUrl,
+    baseHtml,
+    fetchPosts,
+    writeFile: async (outputPath, html) => {
+      const absoluteOutputPath = path.join(distDirectory, outputPath)
+      fs.mkdirSync(path.dirname(absoluteOutputPath), { recursive: true })
+      fs.writeFileSync(absoluteOutputPath, html)
+    },
+  })
 }
 
 const invokedFile = process.argv[1] ? pathToFileURL(path.resolve(process.argv[1])).href : ''
 
 if (import.meta.url === invokedFile) {
-  generateStaticSeoPages(path.resolve('dist'))
+  await generateStaticSeoPages(path.resolve('dist'))
 }

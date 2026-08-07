@@ -18,12 +18,14 @@ const baseHtml = `<!doctype html>
   <body><div id="root"></div><script src="/assets/app.js"></script></body>
 </html>`
 
-function createStaticFixture({ includeMemorialImage = true } = {}) {
+function createStaticFixture({ includeHeroImage = true, includeMemorialImage = true } = {}) {
   const directory = mkdtempSync(join(tmpdir(), 'silvana-seo-'))
   mkdirSync(join(directory, 'assets'), { recursive: true })
   mkdirSync(join(directory, 'media'), { recursive: true })
   writeFileSync(join(directory, 'index.html'), baseHtml)
-  writeFileSync(join(directory, 'assets', 'hero-bw-test.jpg'), 'default-social-image')
+  if (includeHeroImage) {
+    writeFileSync(join(directory, 'assets', 'hero-bw-test.jpg'), 'default-social-image')
+  }
   if (includeMemorialImage) {
     writeFileSync(
       join(directory, 'media', 'silvana-aniversario-05-08.png'),
@@ -39,6 +41,43 @@ function readRouteHtml(directory, route) {
 }
 
 describe('static SEO route generation', () => {
+  it('publishes dated Inspire post previews with their featured image after static routes', async () => {
+    const directory = createStaticFixture()
+    const post = {
+      title: 'Post de exemplo',
+      slug: 'exemplo',
+      publishedAt: '2026-07-28T12:00:00Z',
+      imageUrl: 'https://cdn.sanity.io/images/example/featured.jpg',
+    }
+    try {
+      await generateStaticSeoPages(directory, { VITE_SITE_URL: 'https://www.otimiza.test' }, {
+        fetchPosts: async () => [post, {
+          ...post,
+          slug: 'sem-imagem',
+          imageUrl: null,
+        }],
+      })
+
+      const html = readFileSync(join(directory, '2026', '07', '28', 'exemplo', 'index.html'), 'utf8')
+      expect(html).toContain('<meta property="og:image" content="https://cdn.sanity.io/images/example/featured.jpg" />')
+      const fallbackHtml = readFileSync(join(directory, '2026', '07', '28', 'sem-imagem', 'index.html'), 'utf8')
+      expect(fallbackHtml).toContain('<meta property="og:image" content="https://www.otimiza.test/assets/hero-bw-test.jpg" />')
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
+  })
+
+  it('fails generation when the Vite hero fallback asset is missing', async () => {
+    const directory = createStaticFixture({ includeHeroImage: false })
+    try {
+      await expect(generateStaticSeoPages(directory, {
+        VITE_SITE_URL: 'https://www.otimiza.test',
+      })).rejects.toThrow('Missing Vite hero social image')
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
+  })
+
   it('places exactly one page-specific H1 in the raw HTML response', () => {
     const html = renderStaticRouteHtml(baseHtml, {
       title: 'Quem somos | Otimiza',
@@ -107,10 +146,12 @@ describe('static SEO route generation', () => {
     expect(getStaticRouteWordCount('/')).toBeGreaterThanOrEqual(300)
   })
 
-  it('generates the exact non-indexed memorial social preview', () => {
+  it('generates the exact non-indexed memorial social preview', async () => {
     const directory = createStaticFixture()
     try {
-      generateStaticSeoPages(directory, { VITE_SITE_URL: 'https://www.otimiza.test' })
+      await generateStaticSeoPages(directory, { VITE_SITE_URL: 'https://www.otimiza.test' }, {
+        fetchPosts: async () => [],
+      })
       const html = readRouteHtml(directory, '/silvana-bettiol')
       expect(html).toContain('<title>05/08 é aniversário da Silvana</title>')
       expect(html).toContain('<meta name="description" content="O que Silvana nos ensinou continua vivo em nós. Compartilhe uma lembrança." />')
@@ -128,23 +169,25 @@ describe('static SEO route generation', () => {
     }
   })
 
-  it('fails generation when the memorial social image is missing', () => {
+  it('fails generation when the memorial social image is missing', async () => {
     const directory = createStaticFixture({ includeMemorialImage: false })
     try {
-      expect(() => generateStaticSeoPages(directory, {
+      await expect(generateStaticSeoPages(directory, {
         VITE_SITE_URL: 'https://www.otimiza.test',
-      })).toThrow('Missing memorial social image')
+      }, { fetchPosts: async () => [] })).rejects.toThrow('Missing memorial social image')
     } finally {
       rmSync(directory, { recursive: true, force: true })
     }
   })
 
-  it('preserves complete metadata for every preexisting static route', () => {
+  it('preserves complete metadata for every preexisting static route', async () => {
     const directory = createStaticFixture()
     const origin = 'https://www.otimiza.test'
     const defaultImage = `${origin}/assets/hero-bw-test.jpg`
     try {
-      generateStaticSeoPages(directory, { VITE_SITE_URL: origin })
+      await generateStaticSeoPages(directory, { VITE_SITE_URL: origin }, {
+        fetchPosts: async () => [],
+      })
       Object.entries(staticPageMetadata).forEach(([route, metadata]) => {
         const html = readRouteHtml(directory, route)
         const canonical = buildCanonicalUrl(route, origin)
