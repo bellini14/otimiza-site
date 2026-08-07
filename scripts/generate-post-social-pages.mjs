@@ -44,7 +44,8 @@ function isNonPublicIpv6(hostname) {
   if (address === null) return false
 
   const isIpv4Mapped = address >> 32n === 0xffffn
-  if (isIpv4Mapped) {
+  const isIpv4Compatible = address !== 0n && address >> 32n === 0n
+  if (isIpv4Mapped || isIpv4Compatible) {
     const ipv4 = Number(address & 0xffffffffn)
     const hostname = [
       ipv4 >>> 24,
