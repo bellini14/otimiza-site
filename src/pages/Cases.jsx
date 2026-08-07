@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { client, urlFor } from '../lib/sanity'
+import { resolveCaseStudySlug } from '../data/caseStudies'
 import { groupClientsBySector } from '../data/clientSectors'
 import { sitePages } from '../data/sitePages'
 import Silk from '../components/Silk'
@@ -96,15 +97,6 @@ const MOCK_CASE_TESTIMONIALS = [
   },
 ]
 
-function slugify(value) {
-  return value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-}
-
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max)
 }
@@ -162,7 +154,7 @@ function ClientLogoCard({ logo, variant = 'client', className = '', testId, flui
   )
   const title = variant === 'case' ? logo.caseTitle || logo.name : logo.name
   const description = variant === 'case' ? logo.caseDescription : ''
-  const caseSlug = logo.caseSlug || slugify(logo.name)
+  const caseSlug = logo.caseSlug || resolveCaseStudySlug(logo.name)
   const caseHref = caseSlug ? `/cases/${caseSlug}` : null
   const CardTag = variant === 'case' ? 'article' : 'div'
   const isCaseCard = variant === 'case'
