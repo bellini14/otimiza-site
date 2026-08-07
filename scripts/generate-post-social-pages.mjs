@@ -5,7 +5,7 @@ export const INSPIRE_POSTS_QUERY = `*[_type == "post"] | order(publishedAt desc)
   "title": title,
   "slug": slug.current,
   publishedAt,
-  "imageUrl": mainImage.asset->url
+  "contentImageUrl": content[_type == "image"][0].asset->url
 }`
 
 const POST_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/i
@@ -169,7 +169,7 @@ export function renderPostSocialPage({ post, siteOrigin, fallbackImageUrl, baseH
   const metadata = {
     title,
     url: new URL(postPath, `${siteOrigin}/`).toString(),
-    imageUrl: post.imageUrl || fallbackImageUrl,
+    imageUrl: post.contentImageUrl || fallbackImageUrl,
   }
   const documentHtml = baseHtml || '<!doctype html><html lang="pt-BR"><head></head><body><div id="root"></div></body></html>'
 

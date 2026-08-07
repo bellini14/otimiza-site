@@ -13,7 +13,7 @@ const post = {
   title: 'Um <post> & "especial"',
   slug: 'exemplo',
   publishedAt: '2026-07-28T12:00:00Z',
-  imageUrl: 'https://cdn.sanity.io/images/example/post.jpg?x=1&y=2',
+  contentImageUrl: 'https://cdn.sanity.io/images/example/post.jpg?x=1&y=2',
 }
 
 describe('post social page generation', () => {
@@ -33,13 +33,28 @@ describe('post social page generation', () => {
 
   it('uses the fallback image when a post has no featured image', () => {
     const html = renderPostSocialPage({
-      post: { ...post, imageUrl: null },
+      post: { ...post, contentImageUrl: null },
       siteOrigin,
       fallbackImageUrl,
     })
 
     expect(html).toContain(`<meta property="og:image" content="${fallbackImageUrl}" />`)
     expect(html).toContain(`<meta name="twitter:image" content="${fallbackImageUrl}" />`)
+  })
+
+  it('uses the first content image instead of the Sanity featured image', () => {
+    const html = renderPostSocialPage({
+      post: {
+        ...post,
+        imageUrl: 'https://cdn.sanity.io/images/example/featured-image.png',
+        contentImageUrl: 'https://cdn.sanity.io/images/example/content-image.jpg',
+      },
+      siteOrigin,
+      fallbackImageUrl,
+    })
+
+    expect(html).toContain('https://cdn.sanity.io/images/example/content-image.jpg')
+    expect(html).not.toContain('https://cdn.sanity.io/images/example/featured-image.png')
   })
 
   it('derives an output path only from valid dated post values', () => {

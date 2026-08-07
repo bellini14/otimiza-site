@@ -47,19 +47,19 @@ describe('static SEO route generation', () => {
       title: 'Post de exemplo',
       slug: 'exemplo',
       publishedAt: '2026-07-28T12:00:00Z',
-      imageUrl: 'https://cdn.sanity.io/images/example/featured.jpg',
+      contentImageUrl: 'https://cdn.sanity.io/images/example/content.jpg',
     }
     try {
       await generateStaticSeoPages(directory, { VITE_SITE_URL: 'https://www.otimiza.test' }, {
         fetchPosts: async () => [post, {
           ...post,
           slug: 'sem-imagem',
-          imageUrl: null,
+          contentImageUrl: null,
         }],
       })
 
       const html = readFileSync(join(directory, '2026', '07', '28', 'exemplo', 'index.html'), 'utf8')
-      expect(html).toContain('<meta property="og:image" content="https://cdn.sanity.io/images/example/featured.jpg" />')
+      expect(html).toContain('<meta property="og:image" content="https://cdn.sanity.io/images/example/content.jpg" />')
       const fallbackHtml = readFileSync(join(directory, '2026', '07', '28', 'sem-imagem', 'index.html'), 'utf8')
       expect(fallbackHtml).toContain('<meta property="og:image" content="https://www.otimiza.test/assets/hero-bw-test.jpg" />')
     } finally {
