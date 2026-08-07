@@ -42,19 +42,19 @@ describe('post social page generation', () => {
     expect(html).toContain(`<meta name="twitter:image" content="${fallbackImageUrl}" />`)
   })
 
-  it('uses the first content image instead of the Sanity featured image', () => {
+  it('uses the Sanity main image before an inline content image', () => {
     const html = renderPostSocialPage({
       post: {
         ...post,
-        imageUrl: 'https://cdn.sanity.io/images/example/featured-image.png',
+        mainImageUrl: 'https://cdn.sanity.io/images/example/featured-image.png',
         contentImageUrl: 'https://cdn.sanity.io/images/example/content-image.jpg',
       },
       siteOrigin,
       fallbackImageUrl,
     })
 
-    expect(html).toContain('https://cdn.sanity.io/images/example/content-image.jpg')
-    expect(html).not.toContain('https://cdn.sanity.io/images/example/featured-image.png')
+    expect(html).toContain('https://cdn.sanity.io/images/example/featured-image.png')
+    expect(html).not.toContain('https://cdn.sanity.io/images/example/content-image.jpg')
   })
 
   it('derives an output path only from valid dated post values', () => {
