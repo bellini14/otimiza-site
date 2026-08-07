@@ -30,7 +30,7 @@ Consent copy links to the privacy policy and explains that subscription can be c
 
 ## Architecture
 
-A server-only RD Station adapter owns payload construction and the outbound request to the current conversion endpoint. It reads `RD_STATION_API_KEY` only from the server environment. The key must never be placed in Vite variables, browser code, committed files, logs, or responses.
+A server-only RD Station adapter owns payload construction and sends `POST https://api.rd.services/platform/conversions?api_key=<key>` with JSON content. The request body is `{ event_type: "CONVERSION", event_family: "CDP", payload: { conversion_identifier, email, name?, legal_bases } }`. For an affirmative newsletter subscription, `legal_bases` is exactly `[{ category: "communications", type: "consent", status: "granted" }]`. The adapter reads `RD_STATION_API_KEY` only from the server environment. The key must never be placed in Vite variables, browser code, committed files, logs, or responses.
 
 A dedicated newsletter API route validates and normalizes name, email, consent, source, and honeypot fields. It rejects missing consent or invalid email, silently accepts honeypot submissions without contacting RD Station, and reports a clear temporary failure if RD Station is unavailable.
 
@@ -44,7 +44,15 @@ Both newsletter forms submit asynchronously, disable repeat submission while pen
 
 The general contact form gains an optional Inspire consent checkbox and passes the explicit boolean to the contact API. The existing optional checkbox in the shared article/newsroom dialog is retained and wired to RD Station rather than merely copied into the email message. Existing SMTP, validation, honeypot, dialog focus, accessibility, and user-feedback behavior remains intact.
 
-Each form sends a stable source identifier so RD Station can distinguish the dedicated newsletter page, Inspire sidebar, general contact, article contact, and newsroom contact conversions.
+Each form sends one stable source identifier from this closed mapping:
+
+- dedicated newsletter page: `otimiza-inspire-newsletter-page`;
+- Inspire sidebar: `otimiza-inspire-sidebar`;
+- general contact opt-in: `otimiza-contact-page-newsletter`;
+- article contact opt-in: `otimiza-inspire-article-contact-newsletter`;
+- newsroom contact opt-in: `otimiza-inspire-newsroom-contact-newsletter`.
+
+The server rejects unknown source identifiers. After a successful newsletter conversion, all visitor-entered fields and the required checkbox reset to their initial empty and unchecked states.
 
 ## Privacy Policy
 
@@ -58,7 +66,7 @@ The privacy page is a normal non-Inspire route under the global layout. It recei
 
 ## Error Handling and Observability
 
-The API distinguishes invalid input, missing server configuration, RD rejection, and unexpected errors without returning provider details or secrets to the browser. Server logs contain only a safe form source and status/error category, not the API key or submitted message.
+The API distinguishes invalid input, missing server configuration, RD rejection, and unexpected errors without returning provider details or secrets to the browser. Server logs may contain the safe form source, provider HTTP status code, and internal error category, but never the API key, submitted message, email address, name, or provider response body.
 
 Newsletter registration requires RD success. Contact delivery requires SMTP success; optional RD registration is best effort after affirmative consent. Honeypot submissions produce a generic success and trigger neither provider.
 
@@ -70,4 +78,4 @@ Before completion, run targeted tests, the full test suite, lint, and production
 
 ## Deployment Configuration
 
-`RD_STATION_API_KEY` is configured directly in Vercel for the intended environments and never committed. Deployment readiness includes confirming the variable exists without printing its value and performing a controlled conversion test with a designated test address. No production deployment occurs until local verification and diff review succeed.
+`RD_STATION_API_KEY` is configured directly in Vercel for the intended environments and never committed. Deployment readiness includes confirming the variable exists without printing its value. A controlled live conversion test is a deployment prerequisite, not an automated repository test: immediately before deployment the user must designate a test email address they control, or perform the submission personally and confirm the conversion in RD Station. The address is never committed to the repository or specification. No production deployment occurs until local verification, diff review, and this user-confirmed conversion check succeed.
