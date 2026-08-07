@@ -93,6 +93,22 @@ describe('Home', () => {
     expect(inspireHeading.compareDocumentPosition(brandsHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
+  it('renders Nossa Tecnologia as the final home content section', () => {
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>,
+    )
+
+    const homeContent = screen.getByTestId('home-content')
+    const featuresHeading = screen.getByRole('heading', { name: 'Nossas Soluções' })
+    const technologyHeading = screen.getByRole('heading', { name: 'Nossa Tecnologia' })
+    const technologySection = technologyHeading.closest('section')
+
+    expect(featuresHeading.compareDocumentPosition(technologyHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(homeContent.lastElementChild).toBe(technologySection)
+  })
+
   it('does not render section eyebrow labels', () => {
     render(
       <MemoryRouter>

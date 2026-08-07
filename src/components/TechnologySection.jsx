@@ -74,7 +74,7 @@ export default function TechnologySection() {
             {/* Header moved inside */}
             <div className="mb-6 sm:mb-10">
               <h2 className={`mb-3 font-display text-[2.5rem] leading-[1.05] text-slate-900 sm:mb-4 sm:text-5xl lg:text-6xl ${textVisible ? 'animate-enter' : 'opacity-0'} [animation-delay:120ms]`}>
-                Nossa tecnologia
+                Nossa Tecnologia
               </h2>
               <p className={`max-w-[18rem] text-sm leading-6 text-slate-600 sm:max-w-2xl sm:text-lg ${textVisible ? 'animate-enter' : 'opacity-0'} [animation-delay:240ms]`}>
                 Acreditamos que os negócios são criados ao redor da tecnologia

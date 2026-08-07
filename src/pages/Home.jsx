@@ -239,9 +239,9 @@ function Home() {
           </div>
         </section>
 
-        <TechnologySection />
         <StaggerTestimonials key={homeCasesKey} cases={homeCases} />
         <FeaturesSection />
+        <TechnologySection />
       </div>
     </div>
   )
