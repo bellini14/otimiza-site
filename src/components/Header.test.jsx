@@ -102,11 +102,11 @@ describe('Header', () => {
     expect(mobileNav.getByRole('link', { name: 'Quem somos' })).not.toHaveClass('text-[clamp(1.7rem,8.4vw,2.8rem)]')
     expect(mobileNav.getByRole('link', { name: 'Nossa abordagem' })).toHaveClass('w-fit')
     expect(mobileMenu.querySelector('.mobile-menu-content')).toHaveClass('w-full')
-    expect(mobileMenu.querySelector('.mobile-menu-footer')).toHaveClass('w-full', 'text-[15px]', 'text-white')
+    expect(mobileMenu.querySelector('.mobile-menu-footer')).toBeNull()
     expect(menuScope.queryByText(/2024 All rights reserved/)).not.toBeInTheDocument()
     expect(menuScope.queryByText('Built with React & Tailwind')).not.toBeInTheDocument()
     expect(menuScope.queryByRole('link', { name: 'pt-BR' })).not.toBeInTheDocument()
-    expect(menuScope.getByRole('button', { name: 'en-US' })).toBeInTheDocument()
+    expect(menuScope.queryByRole('button', { name: 'en-US' })).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Otimiza home' })).not.toHaveClass('header-logo-link--menu-open')
     expect(screen.getByRole('link', { name: 'Otimiza home' })).toHaveClass('z-[60]')
     expect(screen.getByAltText('Otimiza')).toHaveClass('header-logo--menu-open')
@@ -146,7 +146,7 @@ describe('Header', () => {
     expect(window.localStorage.getItem('theme')).toBeNull()
   })
 
-  it('opens the language menu and persists the selected locale', () => {
+  it.skip('opens the language menu and persists the selected locale', () => {
     renderHeader()
 
     const languageTrigger = screen.getByRole('button', { name: 'Selecionar idioma' })
@@ -174,7 +174,15 @@ describe('Header', () => {
     expect(window.localStorage.getItem('locale')).toBe('en-US')
   })
 
-  it('shows only the inactive language action in the mobile menu footer', () => {
+  it('hides the language controls in both header menus while keeping the feature available in code', () => {
+    renderHeader()
+
+    expect(screen.queryByRole('button', { name: 'Selecionar idioma' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /abrir menu/i }))
+    expect(within(screen.getByRole('dialog', { name: 'Menu principal' })).queryByRole('button', { name: /en-US|pt-BR/ })).not.toBeInTheDocument()
+  })
+
+  it.skip('shows only the inactive language action in the mobile menu footer', () => {
     renderHeader()
 
     fireEvent.click(screen.getByRole('button', { name: /abrir menu/i }))
@@ -191,7 +199,7 @@ describe('Header', () => {
     expect(menuScope.queryByRole('button', { name: 'en-US' })).not.toBeInTheDocument()
   })
 
-  it('restores the locale and dismisses the language menu with Escape or an outside click', () => {
+  it.skip('restores the locale and dismisses the language menu with Escape or an outside click', () => {
     window.localStorage.setItem('locale', 'en-US')
     renderHeader()
 
@@ -269,11 +277,8 @@ describe('Header', () => {
     expect(screen.getByAltText('Otimiza')).toHaveClass('header-logo')
     expect(screen.getByAltText('Otimiza')).toHaveClass('header-logo--mobile-large')
     expect(screen.getByAltText('Otimiza')).not.toHaveClass('sm:h-12', 'md:h-[3.25rem]')
-    expect(screen.getByRole('button', { name: 'Selecionar idioma' })).toHaveClass('header-language-trigger')
+    expect(screen.queryByRole('button', { name: 'Selecionar idioma' })).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Fale com a Otimiza' })).toHaveClass('header-contact-link')
-    expect(screen.getByRole('button', { name: 'Selecionar idioma' }).parentElement.parentElement).toHaveClass(
-      'header-secondary-actions',
-    )
     expect(mobileToggle).toHaveClass('header-mobile-only')
     expect(mobileToggle).toHaveClass('h-12', 'min-w-[5.25rem]', 'px-5', 'text-[19px]')
   })
@@ -292,12 +297,10 @@ describe('Header', () => {
   it('keeps the secondary actions visible in compact form until the 770px mobile boundary', () => {
     renderHeader()
 
-    const languageTrigger = screen.getByRole('button', { name: 'Selecionar idioma' })
     const contactLink = screen.getByRole('link', { name: 'Fale com a Otimiza' })
     const stylesheet = readFileSync('src/index.css', 'utf8')
 
-    expect(within(languageTrigger).getByText('pt-BR')).toHaveClass('header-language-label')
-    expect(languageTrigger.querySelector('.header-language-chevron')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Selecionar idioma' })).not.toBeInTheDocument()
     expect(contactLink).toHaveClass('header-contact-link')
     expect(within(contactLink).getByText('Fale com a Otimiza')).toHaveClass('header-contact-label')
     expect(within(contactLink).getByTestId('contact-icon')).toBeInTheDocument()

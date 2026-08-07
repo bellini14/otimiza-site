@@ -97,6 +97,9 @@ const languages = [
   { locale: 'en-US', Flag: UnitedStatesFlag },
 ]
 
+// Keep the selector implementation ready for the next multilingual release.
+const SHOW_LANGUAGE_SELECTOR = false
+
 function getInitialLocale() {
   if (typeof window === 'undefined') return 'pt-BR'
 
@@ -435,7 +438,7 @@ function Header() {
             </div>
 
             <div className="header-secondary-actions flex items-center gap-3">
-              <LanguageSelector />
+              {SHOW_LANGUAGE_SELECTOR ? <LanguageSelector /> : null}
 
               <Link
                 to="/contato"
@@ -518,15 +521,17 @@ function Header() {
             )}
           </nav>
 
-          <footer className="mobile-menu-footer flex w-full items-center text-[15px] font-[300] leading-relaxed text-white">
-            <button
+          {SHOW_LANGUAGE_SELECTOR ? (
+            <footer className="mobile-menu-footer flex w-full items-center text-[15px] font-[300] leading-relaxed text-white">
+              <button
               type="button"
               onClick={selectInactiveMobileLocale}
               className="text-left text-white transition-colors hover:text-white"
             >
               {inactiveMobileLocale}
-            </button>
-          </footer>
+              </button>
+            </footer>
+          ) : null}
         </div>
       </section>
     </>
