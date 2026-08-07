@@ -56,6 +56,8 @@ function Contato() {
     const form = event.currentTarget
     const formData = new FormData(form)
     const payload = Object.fromEntries(formData.entries())
+    payload.newsletterConsent = formData.get('newsletterConsent') === 'on'
+    payload.newsletterSource = 'otimiza-contact-page-newsletter'
 
     setStatus({ type: 'loading', message: '' })
 
@@ -143,6 +145,11 @@ function Contato() {
               <label>
                 <span className="sr-only">Comentário ou mensagem</span>
                 <textarea className="contact-form__field" name="message" placeholder="Digite sua mensagem..." rows="2" maxLength="5000" required />
+              </label>
+
+              <label className="contact-form__consent">
+                <input type="checkbox" name="newsletterConsent" />
+                <span>Aceito receber a newsletter Inspire e comunicações da Otimiza. Saiba mais em <a href="/politica-de-privacidade">Política de Privacidade</a>.</span>
               </label>
 
               <label className="contact-honeypot" aria-hidden="true">

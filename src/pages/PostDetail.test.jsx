@@ -219,9 +219,8 @@ describe('PostDetail', () => {
     expect(screen.getByText('Obrigado por ler na Inspire.')).toBeInTheDocument()
     const likeButton = await screen.findByRole('button', { name: /7 curtidas/i })
     const count = container.querySelector('.post-like-button__count')
-    expect(likeButton).not.toHaveTextContent('7')
     expect(count?.textContent).toBe('7')
-    expect(likeButton.contains(count)).toBe(false)
+    expect(likeButton).toContainElement(count)
     expect(fetchMock).toHaveBeenCalledWith('/api/posts/post-com-imagem-inline/likes', { method: 'GET' })
   })
 
@@ -292,17 +291,26 @@ describe('PostDetail', () => {
     expect(within(panel).getByText('Post com imagem inline')).toHaveClass('post-detail__contact-article-title')
     expect(within(panel).getByText('A equipe da Otimiza responderá pelo seu e-mail.')).toHaveClass('post-detail__contact-prompt')
 
+    fireEvent.change(within(panel).getByRole('textbox', { name: 'Nome' }), {
+      target: { value: 'João Silva' },
+    })
     fireEvent.change(within(panel).getByRole('textbox', { name: 'Email' }), {
       target: { value: 'leitor@example.com' },
     })
     fireEvent.change(within(panel).getByRole('textbox', { name: 'Mensagem' }), {
       target: { value: 'Quero conversar sobre este tema.' },
     })
+    const newsletterConsent = within(panel).getByRole('checkbox', {
+      name: /newsletter Inspire e comunicações da Otimiza/i,
+    })
+    expect(newsletterConsent).toHaveAccessibleName('Aceito receber a newsletter Inspire e comunicações da Otimiza. Saiba mais em Política de Privacidade.')
+    fireEvent.click(newsletterConsent)
     const submitButton = within(panel).getByRole('button', { name: 'Enviar mensagem' })
     fireEvent.click(submitButton)
 
     expect(submitButton).toBeDisabled()
     expect(submitButton).toHaveTextContent('Enviando...')
+    expect(within(panel).getByRole('textbox', { name: 'Nome' })).toBeDisabled()
     expect(within(panel).getByRole('textbox', { name: 'Email' })).toBeDisabled()
     expect(within(panel).getByRole('textbox', { name: 'Mensagem' })).toBeDisabled()
     expect(within(panel).getByRole('status')).toHaveTextContent('Enviando sua mensagem...')
@@ -316,10 +324,15 @@ describe('PostDetail', () => {
       headers: { 'Content-Type': 'application/json' },
     }))
     const requestBody = JSON.parse(fetchMock.mock.calls[1][1].body)
+    expect(requestBody.firstName).toBe('João')
+    expect(requestBody.lastName).toBe('Silva')
     expect(requestBody.email).toBe('leitor@example.com')
     expect(requestBody.message).toContain('Post com imagem inline')
     expect(requestBody.message).toContain('Link: /2026/04/13/post-com-imagem-inline')
     expect(requestBody.message).toContain('Quero conversar sobre este tema.')
+    expect(requestBody.message).toContain('Atualizações mensais do Inspire: Sim')
+    expect(requestBody.newsletterConsent).toBe(true)
+    expect(requestBody.newsletterSource).toBe('otimiza-inspire-article-contact-newsletter')
     expect(await within(panel).findByText(/mensagem enviada.*responderá pelo seu e-mail/i)).toBeInTheDocument()
 
     fireEvent.change(within(panel).getByRole('textbox', { name: 'Mensagem' }), {
@@ -339,9 +352,11 @@ describe('PostDetail', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Contato' }))
 
     const panel = screen.getByRole('dialog', { name: 'Converse sobre este artigo' })
+    const nameField = within(panel).getByRole('textbox', { name: 'Nome' })
     const emailField = within(panel).getByRole('textbox', { name: 'Email' })
     const messageField = within(panel).getByRole('textbox', { name: 'Mensagem' })
 
+    fireEvent.change(nameField, { target: { value: 'João Silva' } })
     fireEvent.change(emailField, { target: { value: 'leitor@example.com' } })
     fireEvent.change(messageField, { target: { value: 'Minha reflexão sobre o artigo.' } })
     fireEvent.click(within(panel).getByRole('button', { name: 'Enviar mensagem' }))
@@ -349,6 +364,7 @@ describe('PostDetail', () => {
     const alert = await within(panel).findByRole('alert')
     expect(alert).toHaveTextContent('Serviço indisponível.')
     expect(alert).toHaveTextContent('Sua mensagem continua no formulário para você tentar novamente.')
+    expect(nameField).toHaveValue('João Silva')
     expect(emailField).toHaveValue('leitor@example.com')
     expect(messageField).toHaveValue('Minha reflexão sobre o artigo.')
     expect(within(panel).getByRole('button', { name: 'Enviar mensagem' })).toBeEnabled()

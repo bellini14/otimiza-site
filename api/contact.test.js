@@ -5,10 +5,15 @@ import {
   ContactEmailProviderError,
   sendContactEmail,
 } from './_lib/smtp2go.js'
+import { sendNewsletterConversion } from './_lib/rdStation.js'
 
 vi.mock('./_lib/smtp2go.js', async (importOriginal) => {
   const actual = await importOriginal()
   return { ...actual, sendContactEmail: vi.fn() }
+})
+vi.mock('./_lib/rdStation.js', async (importOriginal) => {
+  const actual = await importOriginal()
+  return { ...actual, sendNewsletterConversion: vi.fn() }
 })
 
 function createResponse() {
@@ -41,6 +46,7 @@ const validBody = {
 
 beforeEach(() => {
   sendContactEmail.mockReset()
+  sendNewsletterConversion.mockReset()
 })
 
 describe('contact API route', () => {
@@ -93,5 +99,23 @@ describe('contact API route', () => {
     }))
     expect(res.statusCode).toBe(200)
     expect(res.jsonBody.message).toMatch(/recebida/i)
+    expect(sendNewsletterConversion).not.toHaveBeenCalled()
+  })
+
+  it('registers an opted-in contact after SMTP succeeds', async () => {
+    sendContactEmail.mockResolvedValue()
+    sendNewsletterConversion.mockResolvedValue()
+    const res = createResponse()
+    await handler({ method: 'POST', body: { ...validBody, newsletterConsent: true, newsletterSource: 'otimiza-contact-page-newsletter' } }, res)
+    expect(sendNewsletterConversion).toHaveBeenCalledWith({ email: 'joao@example.com', name: expect.stringContaining('Silva'), source: 'otimiza-contact-page-newsletter' })
+    expect(res.statusCode).toBe(200)
+  })
+
+  it('keeps SMTP success when optional RD registration fails', async () => {
+    sendContactEmail.mockResolvedValue()
+    sendNewsletterConversion.mockRejectedValue({ name: 'RDStationProviderError', status: 429 })
+    const res = createResponse()
+    await handler({ method: 'POST', body: { ...validBody, newsletterConsent: true, newsletterSource: 'otimiza-contact-page-newsletter' } }, res)
+    expect(res.statusCode).toBe(200)
   })
 })

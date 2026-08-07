@@ -44,6 +44,10 @@
       "destination": "/contato.html"
     },
     {
+      "source": "/politica-de-privacidade",
+      "destination": "/politica-de-privacidade.html"
+    },
+    {
       "source": "/inspire",
       "destination": "/inspire.html"
     },

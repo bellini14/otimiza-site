@@ -127,7 +127,10 @@ function Footer() {
 
             <div className="mt-10 w-full border-t border-[#434b54]/12 pt-6">
               <div className="flex flex-col items-center justify-between gap-3 text-sm text-[#5a6572]/74 sm:flex-row sm:text-left">
-                <p>&copy; {currentYear} Otimiza. All rights reserved.</p>
+                <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 sm:justify-start">
+                  <span>&copy; {currentYear} Otimiza. All rights reserved.</span>
+                  <Link to="/politica-de-privacidade" className="underline underline-offset-4 transition-opacity hover:opacity-65">Política de Privacidade</Link>
+                </p>
                 <p>Developed by Studiodesign</p>
               </div>
             </div>

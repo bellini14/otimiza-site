@@ -31,6 +31,7 @@ function renderLayout(initialEntry = '/inspire/newsletter') {
 
 afterEach(() => {
   cleanup()
+  vi.unstubAllGlobals()
 })
 
 describe('Inspire newsletter CTA', () => {
@@ -83,5 +84,27 @@ describe('Inspire newsletter CTA', () => {
     expect(screen.getByLabelText('Nome')).toBeInTheDocument()
     expect(screen.getByLabelText('Email')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Assinar newsletter' })).toHaveAttribute('data-inspire-tooltip', 'Assinar newsletter')
+  })
+
+  it('requires consent and submits the dedicated newsletter source', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue({ message: 'Inscrição confirmada.' }) })
+    vi.stubGlobal('fetch', fetchMock)
+    window.history.pushState({}, '', '/inspire/newsletter')
+    render(<App />)
+
+    const consent = await screen.findByRole('checkbox', { name: /newsletter Inspire e comunicações da Otimiza/i })
+    expect(consent).toBeRequired()
+    expect(consent).not.toBeChecked()
+    expect(consent).toHaveAccessibleName('Aceito receber a newsletter Inspire e comunicações da Otimiza. Saiba mais em Política de Privacidade.')
+    expect(screen.getByRole('link', { name: 'Política de Privacidade' })).toHaveAttribute('href', '/politica-de-privacidade')
+    fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'Maria' } })
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'maria@example.com' } })
+    fireEvent.click(consent)
+    fireEvent.click(screen.getByRole('button', { name: 'Assinar newsletter' }))
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/newsletter', expect.objectContaining({ method: 'POST' })))
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({ consent: true, source: 'otimiza-inspire-newsletter-page' })
+    await screen.findByText('Inscrição confirmada.')
+    expect(consent).not.toBeChecked()
   })
 })

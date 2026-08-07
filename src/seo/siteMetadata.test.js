@@ -11,11 +11,19 @@ const expectedRoutes = [
   '/tecnologia',
   '/academia-otimiza',
   '/contato',
+  '/politica-de-privacidade',
   '/inspire',
   '/inspire/newsletter',
 ]
 
 describe('SEO title catalog', () => {
+  it('uses the strategic consulting positioning on the home page', () => {
+    expect(staticPageMetadata['/']).toEqual({
+      title: 'Consultoria Estratégica em Negócios e Execução | Otimiza',
+      description: 'A Otimiza transforma estratégia em resultados, conectando visão de negócio, gestão e execução para impulsionar crescimento sustentável.',
+    })
+  })
+
   it('defines a unique, descriptive title for every static public route', () => {
     expect(Object.keys(staticPageMetadata).sort()).toEqual(expectedRoutes.sort())
 

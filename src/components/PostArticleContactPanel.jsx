@@ -12,12 +12,20 @@ const focusableSelector = [
 ].join(',')
 
 const initialFormValues = {
+  name: '',
   email: '',
   message: '',
+  updatesConsent: false,
   company: '',
 }
 
-function PostArticleContactPanel({ postTitle, postPath }) {
+function PostArticleContactPanel({
+  postTitle,
+  postPath,
+  variant = 'article',
+  triggerClassName = '',
+  triggerLabel = 'Contato',
+}) {
   const dialogId = useId()
   const dialogTitleId = useId()
   const triggerRef = useRef(null)
@@ -27,6 +35,7 @@ function PostArticleContactPanel({ postTitle, postPath }) {
   const [formValues, setFormValues] = useState(initialFormValues)
   const [status, setStatus] = useState({ type: 'idle', message: '' })
   const isSubmitting = status.type === 'loading'
+  const isEditorial = variant === 'editorial'
 
   function closeDialog() {
     setIsOpen(false)
@@ -82,8 +91,11 @@ function PostArticleContactPanel({ postTitle, postPath }) {
   }, [isOpen])
 
   function handleFieldChange(event) {
-    const { name, value } = event.currentTarget
-    setFormValues((current) => ({ ...current, [name]: value }))
+    const { checked, name, type, value } = event.currentTarget
+    setFormValues((current) => ({
+      ...current,
+      [name]: type === 'checkbox' ? checked : value,
+    }))
 
     if (status.type === 'success' || status.type === 'error') {
       setStatus({ type: 'idle', message: '' })
@@ -93,12 +105,24 @@ function PostArticleContactPanel({ postTitle, postPath }) {
   async function handleSubmit(event) {
     event.preventDefault()
     const readerMessage = formValues.message.trim()
+    const [firstName, ...lastNameParts] = formValues.name.trim().split(/\s+/)
+    const lastName = lastNameParts.join(' ') || '-'
+    const messageContext = isEditorial
+      ? `Mensagem enviada para a redação do Inspire\n\nMensagem do leitor:\n${readerMessage}`
+      : `Mensagem enviada pelo Inspire\nArtigo: "${postTitle}"\nLink: ${postPath}\n\nMensagem do leitor:\n${readerMessage}`
+    const message = `${messageContext}\n\nAtualizações mensais do Inspire: ${
+      formValues.updatesConsent ? 'Sim' : 'Não'
+    }`
     const payload = {
-      firstName: 'Leitor',
-      lastName: 'Inspire',
+      firstName,
+      lastName,
       email: formValues.email.trim(),
-      message: `Mensagem enviada pelo Inspire\nArtigo: "${postTitle}"\nLink: ${postPath}\n\nMensagem do leitor:\n${readerMessage}`,
+      message,
       company: formValues.company,
+      newsletterConsent: formValues.updatesConsent,
+      newsletterSource: isEditorial
+        ? 'otimiza-inspire-newsroom-contact-newsletter'
+        : 'otimiza-inspire-article-contact-newsletter',
     }
 
     setStatus({ type: 'loading', message: 'Enviando sua mensagem...' })
@@ -134,21 +158,35 @@ function PostArticleContactPanel({ postTitle, postPath }) {
 
   return (
     <>
-      <div className="post-detail__hero-action-item">
+      {isEditorial ? (
         <button
           ref={triggerRef}
           type="button"
-          className="post-detail__hero-action-control post-detail__hero-contact-button"
+          className={triggerClassName}
           aria-haspopup="dialog"
           aria-expanded={isOpen}
           aria-controls={dialogId}
-          data-inspire-tooltip="Enviar mensagem"
           onClick={() => setIsOpen(true)}
         >
-          <MessageCircle size={16} strokeWidth={1.8} />
-          Contato
+          {triggerLabel}
         </button>
-      </div>
+      ) : (
+        <div className="post-detail__hero-action-item">
+          <button
+            ref={triggerRef}
+            type="button"
+            className="post-detail__hero-action-control post-detail__hero-contact-button"
+            aria-haspopup="dialog"
+            aria-expanded={isOpen}
+            aria-controls={dialogId}
+            data-inspire-tooltip="Enviar mensagem"
+            onClick={() => setIsOpen(true)}
+          >
+            <MessageCircle size={16} strokeWidth={1.8} />
+            {triggerLabel}
+          </button>
+        </div>
+      )}
 
       {isOpen && createPortal(
         <div
@@ -176,10 +214,12 @@ function PostArticleContactPanel({ postTitle, postPath }) {
                 </span>
                 <div className="post-detail__contact-heading-text">
                   <h2 id={dialogTitleId} className="post-detail__contact-heading">
-                    Converse sobre este artigo
+                    {isEditorial ? 'Escreva para a redação' : 'Converse sobre este artigo'}
                   </h2>
                   <p className="post-detail__contact-heading-copy">
-                    Compartilhe uma dúvida, percepção ou aplicação prática.
+                    {isEditorial
+                      ? 'Envie uma mensagem, sugestão ou comentário.'
+                      : 'Compartilhe uma dúvida, percepção ou aplicação prática.'}
                   </p>
                 </div>
               </div>
@@ -194,16 +234,34 @@ function PostArticleContactPanel({ postTitle, postPath }) {
               </button>
             </header>
 
-            <div className="post-detail__contact-context">
-              <span className="post-detail__contact-context-label">Sobre o artigo</span>
-              <p className="post-detail__contact-article-title">{postTitle}</p>
-            </div>
+            {!isEditorial && (
+              <div className="post-detail__contact-context">
+                <span className="post-detail__contact-context-label">Sobre o artigo</span>
+                <p className="post-detail__contact-article-title">{postTitle}</p>
+              </div>
+            )}
 
             <p className="post-detail__contact-prompt">
-              A equipe da Otimiza responderá pelo seu e-mail.
+              {isEditorial
+                ? 'A redação do Inspire responderá para o seu e-mail.'
+                : 'A equipe da Otimiza responderá pelo seu e-mail.'}
             </p>
 
             <form className="post-detail__contact-form" onSubmit={handleSubmit}>
+              <label>
+                <span className="sr-only">Nome</span>
+                <input
+                  name="name"
+                  type="text"
+                  placeholder="Nome"
+                  autoComplete="name"
+                  maxLength="80"
+                  value={formValues.name}
+                  disabled={isSubmitting}
+                  onChange={handleFieldChange}
+                  required
+                />
+              </label>
               <label>
                 <span className="sr-only">Email</span>
                 <input
@@ -222,7 +280,9 @@ function PostArticleContactPanel({ postTitle, postPath }) {
                 <span className="sr-only">Mensagem</span>
                 <textarea
                   name="message"
-                  placeholder="O que este artigo fez você pensar?"
+                  placeholder={isEditorial
+                    ? 'Escreva sua mensagem...'
+                    : 'O que este artigo fez você pensar?'}
                   rows="3"
                   maxLength="4200"
                   value={formValues.message}
@@ -230,6 +290,16 @@ function PostArticleContactPanel({ postTitle, postPath }) {
                   onChange={handleFieldChange}
                   required
                 />
+              </label>
+              <label className="post-detail__contact-consent">
+                <input
+                  name="updatesConsent"
+                  type="checkbox"
+                  checked={formValues.updatesConsent}
+                  disabled={isSubmitting}
+                  onChange={handleFieldChange}
+                />
+                <span>Aceito receber a newsletter Inspire e comunicações da Otimiza. Saiba mais em <a href="/politica-de-privacidade">Política de Privacidade</a>.</span>
               </label>
               <label className="post-detail__contact-honeypot" aria-hidden="true">
                 <span>Empresa</span>

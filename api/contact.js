@@ -3,6 +3,7 @@ import {
   ContactEmailProviderError,
   sendContactEmail,
 } from './_lib/smtp2go.js'
+import { NEWSLETTER_SOURCES, sendNewsletterConversion } from './_lib/rdStation.js'
 
 const FIELD_LIMITS = {
   firstName: 80,
@@ -22,6 +23,8 @@ function normalizeBody(body) {
     email: typeof source?.email === 'string' ? source.email.trim().toLowerCase() : '',
     message: typeof source?.message === 'string' ? source.message.trim() : '',
     company: typeof source?.company === 'string' ? source.company.trim() : '',
+    newsletterConsent: source?.newsletterConsent === true,
+    newsletterSource: typeof source?.newsletterSource === 'string' ? source.newsletterSource.trim() : '',
   }
 }
 
@@ -61,6 +64,21 @@ export default async function handler(req, res) {
 
   try {
     await sendContactEmail(contact)
+    if (contact.newsletterConsent && NEWSLETTER_SOURCES.has(contact.newsletterSource)) {
+      try {
+        await sendNewsletterConversion({
+          email: contact.email,
+          name: `${contact.firstName} ${contact.lastName}`.trim(),
+          source: contact.newsletterSource,
+        })
+      } catch (error) {
+        console.error('Optional RD Station conversion failed.', {
+          source: contact.newsletterSource,
+          status: error?.status,
+          category: error?.name || 'unexpected',
+        })
+      }
+    }
     return res.status(200).json({ message: 'Mensagem recebida. Em breve entraremos em contato.' })
   } catch (error) {
     if (error instanceof ContactEmailConfigurationError) {

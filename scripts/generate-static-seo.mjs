@@ -14,6 +14,7 @@ const routeHeadings = {
   '/tecnologia': 'Tecnologia',
   '/academia-otimiza': 'Academia Otimiza',
   '/contato': 'Contato',
+  '/politica-de-privacidade': 'Política de Privacidade',
   '/inspire': 'Inspire: conteúdos sobre gestão e processos',
   '/inspire/newsletter': 'Assine a newsletter',
 }
@@ -79,6 +80,12 @@ const routeSections = {
     { heading: 'Mentoria' },
   ],
   '/contato': [{ heading: 'Mande uma mensagem' }],
+  '/politica-de-privacidade': [
+    { heading: 'Dados e finalidades' },
+    { heading: 'Newsletter e RD Station' },
+    { heading: 'Consentimento e revogação' },
+    { heading: 'Direitos do titular' },
+  ],
   '/inspire': [
     { heading: 'Publicações recentes', children: ['Gestão', 'Processos', 'Tecnologia'] },
     { heading: 'Seleções da redação' },
@@ -129,6 +136,10 @@ const routeLinks = {
   '/contato': [
     { href: '/o-que-fazemos', label: 'Conheça nossas soluções' },
     { href: '/cases', label: 'Veja cases da Otimiza' },
+  ],
+  '/politica-de-privacidade': [
+    { href: '/contato', label: 'Fale com a Otimiza' },
+    { href: '/inspire/newsletter', label: 'Conheça a newsletter Inspire' },
   ],
   '/inspire': [
     { href: '/inspire/newsletter', label: 'Assine a newsletter Inspire' },

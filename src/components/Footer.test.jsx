@@ -43,6 +43,7 @@ describe('Footer', () => {
     )
     expect(screen.queryByRole('link', { name: 'X' })).not.toBeInTheDocument()
     expect(screen.getByText(new RegExp(`Otimiza\\. All rights reserved\\.`, 'i'))).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Política de Privacidade' })).toHaveAttribute('href', '/politica-de-privacidade')
     expect(screen.getByText(/Developed by Studiodesign/i)).toBeInTheDocument()
   })
 })

@@ -1,7 +1,7 @@
 export const staticPageMetadata = {
   '/': {
-    title: 'Consultoria empresarial em gestão e processos | Otimiza',
-    description: 'A Otimiza une consultoria empresarial, tecnologia e desenvolvimento de pessoas para melhorar processos, gestão e resultados.',
+    title: 'Consultoria Estratégica em Negócios e Execução | Otimiza',
+    description: 'A Otimiza transforma estratégia em resultados, conectando visão de negócio, gestão e execução para impulsionar crescimento sustentável.',
   },
   '/quem-somos': {
     title: 'Quem somos: experiência em gestão empresarial | Otimiza',
@@ -30,6 +30,10 @@ export const staticPageMetadata = {
   '/contato': {
     title: 'Contato da consultoria Otimiza em Caxias do Sul',
     description: 'Entre em contato com a Otimiza em Caxias do Sul para conversar sobre consultoria, tecnologia, treinamentos e melhoria de processos.',
+  },
+  '/politica-de-privacidade': {
+    title: 'Política de Privacidade | Otimiza',
+    description: 'Entenda como a Otimiza trata dados pessoais, consentimento para comunicações, direitos dos titulares e solicitações de privacidade.',
   },
   '/inspire': {
     title: 'Inspire: conteúdos sobre gestão e processos | Otimiza',

@@ -1,10 +1,24 @@
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import Threads from '../components/Threads'
 
-function handleSubmit(event) {
-  event.preventDefault()
-}
-
 function InspireNewsletter() {
+  const [status, setStatus] = useState({ type: 'idle', message: '' })
+  const isSubmitting = status.type === 'loading'
+
+  async function handleSubmit(event) {
+    event.preventDefault()
+    const form = event.currentTarget
+    const data = new FormData(form)
+    setStatus({ type: 'loading', message: 'Confirmando sua inscrição…' })
+    try {
+      const response = await fetch('/api/newsletter', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: data.get('name'), email: data.get('email'), consent: data.get('consent') === 'on', source: 'otimiza-inspire-newsletter-page', company: data.get('company') }) })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result.error || 'Não foi possível assinar agora.')
+      form.reset()
+      setStatus({ type: 'success', message: result.message || 'Inscrição confirmada.' })
+    } catch (error) { setStatus({ type: 'error', message: error.message }) }
+  }
   return (
     <section className="inspire-newsletter" aria-labelledby="inspire-newsletter-title">
       <div
@@ -52,16 +66,25 @@ function InspireNewsletter() {
               autoComplete="email"
               placeholder="voce@empresa.com"
               className="inspire-newsletter__input"
+              required
             />
           </label>
 
+          <label className="inspire-newsletter__consent">
+            <input type="checkbox" name="consent" required />
+            <span>Aceito receber a newsletter Inspire e comunicações da Otimiza. Saiba mais em <Link to="/politica-de-privacidade">Política de Privacidade</Link>.</span>
+          </label>
+          <label className="contact-honeypot" aria-hidden="true"><span>Empresa</span><input name="company" tabIndex="-1" autoComplete="off" /></label>
+
           <button
             type="submit"
+            disabled={isSubmitting}
             className="inspire-newsletter__submit"
             data-inspire-tooltip="Assinar newsletter"
           >
-            Assinar newsletter
+            {isSubmitting ? 'Assinando…' : 'Assinar newsletter'}
           </button>
+          {status.message ? <p className={`inspire-newsletter__status inspire-newsletter__status--${status.type}`} role={status.type === 'error' ? 'alert' : 'status'} aria-live="polite">{status.message}</p> : null}
         </form>
       </div>
     </section>

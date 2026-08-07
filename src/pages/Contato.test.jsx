@@ -24,12 +24,16 @@ describe('Contato page', () => {
     expect(screen.getByLabelText('Sobrenome')).toBeRequired()
     expect(screen.getByLabelText('E-mail')).toBeRequired()
     expect(screen.getByLabelText('Comentário ou mensagem')).toBeRequired()
+    const newsletterConsent = screen.getByRole('checkbox', { name: /newsletter Inspire e comunicações da Otimiza/i })
+    expect(newsletterConsent).not.toBeRequired()
+    expect(newsletterConsent).toHaveAccessibleName('Aceito receber a newsletter Inspire e comunicações da Otimiza. Saiba mais em Política de Privacidade.')
+    expect(screen.getByRole('link', { name: 'Política de Privacidade' })).toHaveAttribute('href', '/politica-de-privacidade')
     expect(screen.getByTestId('contact-form-panel')).toHaveClass('contact-form-panel')
     expect(screen.getByTestId('contact-hero-map')).toContainElement(
       screen.getByRole('region', { name: 'Mapa da Otimiza em Caxias do Sul' }),
     )
     expect(screen.getByRole('region', { name: 'Informações de contato' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'otm@otm.com.br' })).toHaveAttribute('href', 'mailto:otm@otm.com.br')
+    expect(screen.getAllByRole('link', { name: 'otm@otm.com.br' })[0]).toHaveAttribute('href', 'mailto:otm@otm.com.br')
     expect(screen.getByRole('link', { name: '+55 54 3211.6045' })).toHaveAttribute('href', 'tel:+555432116045')
     expect(screen.getByRole('link', { name: 'Facebook' })).toHaveAttribute(
       'href',
@@ -73,6 +77,8 @@ describe('Contato page', () => {
       lastName: 'Silva',
       email: 'joao@example.com',
       message: 'Olá, Otimiza.',
+      newsletterConsent: false,
+      newsletterSource: 'otimiza-contact-page-newsletter',
     }))
     expect(screen.getByLabelText('Nome')).toHaveValue('')
   })
