@@ -171,6 +171,7 @@ export function resolveSiteOrigin(environment = process.env) {
 }
 
 export function renderStaticRouteHtml(baseHtml, page) {
+  const socialPreview = page.socialPreview || page
   const sections = (page.sections || []).map((section) => {
     const children = (section.children || [])
       .map((heading) => `<h3>${escapeHtml(heading)}</h3>`)
@@ -181,20 +182,20 @@ export function renderStaticRouteHtml(baseHtml, page) {
     return `<section><h2>${escapeHtml(section.heading)}</h2>${children}${paragraphs}</section>`
   }).join('')
   const openGraph = [
-    ['og:title', page.title],
-    ['og:description', page.description],
+    ['og:title', socialPreview.title],
+    ['og:description', socialPreview.description],
     ['og:type', 'website'],
     ['og:url', page.canonicalUrl],
-    ['og:image', page.imageUrl],
+    ['og:image', socialPreview.imageUrl],
     ['og:site_name', 'Otimiza'],
   ].map(([property, content]) => (
     `<meta property="${property}" content="${escapeHtml(content)}" />`
   )).join('\n  ')
   const twitterCards = [
     ['twitter:card', 'summary_large_image'],
-    ['twitter:title', page.title],
-    ['twitter:description', page.description],
-    ['twitter:image', page.imageUrl],
+    ['twitter:title', socialPreview.title],
+    ['twitter:description', socialPreview.description],
+    ['twitter:image', socialPreview.imageUrl],
   ].map(([name, content]) => (
     `<meta name="${name}" content="${escapeHtml(content)}" />`
   )).join('\n  ')
@@ -251,6 +252,11 @@ export async function generateStaticSeoPages(
     throw new Error(`Missing Vite hero social image in ${path.join(distDirectory, 'assets')}`)
   }
   const imageUrl = new URL(`/assets/${socialImageFile}`, siteOrigin).toString()
+  const newsletterSocialPreview = {
+    title: 'Assine o Inspire',
+    description: 'Receba novas leituras, repertorio de gestao e selecoes editoriais da Otimiza em uma curadoria direta no seu inbox.',
+    imageUrl: new URL('/inspire-newsletter-card.png', siteOrigin).toString(),
+  }
 
   Object.entries(staticPageMetadata).forEach(([route, metadata]) => {
     const canonicalUrl = buildCanonicalUrl(route, siteOrigin)
@@ -260,6 +266,7 @@ export async function generateStaticSeoPages(
       sections: routeSections[route],
       canonicalUrl,
       imageUrl,
+      ...(route === '/inspire/newsletter' ? { socialPreview: newsletterSocialPreview } : {}),
       links: routeLinks[route],
     }
     const html = renderStaticRouteHtml(baseHtml, {

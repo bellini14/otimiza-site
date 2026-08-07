@@ -182,6 +182,32 @@ describe('static SEO route generation', () => {
     }
   })
 
+  it('generates an exclusive social preview for the Inspire newsletter', async () => {
+    const directory = createStaticFixture()
+    const origin = 'https://www.otimiza.test'
+    try {
+      await generateStaticSeoPages(directory, { VITE_SITE_URL: origin }, {
+        fetchPosts: async () => [],
+      })
+
+      const html = readRouteHtml(directory, '/inspire/newsletter')
+      const title = 'Assine o Inspire'
+      const description = 'Receba novas leituras, repertorio de gestao e selecoes editoriais da Otimiza em uma curadoria direta no seu inbox.'
+      const imageUrl = `${origin}/inspire-newsletter-card.png`
+
+      expect(html).toContain('<title>Newsletter Inspire sobre gestão empresarial | Otimiza</title>')
+      expect(html).toContain('<meta name="description" content="Assine a newsletter Inspire para acompanhar conteúdos da Otimiza sobre gestão empresarial, processos, tecnologia e desenvolvimento." />')
+      expect(html).toContain(`<meta property="og:title" content="${title}" />`)
+      expect(html).toContain(`<meta property="og:description" content="${description}" />`)
+      expect(html).toContain(`<meta property="og:image" content="${imageUrl}" />`)
+      expect(html).toContain(`<meta name="twitter:title" content="${title}" />`)
+      expect(html).toContain(`<meta name="twitter:description" content="${description}" />`)
+      expect(html).toContain(`<meta name="twitter:image" content="${imageUrl}" />`)
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
+  })
+
   it('preserves complete metadata for every preexisting static route', async () => {
     const directory = createStaticFixture()
     const origin = 'https://www.otimiza.test'
@@ -190,7 +216,7 @@ describe('static SEO route generation', () => {
       await generateStaticSeoPages(directory, { VITE_SITE_URL: origin }, {
         fetchPosts: async () => [],
       })
-      Object.entries(staticPageMetadata).forEach(([route, metadata]) => {
+      Object.entries(staticPageMetadata).filter(([route]) => route !== '/inspire/newsletter').forEach(([route, metadata]) => {
         const html = readRouteHtml(directory, route)
         const canonical = buildCanonicalUrl(route, origin)
         expect(html).toContain(`<title>${metadata.title}</title>`)
