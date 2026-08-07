@@ -11,6 +11,20 @@ export const INSPIRE_POSTS_QUERY = `*[_type == "post"] | order(publishedAt desc)
 const POST_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/i
 const DATE_PREFIX = /^(\d{4})-(\d{2})-(\d{2})(?:T|$)/
 
+function isPrivateOrUnspecifiedIpv4(hostname) {
+  const octets = hostname.split('.').map(Number)
+  if (octets.length !== 4 || octets.some((octet) => !Number.isInteger(octet) || octet < 0 || octet > 255)) {
+    return false
+  }
+  const [first, second] = octets
+  return first === 0
+    || first === 10
+    || first === 100 && second >= 64 && second <= 127
+    || first === 169 && second === 254
+    || first === 172 && second >= 16 && second <= 31
+    || first === 192 && second === 168
+}
+
 export function escapeHtml(value) {
   return String(value)
     .replaceAll('&', '&amp;')
@@ -41,8 +55,11 @@ export function resolvePublicSiteOrigin(environment = process.env) {
   if (hostname === 'localhost' || hostname.endsWith('.localhost') || isLoopbackAddress) {
     throw new Error('VITE_SITE_URL cannot use localhost.')
   }
+  if (isPrivateOrUnspecifiedIpv4(hostname)) {
+    throw new Error('VITE_SITE_URL cannot use a private or unspecified IP address.')
+  }
   const isVercelPreviewAlias = /-git-[a-z0-9-]+\.vercel\.app$/i.test(url.hostname)
-  const isVercelDeploymentPreview = /-[a-z0-9]{6,}-[a-z0-9]+\.vercel\.app$/i.test(url.hostname)
+  const isVercelDeploymentPreview = /-[a-z0-9]{6,}-[a-z0-9-]+\.vercel\.app$/i.test(url.hostname)
   if (environment.VERCEL_ENV === 'preview' || isVercelPreviewAlias || isVercelDeploymentPreview) {
     throw new Error('VITE_SITE_URL cannot use a Vercel preview host.')
   }
