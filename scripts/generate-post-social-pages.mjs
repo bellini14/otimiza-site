@@ -36,11 +36,14 @@ export function resolvePublicSiteOrigin(environment = process.env) {
   if (url.protocol !== 'https:') {
     throw new Error('VITE_SITE_URL must use HTTPS.')
   }
-  if (url.hostname === 'localhost' || url.hostname.endsWith('.localhost')) {
+  const hostname = url.hostname.replace(/^\[|\]$/g, '').toLowerCase()
+  const isLoopbackAddress = hostname === '::1' || /^127(?:\.\d{1,3}){3}$/.test(hostname)
+  if (hostname === 'localhost' || hostname.endsWith('.localhost') || isLoopbackAddress) {
     throw new Error('VITE_SITE_URL cannot use localhost.')
   }
   const isVercelPreviewAlias = /-git-[a-z0-9-]+\.vercel\.app$/i.test(url.hostname)
-  if (environment.VERCEL_ENV === 'preview' || isVercelPreviewAlias) {
+  const isVercelDeploymentPreview = /-[a-z0-9]{6,}-[a-z0-9]+\.vercel\.app$/i.test(url.hostname)
+  if (environment.VERCEL_ENV === 'preview' || isVercelPreviewAlias || isVercelDeploymentPreview) {
     throw new Error('VITE_SITE_URL cannot use a Vercel preview host.')
   }
   if (url.pathname !== '/' || url.search || url.hash) {

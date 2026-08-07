@@ -55,7 +55,10 @@ describe('post social page generation', () => {
     expect(() => resolvePublicSiteOrigin({})).toThrow('VITE_SITE_URL')
     expect(() => resolvePublicSiteOrigin({ VITE_SITE_URL: 'http://www.otm.com.br' })).toThrow('HTTPS')
     expect(() => resolvePublicSiteOrigin({ VITE_SITE_URL: 'https://localhost:5173' })).toThrow('localhost')
+    expect(() => resolvePublicSiteOrigin({ VITE_SITE_URL: 'https://127.0.0.1' })).toThrow('localhost')
+    expect(() => resolvePublicSiteOrigin({ VITE_SITE_URL: 'https://[::1]' })).toThrow('localhost')
     expect(() => resolvePublicSiteOrigin({ VITE_SITE_URL: 'https://otimiza-git-main.vercel.app' })).toThrow('preview')
+    expect(() => resolvePublicSiteOrigin({ VITE_SITE_URL: 'https://otimiza-abc123-joao.vercel.app' })).toThrow('preview')
   })
 
   it('writes only valid dated posts and fails when fetching posts fails', async () => {
