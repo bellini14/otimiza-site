@@ -25,6 +25,44 @@ function isPrivateOrUnspecifiedIpv4(hostname) {
     || first === 192 && second === 168
 }
 
+function ipv6ToBigInt(hostname) {
+  const [left, right] = hostname.split('::')
+  if (hostname.split('::').length > 2) return null
+
+  const leftGroups = left ? left.split(':') : []
+  const rightGroups = right ? right.split(':') : []
+  const groups = hostname.includes('::')
+    ? [...leftGroups, ...Array(8 - leftGroups.length - rightGroups.length).fill('0'), ...rightGroups]
+    : leftGroups
+  if (groups.length !== 8 || groups.some((group) => !/^[0-9a-f]{1,4}$/i.test(group))) return null
+
+  return groups.reduce((address, group) => (address << 16n) + BigInt(`0x${group}`), 0n)
+}
+
+function isNonPublicIpv6(hostname) {
+  const address = ipv6ToBigInt(hostname)
+  if (address === null) return false
+
+  const isIpv4Mapped = address >> 32n === 0xffffn
+  if (isIpv4Mapped) {
+    const ipv4 = Number(address & 0xffffffffn)
+    const hostname = [
+      ipv4 >>> 24,
+      (ipv4 >>> 16) & 255,
+      (ipv4 >>> 8) & 255,
+      ipv4 & 255,
+    ].join('.')
+    return hostname.startsWith('127.') || isPrivateOrUnspecifiedIpv4(hostname)
+  }
+
+  return address === 0n
+    || address === 1n
+    || address >> 121n === 0x7en // fc00::/7 unique local addresses
+    || address >> 118n === 0x3fan // fe80::/10 link-local addresses
+    || address >> 118n === 0x3fbn // fec0::/10 deprecated site-local addresses
+    || address >> 120n === 0xffn // ff00::/8 multicast addresses
+}
+
 export function escapeHtml(value) {
   return String(value)
     .replaceAll('&', '&amp;')
@@ -54,6 +92,9 @@ export function resolvePublicSiteOrigin(environment = process.env) {
   const isLoopbackAddress = hostname === '::1' || /^127(?:\.\d{1,3}){3}$/.test(hostname)
   if (hostname === 'localhost' || hostname.endsWith('.localhost') || isLoopbackAddress) {
     throw new Error('VITE_SITE_URL cannot use localhost.')
+  }
+  if (hostname.includes(':') && isNonPublicIpv6(hostname)) {
+    throw new Error('VITE_SITE_URL cannot use a non-public IPv6 address.')
   }
   if (isPrivateOrUnspecifiedIpv4(hostname)) {
     throw new Error('VITE_SITE_URL cannot use a private or unspecified IP address.')
