@@ -66,6 +66,7 @@ describe('post social page generation', () => {
 
   it('requires a public HTTPS production site origin', () => {
     expect(resolvePublicSiteOrigin({ VITE_SITE_URL: siteOrigin })).toBe(siteOrigin)
+    expect(resolvePublicSiteOrigin({ VITE_SITE_URL: siteOrigin, VERCEL_ENV: 'preview' })).toBe(siteOrigin)
     expect(resolvePublicSiteOrigin({ VITE_SITE_URL: 'https://otimiza-site.vercel.app' })).toBe('https://otimiza-site.vercel.app')
     expect(() => resolvePublicSiteOrigin({})).toThrow('VITE_SITE_URL')
     expect(() => resolvePublicSiteOrigin({ VITE_SITE_URL: 'http://www.otm.com.br' })).toThrow('HTTPS')

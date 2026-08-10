@@ -103,7 +103,7 @@ export function resolvePublicSiteOrigin(environment = process.env) {
   }
   const isVercelPreviewAlias = /-git-[a-z0-9-]+\.vercel\.app$/i.test(url.hostname)
   const isVercelDeploymentPreview = /-[a-z0-9]{6,}-[a-z0-9-]+\.vercel\.app$/i.test(url.hostname)
-  if (environment.VERCEL_ENV === 'preview' || isVercelPreviewAlias || isVercelDeploymentPreview) {
+  if (isVercelPreviewAlias || isVercelDeploymentPreview) {
     throw new Error('VITE_SITE_URL cannot use a Vercel preview host.')
   }
   if (url.pathname !== '/' || url.search || url.hash) {
