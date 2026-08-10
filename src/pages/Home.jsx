@@ -8,6 +8,7 @@ import { StaggerTestimonials } from '../components/ui/stagger-testimonials'
 import { ScrollVelocity } from '../components/ui/ScrollVelocity'
 import { client } from '../lib/sanity'
 import { HOME_CLIENT_LOGO_FALLBACKS } from '../data/homeClientLogoFallbacks'
+import { resolveLegacyImageUrl } from '../lib/legacyImageUrl'
 
 
 const homeClientLogoQuery = `*[_type == "clientLogo" && isVisible != false && showOnHome == true && defined(logo.asset)] | order(coalesce(sortOrder, 9999) asc, name asc) {
@@ -28,6 +29,10 @@ const homeCasesQuery = `*[_type == "clientLogo" && isVisible != false && showOnC
 }`
 
 const MIN_HOME_LOGOS_PER_ROW = 6
+
+function resolveLogoUrls(logos) {
+  return logos.map((logo) => ({ ...logo, logoUrl: resolveLegacyImageUrl(logo.logoUrl) }))
+}
 
 function useScrollReveal(threshold = 0.15) {
   const [isVisible, setIsVisible] = useState(false)
@@ -126,12 +131,12 @@ function Home() {
       try {
         const logos = await client.fetch(homeClientLogoQuery)
         if (isMounted && Array.isArray(logos)) {
-          setHomeClientLogos(logos)
+          setHomeClientLogos(resolveLogoUrls(logos))
         }
       } catch (error) {
         console.error('Error fetching home client logos from Sanity:', error)
         if (isMounted) {
-          setHomeClientLogos(HOME_CLIENT_LOGO_FALLBACKS)
+          setHomeClientLogos(resolveLogoUrls(HOME_CLIENT_LOGO_FALLBACKS))
         }
       }
     }
@@ -150,7 +155,7 @@ function Home() {
       try {
         const cases = await client.fetch(homeCasesQuery)
         if (isMounted && Array.isArray(cases)) {
-          setHomeCases(cases)
+          setHomeCases(resolveLogoUrls(cases))
         }
       } catch (error) {
         console.error('Error fetching home cases from Sanity:', error)

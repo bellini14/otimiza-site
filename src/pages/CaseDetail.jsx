@@ -7,6 +7,7 @@ import { caseStudies } from '../data/caseStudies'
 import GradualBlur from '../components/GradualBlur'
 import SeoHead from '../seo/SeoHead'
 import { getPageDescription, getPageTitle } from '../seo/siteMetadata'
+import { resolveLegacyImageUrl } from '../lib/legacyImageUrl'
 
 const fallbackHeroImages = {
   default: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1800&q=82',
@@ -189,7 +190,7 @@ function getCmsSections(cmsCase) {
 function getCmsHeroImage(cmsCase) {
   if (!cmsCase?.logo) return null
 
-  return urlFor(cmsCase.logo).ignoreImageParams().width(1800).height(1100).fit('max').url()
+  return resolveLegacyImageUrl(urlFor(cmsCase.logo).ignoreImageParams().width(1800).height(1100).fit('max').url())
 }
 
 function CaseDetail() {

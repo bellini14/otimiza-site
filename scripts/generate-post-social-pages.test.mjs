@@ -1,4 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
+import { execFileSync } from 'node:child_process'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import {
   DESCRIPTION,
   generatePostSocialPages,
@@ -9,6 +12,7 @@ import {
 
 const siteOrigin = 'https://www.otm.com.br'
 const fallbackImageUrl = `${siteOrigin}/assets/hero-bw.jpg`
+const scriptDirectory = path.dirname(fileURLToPath(import.meta.url))
 const post = {
   title: 'Um <post> & "especial"',
   slug: 'exemplo',
@@ -17,6 +21,28 @@ const post = {
 }
 
 describe('post social page generation', () => {
+  it('loads the social generator through native Node ESM', () => {
+    expect(() => execFileSync(
+      process.execPath,
+      ['--input-type=module', '--eval', "import('./generate-post-social-pages.mjs')"],
+      { cwd: scriptDirectory, encoding: 'utf8', stdio: 'pipe' },
+    )).not.toThrow()
+  })
+
+  it('uses the legacy OTM URL for mapped Sanity social metadata', () => {
+    const html = renderPostSocialPage({
+      post: {
+        ...post,
+        mainImageUrl: 'https://cdn.sanity.io/images/igy822g7/production/0122eed8d7195fe28022797c883bcb730ac02641-856x314.png?w=1200',
+      },
+      siteOrigin,
+      fallbackImageUrl,
+    })
+
+    expect(html).toContain('https://www.otm.com.br/wp-content/uploads/2020/10/Screenshot_11.png')
+    expect(html).not.toContain('cdn.sanity.io/images/igy822g7/production/0122eed8d7195fe28022797c883bcb730ac02641')
+  })
+
   it('renders escaped article metadata for a dated post', () => {
     const html = renderPostSocialPage({ post, siteOrigin, fallbackImageUrl })
 

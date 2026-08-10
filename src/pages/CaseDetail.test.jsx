@@ -8,17 +8,17 @@ vi.mock('../lib/sanity', () => ({
   client: {
     fetch: vi.fn(),
   },
-  urlFor: () => ({
+  urlFor: (source) => ({
     ignoreImageParams: () => ({
       width: () => {
         const imageBuilder = {
           height: () => ({
             fit: () => ({
-              url: () => 'https://cdn.sanity.io/images/project/dataset/cms-logo.png',
+              url: () => source?.assetUrl ?? 'https://cdn.sanity.io/images/project/dataset/cms-logo.png',
             }),
           }),
           fit: () => ({
-            url: () => 'https://cdn.sanity.io/images/project/dataset/cms-logo.png',
+            url: () => source?.assetUrl ?? 'https://cdn.sanity.io/images/project/dataset/cms-logo.png',
           }),
         }
         return imageBuilder
@@ -94,7 +94,10 @@ describe('CaseDetail', () => {
       sector: 'Tecnologia',
       caseTitle: 'Case vindo do Sanity',
       caseDescription: 'Resumo editado no CMS.',
-      logo: { asset: { _ref: 'image-cms-logo-400x240-png' } },
+      logo: {
+        asset: { _ref: 'image-cms-logo-400x240-png' },
+        assetUrl: 'https://cdn.sanity.io/images/igy822g7/production/0122eed8d7195fe28022797c883bcb730ac02641-856x314.png?w=1800',
+      },
       caseContent: [
         {
           _type: 'block',
@@ -112,9 +115,42 @@ describe('CaseDetail', () => {
     expect(screen.getByText('Resumo editado no CMS.')).toBeInTheDocument()
     expect(screen.getByText('Conteudo customizado do Sanity.')).toBeInTheDocument()
     expect(screen.getByTestId('case-detail-hero-image')).toHaveAccessibleName('Cliente CMS')
+    expect(screen.getByTestId('case-detail-hero-image')).toHaveAttribute(
+      'src',
+      'https://www.otm.com.br/wp-content/uploads/2020/10/Screenshot_11.png',
+    )
+    expect(document.head.querySelector('meta[property="og:image"]')).toHaveAttribute(
+      'content',
+      'https://www.otm.com.br/wp-content/uploads/2020/10/Screenshot_11.png',
+    )
     expect(screen.queryByTestId('case-detail-client-mark')).not.toBeInTheDocument()
     expect(screen.queryByTestId('case-detail-client-logo')).not.toBeInTheDocument()
     expect(screen.getByTestId('case-detail-side-nav')).toBeInTheDocument()
     expect(screen.getAllByTestId('case-detail-side-nav-item')).toHaveLength(1)
+  })
+
+  it('keeps an unmapped CMS case hero on the Sanity CDN', async () => {
+    const unmappedSanityUrl = 'https://cdn.sanity.io/images/igy822g7/production/new-case-logo-1800x1100.png'
+    client.fetch.mockResolvedValue({
+      name: 'Cliente novo',
+      caseTitle: 'Case novo',
+      caseDescription: 'Resumo do novo case.',
+      logo: { assetUrl: unmappedSanityUrl },
+      caseContent: [
+        {
+          _type: 'block',
+          _key: 'new-case-block',
+          style: 'normal',
+          children: [{ _type: 'span', _key: 'new-case-span', text: 'Conteudo novo.', marks: [] }],
+          markDefs: [],
+        },
+      ],
+    })
+
+    renderCase('cliente-novo')
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Case novo' })).toBeInTheDocument()
+    expect(screen.getByTestId('case-detail-hero-image')).toHaveAttribute('src', unmappedSanityUrl)
+    expect(document.head.querySelector('meta[property="og:image"]')).toHaveAttribute('content', unmappedSanityUrl)
   })
 })

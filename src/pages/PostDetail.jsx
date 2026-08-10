@@ -10,6 +10,7 @@ import PostArticleContactPanel from '../components/PostArticleContactPanel'
 import SeoHead from '../seo/SeoHead'
 import { getPageDescription, getPageTitle } from '../seo/siteMetadata'
 import { buildWordPressPostPath } from '../lib/postUrl'
+import { resolveLegacyImageUrl } from '../lib/legacyImageUrl'
 
 function getPreviewPost(locationState) {
   if (!locationState?.postPreview) {
@@ -25,7 +26,7 @@ function getPreviewPost(locationState) {
     eyebrow,
     mainImage: mainImage ?? null,
     content: content ?? [],
-    imgSrc: imgSrc ?? null,
+    imgSrc: resolveLegacyImageUrl(imgSrc ?? null),
     slug: slug ?? null,
   }
 }
@@ -76,7 +77,10 @@ function PostDetail() {
         }
 
         setPost(resolvedPost)
-        setMorePosts(resolvedMore)
+        setMorePosts(resolvedMore.map((morePost) => ({
+          ...morePost,
+          imgSrc: resolveLegacyImageUrl(morePost.imgSrc),
+        })))
 
       } catch (error) {
         console.error('Error fetching post details from Sanity:', error)
@@ -102,8 +106,8 @@ function PostDetail() {
   const isShellLoading = loading && !post
   const contentPhase = loading ? 'loading' : 'ready'
   const postSocialImage = post?.mainImage
-    ? urlFor(post.mainImage).width(1200).url()
-    : post?.imgSrc
+    ? resolveLegacyImageUrl(urlFor(post.mainImage).width(1200).url())
+    : resolveLegacyImageUrl(post?.imgSrc)
   const postPath = buildWordPressPostPath({ publishedAt: post?.publishedAt, slug })
 
   if (!post && !isShellLoading) {
@@ -136,7 +140,7 @@ function PostDetail() {
         return (
           <figure className="my-10 overflow-hidden rounded-2xl">
             <img
-              src={urlFor(value).width(1200).url()}
+              src={resolveLegacyImageUrl(urlFor(value).width(1200).url())}
               alt={value.alt || post.title}
               className="w-full rounded-2xl object-cover"
               loading={isFirstInlineImage ? 'eager' : 'lazy'}

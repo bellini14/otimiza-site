@@ -5,6 +5,7 @@ import SplitText from '../components/SplitText'
 import { pageTitleMotion } from '../components/pageTitleMotion'
 import { ScrollVelocity } from '../components/ui/ScrollVelocity'
 import { client } from '../lib/sanity'
+import { resolveLegacyImageUrl } from '../lib/legacyImageUrl'
 import heroBwImage from '../../imagens/hero quem somos-optimized.jpg'
 import hairlineIcon from '../../imagens/icone hairline.svg'
 
@@ -265,7 +266,10 @@ function ClientLogoPill({ logo, isDecorative = false }) {
 }
 
 function ClientLogoCarousel() {
-  const [logos, setLogos] = useState(clientLogoFallbacks)
+  const [logos, setLogos] = useState(() => clientLogoFallbacks.map((logo) => ({
+    ...logo,
+    logoUrl: resolveLegacyImageUrl(logo.logoUrl),
+  })))
   const [logosRef, logosVisible] = useScrollReveal(0.1)
   const logoRows = useMemo(() => buildClientLogoRows(logos), [logos])
 
@@ -276,7 +280,10 @@ function ClientLogoCarousel() {
       try {
         const fetchedLogos = await client.fetch(clientLogoQuery)
         if (isMounted && Array.isArray(fetchedLogos) && fetchedLogos.length > 0) {
-          setLogos(fetchedLogos)
+          setLogos(fetchedLogos.map((logo) => ({
+            ...logo,
+            logoUrl: resolveLegacyImageUrl(logo.logoUrl),
+          })))
         }
       } catch (error) {
         console.error('Error fetching client logos from Sanity:', error)

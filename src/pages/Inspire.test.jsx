@@ -113,6 +113,29 @@ afterEach(() => {
 })
 
 describe('Inspire', () => {
+  it('serves mapped Sanity feed images from the legacy OTM host and leaves new assets on Sanity', async () => {
+    const legacySanityUrl = 'https://cdn.sanity.io/images/igy822g7/production/0122eed8d7195fe28022797c883bcb730ac02641-856x314.png?w=1200'
+    const newSanityUrl = 'https://cdn.sanity.io/images/igy822g7/production/new-feed-image-1200x800.jpg'
+    client.fetch.mockResolvedValue([
+      makePost(1, { title: 'Post legado', imgSrc: legacySanityUrl }),
+      makePost(2, { title: 'Post novo', imgSrc: newSanityUrl }),
+    ])
+
+    renderInspirePage()
+
+    const legacyThumbnail = (await screen.findByRole('heading', { name: 'Post legado' }))
+      .closest('article')
+      .querySelector('img')
+    const newThumbnail = screen.getByRole('heading', { name: 'Post novo' })
+      .closest('article')
+      .querySelector('img')
+    expect(legacyThumbnail).toHaveAttribute(
+      'src',
+      'https://www.otm.com.br/wp-content/uploads/2020/10/Screenshot_11.png',
+    )
+    expect(newThumbnail).toHaveAttribute('src', newSanityUrl)
+  })
+
   it('lets native mouse-wheel scrolling reach the editorial feed', () => {
     client.fetch.mockResolvedValue([])
 

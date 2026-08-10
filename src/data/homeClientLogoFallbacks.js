@@ -1,3 +1,5 @@
+import { resolveLegacyImageUrl } from '../lib/legacyImageUrl'
+
 export const HOME_CLIENT_LOGO_FALLBACKS = [
   ['home-client-aes-brasil', 'AES Brasil', 'AES', 'e71ef8ce88e8abce3b24b3ad02117ce803d35ddf-1197x489.png'],
   ['08d1c5fa-324d-4550-a27d-9ec20f30d102', 'Banco Moneo S.A.', 'Banco Moneo', '27406390c300eb040d3c5484ff205dc563b65088-281x42.png'],
@@ -30,6 +32,6 @@ export const HOME_CLIENT_LOGO_FALLBACKS = [
   _id,
   name,
   logoAlt,
-  logoUrl: `https://cdn.sanity.io/images/igy822g7/production/${assetFilename}`,
+  logoUrl: resolveLegacyImageUrl(`https://cdn.sanity.io/images/igy822g7/production/${assetFilename}`),
 }))
 

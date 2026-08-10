@@ -12,6 +12,7 @@ import {
 import { client } from '../lib/sanity'
 import usePageTransitionNavigate from '../transitions/usePageTransitionNavigate'
 import { buildWordPressPostPath } from '../lib/postUrl'
+import { resolveLegacyImageUrl } from '../lib/legacyImageUrl'
 
 const INTERNAL_SEARCH_UPDATE_STATE_KEY = '__otimizaInspireSearchUpdateId'
 const SEARCH_SUGGESTIONS_DELAY_MS = 180
@@ -214,7 +215,9 @@ function InspireLayout() {
 
         setSuggestions(
           rankInspireSearchResults(
-            (nextSuggestions || []).filter((suggestion) => suggestion.slug),
+            (nextSuggestions || [])
+              .filter((suggestion) => suggestion.slug)
+              .map((suggestion) => ({ ...suggestion, imgSrc: resolveLegacyImageUrl(suggestion.imgSrc) })),
             normalizedValue,
           ).slice(0, 5),
         )
