@@ -13,8 +13,9 @@ export function isSafeManifestPath(candidate) {
     && relativePath.split('/').every((segment) => segment !== '' && segment !== '.' && segment !== '..')
 }
 
-export async function validateLegacyMedia(manifest, { publicRoot }) {
+export async function validateLegacyMedia(manifest, { publicRoot, fileSystem = fs }) {
   const root = publicRoot instanceof URL ? fileURLToPath(publicRoot) : path.resolve(publicRoot)
+  const realRoot = await fileSystem.realpath(root)
   const errors = []
 
   for (const assetId of Object.keys(manifest).sort()) {
@@ -32,7 +33,14 @@ export async function validateLegacyMedia(manifest, { publicRoot }) {
     }
 
     try {
-      const stats = await fs.stat(target)
+      const realTarget = await fileSystem.realpath(target)
+      const realRelative = path.relative(realRoot, realTarget)
+      if (realRelative.startsWith('..') || path.isAbsolute(realRelative)) {
+        errors.push({ assetId, path: legacyPath, reason: 'symlink escape' })
+        continue
+      }
+
+      const stats = await fileSystem.stat(realTarget)
       if (!stats.isFile()) errors.push({ assetId, path: legacyPath, reason: 'not a file' })
     } catch (error) {
       if (error.code === 'ENOENT') errors.push({ assetId, path: legacyPath, reason: 'file does not exist' })

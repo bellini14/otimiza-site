@@ -66,9 +66,11 @@ export function buildLegacyManifest(assets, legacyFiles) {
 
     const filenameCandidates = filesByFilename.get(asset.originalFilename) ?? []
     const hasDimensions = Number.isFinite(asset.width) && Number.isFinite(asset.height)
-    const candidates = hasDimensions
-      ? filenameCandidates.filter((file) => file.width === asset.width && file.height === asset.height)
-      : filenameCandidates
+    if (!hasDimensions) {
+      report.missing.push(reportAsset(asset, assetId, filenameCandidates))
+      continue
+    }
+    const candidates = filenameCandidates.filter((file) => file.width === asset.width && file.height === asset.height)
 
     if (candidates.length === 1) {
       const entry = { assetId, path: candidates[0].relativePath, sanityId: asset._id }
@@ -76,7 +78,7 @@ export function buildLegacyManifest(assets, legacyFiles) {
       report.matched.push(entry)
     } else if (candidates.length > 1) {
       report.ambiguous.push(reportAsset(asset, assetId, candidates))
-    } else if (filenameCandidates.length > 0 && hasDimensions) {
+    } else if (filenameCandidates.length > 0) {
       report.dimensionMismatch.push(reportAsset(asset, assetId, filenameCandidates))
     } else {
       report.missing.push(reportAsset(asset, assetId))

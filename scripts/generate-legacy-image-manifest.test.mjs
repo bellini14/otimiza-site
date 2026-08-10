@@ -27,23 +27,34 @@ describe('buildLegacyManifest', () => {
 
   it('sorts manifest entries alphabetically by immutable URL asset id', () => {
     const { manifest } = buildLegacyManifest([
-      { _id: 'image-z', originalFilename: 'z.jpg', url: 'https://cdn.sanity.io/images/igy822g7/production/z-hash-1x1.jpg' },
-      { _id: 'image-a', originalFilename: 'a.jpg', url: 'https://cdn.sanity.io/images/igy822g7/production/a-hash-1x1.jpg' },
+      { _id: 'image-z', originalFilename: 'z.jpg', width: 1, height: 1, url: 'https://cdn.sanity.io/images/igy822g7/production/z-hash-1x1.jpg' },
+      { _id: 'image-a', originalFilename: 'a.jpg', width: 1, height: 1, url: 'https://cdn.sanity.io/images/igy822g7/production/a-hash-1x1.jpg' },
     ], [
-      { relativePath: 'wp-content/uploads/2020/01/z.jpg', filename: 'z.jpg' },
-      { relativePath: 'wp-content/uploads/2020/01/a.jpg', filename: 'a.jpg' },
+      { relativePath: 'wp-content/uploads/2020/01/z.jpg', filename: 'z.jpg', width: 1, height: 1 },
+      { relativePath: 'wp-content/uploads/2020/01/a.jpg', filename: 'a.jpg', width: 1, height: 1 },
     ])
 
     expect(Object.keys(manifest)).toEqual(['a-hash-1x1.jpg', 'z-hash-1x1.jpg'])
+  })
+
+  it('does not map assets without dimensions by filename alone', () => {
+    const { manifest, report } = buildLegacyManifest([
+      { _id: 'image-no-dimensions', originalFilename: 'unique.jpg', url: 'https://cdn.sanity.io/images/igy822g7/production/no-dimensions-hash-1x1.jpg' },
+    ], [
+      { relativePath: 'wp-content/uploads/2020/01/unique.jpg', filename: 'unique.jpg', width: 1, height: 1 },
+    ])
+
+    expect(manifest).toEqual({})
+    expect(report.missing.map(({ assetId }) => assetId)).toEqual(['no-dimensions-hash-1x1.jpg'])
   })
 
   it('reports invalid Sanity assets without preventing valid assets from being generated', () => {
     const { manifest, report } = buildLegacyManifest([
       { _id: 'image-invalid', originalFilename: 'invalid.jpg', url: null },
       { _id: 'image-invalid-2', originalFilename: null, url: 'https://cdn.sanity.io/images/igy822g7/production/invalid-hash-1x1.jpg' },
-      { _id: 'image-valid', originalFilename: 'valid.jpg', url: 'https://cdn.sanity.io/images/igy822g7/production/valid-hash-1x1.jpg' },
+      { _id: 'image-valid', originalFilename: 'valid.jpg', width: 1, height: 1, url: 'https://cdn.sanity.io/images/igy822g7/production/valid-hash-1x1.jpg' },
     ], [
-      { relativePath: 'wp-content/uploads/2020/01/valid.jpg', filename: 'valid.jpg' },
+      { relativePath: 'wp-content/uploads/2020/01/valid.jpg', filename: 'valid.jpg', width: 1, height: 1 },
     ])
 
     expect(manifest).toEqual({ 'valid-hash-1x1.jpg': 'wp-content/uploads/2020/01/valid.jpg' })
