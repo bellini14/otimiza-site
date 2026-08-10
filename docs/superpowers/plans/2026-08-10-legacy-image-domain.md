@@ -24,6 +24,8 @@ expect(resolveLegacyImageUrl('https://cdn.sanity.io/images/igy822g7/production/h
   .toBe('https://www.otm.com.br/wp-content/uploads/2020/09/example.jpg')
 expect(resolveLegacyImageUrl('https://cdn.sanity.io/images/igy822g7/production/new-hash-300x200.jpg'))
   .toBe('https://cdn.sanity.io/images/igy822g7/production/new-hash-300x200.jpg')
+expect(resolveLegacyImageUrl('https://example.com/image.jpg'))
+  .toBe('https://example.com/image.jpg')
 ```
 
 - [ ] **Step 2: Run test and verify it fails because the resolver is absent**
@@ -73,7 +75,7 @@ Run: `npm test -- scripts/generate-legacy-image-manifest.test.mjs scripts/verify
 
 - [ ] **Step 3: Implement deterministic generation**
 
-The generator accepts `--legacy-root <directory>` and fetches Sanity asset `_id`, `originalFilename`, dimensions, and URL from the public API. It indexes the supplied archive, accepts only one safe match, writes sorted asset-ID keys, and emits a report for missing or ambiguous candidates. The verifier checks every manifest target is a relative `wp-content/uploads/` path and exists under `public/`.
+The generator accepts `--legacy-root <directory>` and fetches Sanity asset `_id`, `originalFilename`, dimensions, and URL from the public API. It indexes the supplied archive, validates candidate width and height when available, accepts only one safe match, writes sorted asset-ID keys, and emits a report for missing or ambiguous candidates. The verifier checks every manifest target is a relative `wp-content/uploads/` path and exists under `public/`.
 
 - [ ] **Step 4: Generate the real manifest and materialize only referenced files**
 
@@ -93,14 +95,14 @@ git commit -m "feat: add legacy WordPress image manifest"
 ### Task 3: Apply the resolver at image-rendering boundaries
 
 **Files:**
-- Modify: `src/pages/Inspire.jsx`, `src/pages/PostDetail.jsx`, `src/pages/Home.jsx`, `src/pages/Cases.jsx`, `src/pages/QuemSomos.jsx`, `src/pages/NossaAbordagem.jsx`
+- Modify: `src/pages/Inspire.jsx`, `src/pages/PostDetail.jsx`, `src/pages/Home.jsx`, `src/pages/Cases.jsx`, `src/pages/CaseDetail.jsx`, `src/pages/QuemSomos.jsx`, `src/pages/NossaAbordagem.jsx`
 - Modify: `src/components/InspireLayout.jsx`, `src/components/ui/blog-highlights.jsx`
 - Modify: `scripts/generate-post-social-pages.mjs`
 - Modify: their focused tests
 
 - [ ] **Step 1: Write failing integration tests**
 
-Add a mapped Sanity URL to an Inspire/PostDetail fixture and static social-page fixture. Assert rendered `img.src` and generated `og:image` use the OTM URL; retain an assertion that an unmapped asset stays on Sanity.
+Add a mapped Sanity URL to an Inspire/PostDetail fixture, CaseDetail SEO fixture, and static social-page fixture. Assert rendered `img.src` and generated `og:image` use the OTM URL; retain an assertion that an unmapped asset stays on Sanity.
 
 - [ ] **Step 2: Run the focused tests and verify failure**
 
@@ -112,7 +114,7 @@ Call `resolveLegacyImageUrl` after GROQ `asset->url` data is received and after 
 
 - [ ] **Step 4: Run integration tests**
 
-Run: `npm test -- src/pages/Inspire.test.jsx src/pages/PostDetail.test.jsx src/components/InspireLayout.test.jsx src/pages/Home.test.jsx src/pages/Cases.test.jsx src/pages/QuemSomos.test.jsx src/pages/NossaAbordagem.test.jsx scripts/generate-post-social-pages.test.mjs`
+Run: `npm test -- src/pages/Inspire.test.jsx src/pages/PostDetail.test.jsx src/pages/CaseDetail.test.jsx src/components/InspireLayout.test.jsx src/pages/Home.test.jsx src/pages/Cases.test.jsx src/pages/QuemSomos.test.jsx src/pages/NossaAbordagem.test.jsx scripts/generate-post-social-pages.test.mjs`
 
 - [ ] **Step 5: Commit**
 
