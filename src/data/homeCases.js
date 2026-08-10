@@ -1,3 +1,5 @@
+import { resolveLegacyImageUrl } from '../lib/legacyImageUrl'
+
 const HOME_CASES = [
   {
     id: 'fallback-banco-moneo',
@@ -91,7 +93,10 @@ const HOME_CASES = [
   },
 ]
 
-export const HOME_CASE_FALLBACKS = HOME_CASES.map((caseStudy) => ({ ...caseStudy }))
+export const HOME_CASE_FALLBACKS = HOME_CASES.map((caseStudy) => ({
+  ...caseStudy,
+  logoUrl: resolveLegacyImageUrl(caseStudy.logoUrl),
+}))
 
 function normalizeKey(value = '') {
   return value

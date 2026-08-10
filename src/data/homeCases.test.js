@@ -25,7 +25,7 @@ describe('home cases data', () => {
         company: expect.any(String),
         sector: expect.any(String),
         summary: expect.any(String),
-        logoUrl: expect.stringMatching(/^https:\/\/cdn\.sanity\.io\/images\//),
+        logoUrl: expect.stringMatching(/^https:\/\/(?:www\.otm\.com\.br\/wp-content\/uploads|cdn\.sanity\.io\/images)\//),
         slug: expect.any(String),
       }))
       expect(caseStudy.summary.length).toBeGreaterThan(30)

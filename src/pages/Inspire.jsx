@@ -14,6 +14,7 @@ import PostLikeButton from '../components/PostLikeButton'
 import InspireNewsletterSignup from '../components/InspireNewsletterSignup'
 import InspireShareButton from '../components/InspireShareButton'
 import { buildWordPressPostPath } from '../lib/postUrl'
+import { resolveLegacyImageUrl } from '../lib/legacyImageUrl'
 
 const INITIAL_POST_COUNT = 15
 const POSTS_PER_BATCH = 5
@@ -91,17 +92,20 @@ function deriveStoryStats(post) {
 }
 
 async function fetchPostBatch(start, end, category = null) {
-  if (category) {
-    return client.fetch(CATEGORY_POSTS_QUERY, { category, start, end })
-  }
+  const posts = category
+    ? await client.fetch(CATEGORY_POSTS_QUERY, { category, start, end })
+    : await client.fetch(POSTS_QUERY, { start, end })
 
-  return client.fetch(POSTS_QUERY, { start, end })
+  return posts?.map((post) => ({ ...post, imgSrc: resolveLegacyImageUrl(post.imgSrc) })) ?? []
 }
 
 function Inspire() {
   const [searchParams] = useSearchParams()
   const searchQuery = searchParams.get('q') || ''
-  const cachedPosts = useMemo(() => getCachedInspirePosts(), [])
+  const cachedPosts = useMemo(
+    () => getCachedInspirePosts().map((post) => ({ ...post, imgSrc: resolveLegacyImageUrl(post.imgSrc) })),
+    [],
+  )
 
   const [allFeed, setAllFeed] = useState(() => ({
     posts: cachedPosts.length > 0 ? cachedPosts : INITIAL_FALLBACK_POSTS,
@@ -261,7 +265,8 @@ function Inspire() {
         } else {
           const broadTerm = buildInspireBroadPattern(searchQuery)
           const foldedTerm = buildInspireSearchPattern(searchQuery)
-          const results = await client.fetch(SEARCH_QUERY, { broadTerm, foldedTerm, term })
+          const results = (await client.fetch(SEARCH_QUERY, { broadTerm, foldedTerm, term }))
+            ?.map((post) => ({ ...post, imgSrc: resolveLegacyImageUrl(post.imgSrc) }))
           setSearchResults(rankInspireSearchResults(sortByDate(results || []), searchQuery))
         }
       } catch (error) {
