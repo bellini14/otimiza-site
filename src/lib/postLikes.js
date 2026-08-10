@@ -1,0 +1,99 @@
+const POST_LIKE_STORAGE_PREFIX = 'post-like:'
+const postLikeCountCache = new Map()
+
+function getLikesEndpoint(slug) {
+  return `/api/posts/${encodeURIComponent(slug)}/likes`
+}
+
+async function readJson(response) {
+  const payload = await response.json()
+
+  if (!response.ok) {
+    const message =
+      typeof payload?.error === 'string' && payload.error.length > 0
+        ? payload.error
+        : 'Unable to process post likes.'
+
+    throw new Error(message)
+  }
+
+  return payload
+}
+
+export function getPostLikeStorageKey(slug) {
+  return `${POST_LIKE_STORAGE_PREFIX}${slug}`
+}
+
+export function hasLikedPost(slug) {
+  if (typeof window === 'undefined' || !slug) {
+    return false
+  }
+
+  return window.localStorage.getItem(getPostLikeStorageKey(slug)) === 'true'
+}
+
+export function rememberLikedPost(slug) {
+  if (typeof window === 'undefined' || !slug) {
+    return
+  }
+
+  window.localStorage.setItem(getPostLikeStorageKey(slug), 'true')
+}
+
+export function forgetLikedPost(slug) {
+  if (typeof window === 'undefined' || !slug) {
+    return
+  }
+
+  window.localStorage.removeItem(getPostLikeStorageKey(slug))
+}
+
+export function getCachedPostLikeCount(slug) {
+  if (!slug || !postLikeCountCache.has(slug)) {
+    return null
+  }
+
+  return postLikeCountCache.get(slug)
+}
+
+export function cachePostLikeCount(slug, count) {
+  if (!slug || typeof count !== 'number') {
+    return
+  }
+
+  postLikeCountCache.set(slug, count)
+}
+
+export function resetPostLikeCountCache() {
+  postLikeCountCache.clear()
+}
+
+export async function fetchPostLikes(slug) {
+  const response = await fetch(getLikesEndpoint(slug), {
+    method: 'GET',
+  })
+
+  const payload = await readJson(response)
+  cachePostLikeCount(slug, payload.count)
+  return payload
+}
+
+export async function submitPostLike(slug) {
+  const response = await fetch(getLikesEndpoint(slug), {
+    method: 'POST',
+  })
+
+  const payload = await readJson(response)
+  cachePostLikeCount(slug, payload.count)
+  return payload
+}
+
+export async function removePostLike(slug) {
+  const response = await fetch(getLikesEndpoint(slug), {
+    method: 'DELETE',
+  })
+
+  const payload = await readJson(response)
+  cachePostLikeCount(slug, payload.count)
+  return payload
+}

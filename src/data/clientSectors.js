@@ -18,7 +18,7 @@ export function groupClientsBySector(clients) {
   return clientSectors
     .map((sector) => ({
       sector,
-      clients: clients.filter((client) => client.sector === sector && client.logoUrl),
+      clients: clients.filter((client) => client.sector === sector && (client.logo || client.logoUrl)),
     }))
     .filter((group) => group.clients.length > 0)
 }

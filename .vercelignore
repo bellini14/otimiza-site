@@ -1,0 +1,12 @@
+node_modules
+.worktrees
+.superpowers
+.agents
+dist
+outputs
+arquivo_otm_com_br
+studio
+test-results
+docs
+**/*.test.js
+**/*.test.jsx

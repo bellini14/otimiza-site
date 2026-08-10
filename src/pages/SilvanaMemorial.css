@@ -1,0 +1,675 @@
+.silvana-memorial {
+  --memorial-ink: #39424c;
+  --memorial-text: #5a6572;
+  --memorial-surface: #ffffff;
+  --memorial-soft: #EFEFF4;
+  --memorial-blue-soft: #E5E9F1;
+  --memorial-red: #e02020;
+  position: relative;
+  isolation: isolate;
+  min-height: 100svh;
+  overflow: clip;
+  background:
+    radial-gradient(circle at 8% 42%, rgb(90 101 114 / 6%), transparent 30rem),
+    linear-gradient(180deg, #ffffff 0%, #EFEFF4 48%, #E5E9F1 100%);
+  color: #5a6572;
+  font-family: "elza", sans-serif;
+}
+
+@supports (min-height: 100dvh) {
+  .silvana-memorial { min-height: 100dvh; }
+}
+
+.silvana-memorial *,
+.silvana-memorial *::before,
+.silvana-memorial *::after { box-sizing: border-box; }
+
+.silvana-memorial h1,
+.silvana-memorial h2,
+.silvana-memorial .memorial-note-signature { font-family: "elza", sans-serif; }
+
+.memorial-dust-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 1;
+}
+
+.memorial-dust-layer canvas { display: block; width: 100%; height: 100%; }
+
+.memorial-hero {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  min-height: min(92svh, 58rem);
+  place-content: center;
+  padding: clamp(5rem, 10vw, 8rem) max(1.5rem, env(safe-area-inset-left)) clamp(4rem, 8vw, 7rem);
+  text-align: center;
+}
+
+.memorial-eyebrow {
+  margin: 0 0 1.8rem;
+  color: #e02020;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+}
+
+.memorial-hero h1 {
+  max-width: 88rem;
+  margin: 0 auto;
+  color: #39424c;
+  font-size: clamp(3.2rem, 8vw, 7.4rem);
+  font-weight: 200;
+  letter-spacing: -.055em;
+  line-height: .96;
+  text-wrap: balance;
+}
+
+.memorial-subtitle {
+  max-width: 40rem;
+  margin: 2rem auto 0;
+  color: #5a6572;
+  font-family: "elza", sans-serif;
+  font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+  font-style: italic;
+  font-weight: 300;
+  line-height: 1.5;
+}
+
+.memorial-divider {
+  width: 4rem;
+  height: 2px;
+  margin: 2rem auto 0;
+  background: #e02020;
+}
+
+.memorial-scroll-cue {
+  position: relative;
+  width: 1.5rem;
+  height: .85rem;
+  margin: 1.5rem auto 0;
+  color: #4d4d4d;
+  animation: memorial-scroll-cue 1.8s ease-in-out infinite;
+}
+
+.memorial-scroll-cue svg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2.5rem;
+  height: 2.5rem;
+  transform: translate(-50%, -50%);
+}
+
+.memorial-video-section {
+  --memorial-video-progress: 0;
+  --memorial-video-expand-progress: 0;
+  --memorial-video-contract-progress: 0;
+  position: relative;
+  z-index: 3;
+  height: 250svh;
+  margin: 0;
+}
+
+.memorial-video-stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+}
+
+@supports (height: 100dvh) {
+  .memorial-video-stage { height: 100dvh; }
+}
+
+.memorial-video-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(
+    calc(
+      24rem
+      + (var(--memorial-video-expand-progress) * (100% - 27.5rem))
+      - (var(--memorial-video-contract-progress) * (100% - 39.5rem))
+    ),
+    calc(100% - 3.5rem),
+    calc((100svh - 1.5rem) * 1.7778)
+  );
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgb(67 75 84 / 10%);
+  border-radius: clamp(.9rem, 1.5vw, 1.4rem);
+  background: #E5E9F1;
+  box-shadow: 0 2rem 5rem rgb(67 75 84 / 18%);
+  will-change: width, transform;
+}
+
+.memorial-video-frame video,
+.memorial-video-poster,
+.memorial-video-placeholder {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.memorial-video-frame video,
+.memorial-video-poster { object-position: center; }
+
+.memorial-video-placeholder {
+  display: grid;
+  place-content: center;
+  background: linear-gradient(135deg, #f7f8fa, #dce2ea);
+  color: #39424c;
+  text-align: center;
+}
+
+.memorial-video-placeholder span { font-size: clamp(1.3rem, 3vw, 2.5rem); font-weight: 300; }
+.memorial-video-placeholder small { margin-top: .5rem; opacity: .68; letter-spacing: .13em; text-transform: uppercase; }
+
+.memorial-contribution {
+  position: relative;
+  z-index: 5;
+  width: min(100% - 2rem, 52rem);
+  margin: clamp(3rem, 9vw, 8rem) auto clamp(5rem, 10vw, 9rem);
+}
+
+.memorial-form-card {
+  padding: clamp(2rem, 6vw, 4.75rem);
+  border: 0;
+  border-top: 3px solid var(--memorial-red);
+  border-radius: .5rem;
+  background: #ffffff;
+  box-shadow: none;
+  color: #5a6572;
+}
+
+.memorial-form-kicker {
+  margin: 0 0 1rem;
+  color: #e02020;
+  font-size: .7rem;
+  font-weight: 600;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+
+.memorial-form-card h2 {
+  max-width: 40rem;
+  margin: 0;
+  color: #39424c;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 300;
+  letter-spacing: -.035em;
+  line-height: 1;
+  text-wrap: balance;
+}
+
+.memorial-form-hint,
+.memorial-welcome {
+  max-width: 35rem;
+  margin: 1rem 0 0;
+  color: #5a6572;
+  line-height: 1.55;
+}
+
+.memorial-form-card > label {
+  display: block;
+  margin: 2.4rem 0 .35rem;
+  color: #4d5864;
+  font-size: .95rem;
+  font-weight: 500;
+}
+
+.memorial-form-card input[type="email"],
+.memorial-form-card textarea {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid rgb(90 101 114 / 28%);
+  border-radius: 0;
+  background: transparent;
+  color: #39424c;
+  font-family: "elza", sans-serif;
+  font-size: 1.05rem;
+  font-weight: 400;
+  outline: none;
+  transition: border-color 180ms ease, background-color 180ms ease;
+}
+
+.memorial-form-card input::placeholder,
+.memorial-form-card textarea::placeholder { color: #737e89; opacity: 1; }
+.memorial-form-card input[type="email"] { min-height: 3rem; padding: .6rem 0 .75rem; }
+.memorial-form-card textarea { min-height: 10rem; padding: .8rem 0; resize: vertical; line-height: 1.6; }
+.memorial-form-card input:focus-visible,
+.memorial-form-card textarea:focus-visible { border-color: #39424c; }
+
+.silvana-memorial button:focus-visible,
+.silvana-memorial input:focus-visible,
+.silvana-memorial textarea:focus-visible {
+  outline: 3px solid rgb(224 32 32 / 48%);
+  outline-offset: 3px;
+}
+
+.memorial-form-card > button[type="submit"] {
+  display: inline-flex;
+  width: auto;
+  min-width: 12rem;
+  min-height: 3.5rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2.25rem;
+  padding: .85rem 1.5rem;
+  border: 0;
+  border-radius: 1.1rem;
+  background: #5a6572;
+  color: #ffffff;
+  font-size: .92rem;
+  font-weight: 700;
+  transition: background-color 180ms ease, transform 180ms ease;
+}
+
+.memorial-form-card > button[type="submit"]:hover:not(:disabled) { background: #46515e; transform: translateY(-1px); }
+.memorial-form-card button { cursor: pointer; font-family: "elza", sans-serif; }
+.memorial-form-card button:disabled { cursor: wait; opacity: .62; }
+
+.memorial-form-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: .8rem;
+  color: #5a6572;
+  font-size: .82rem;
+}
+
+.memorial-checkbox {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: .65rem;
+  cursor: pointer;
+}
+
+.memorial-checkbox input { width: 1.15rem; height: 1.15rem; accent-color: #e02020; }
+
+.memorial-form-secondary-actions { display: flex; flex-wrap: wrap; gap: .25rem 1.5rem; margin-top: .45rem; }
+
+.memorial-text-button,
+.memorial-delete-toggle {
+  display: block;
+  width: fit-content;
+  min-height: 2.75rem;
+  margin-top: .5rem;
+  padding: .65rem 0;
+  border: 0;
+  background: transparent;
+  color: #4f5c54;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: .25rem;
+}
+
+.memorial-delete-toggle { color: #b91414; }
+
+.memorial-danger {
+  width: auto;
+  min-width: 12rem;
+  min-height: 3.5rem;
+  margin-top: 2.25rem;
+  padding: .85rem 1.5rem;
+  border: 0;
+  border-radius: 1.1rem;
+  background: #e02020;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.memorial-form-card > .memorial-danger { background: #e02020; }
+.memorial-status { min-height: 1.25rem; margin: 1rem 0 0; font-size: .86rem; line-height: 1.5; }
+.memorial-status-error { color: #a71111; }
+.memorial-status-status { color: #425e4d; }
+
+.memorial-board-section {
+  position: relative;
+  z-index: 4;
+  width: min(100% - 2rem, 78rem);
+  margin: 0 auto;
+}
+
+.memorial-counter {
+  min-height: 1.5rem;
+  margin: 0 0 1.4rem;
+  color: #5a6572;
+  text-align: center;
+}
+
+.memorial-counter strong { color: #e02020; font-size: 1.2em; }
+
+.memorial-board-sync {
+  display: flex;
+  min-height: 2rem;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  margin: -.75rem 0 .75rem;
+  color: #4e5b67;
+  font-size: .8rem;
+}
+
+.memorial-board-sync svg { width: .9rem; animation: memorial-spin 1.2s linear infinite; }
+
+.memorial-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13.5rem), 15.6rem));
+  align-items: start;
+  justify-content: center;
+  gap: 2.2rem 1.8rem;
+  min-height: 18rem;
+  padding: clamp(2rem, 5vw, 4rem);
+  border: clamp(.7rem, 1.6vw, 1.25rem) solid #70675d;
+  border-radius: 1.2rem;
+  background:
+    repeating-linear-gradient(17deg, rgb(57 66 76 / 4%) 0 1px, transparent 1px 4px),
+    linear-gradient(145deg, #b9a489, #9b866f);
+  box-shadow: inset 0 0 4rem rgb(57 66 76 / 18%), 0 2rem 5rem rgb(67 75 84 / 16%);
+}
+
+.memorial-empty,
+.memorial-board-error {
+  grid-column: 1 / -1;
+  align-self: center;
+  margin: auto;
+  color: #ffffff;
+  font-style: italic;
+  text-align: center;
+}
+
+.memorial-board-error { display: grid; max-width: 26rem; justify-items: center; gap: 1rem; font-style: normal; }
+.memorial-board-error p { margin: 0; }
+.memorial-board-error button {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: .45rem;
+  padding: .7rem 1rem;
+  border: 1px solid rgb(255 255 255 / 60%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 14%);
+  color: #ffffff;
+  cursor: pointer;
+}
+.memorial-board-error svg { width: 1rem; }
+
+.memorial-note {
+  position: relative;
+  min-height: 9.5rem;
+  padding: 2rem 1.15rem 1.3rem;
+  transform: rotate(var(--note-rotation));
+  background: linear-gradient(135deg, rgb(255 255 255 / 28%), transparent 45%), var(--note-color);
+  box-shadow: 0 .7rem 1.2rem rgb(48 27 10 / 28%);
+  color: #2b2318;
+}
+
+.memorial-note-open {
+  display: flex;
+  width: 100%;
+  min-height: 6.2rem;
+  flex-direction: column;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.memorial-note-preview {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+}
+
+.memorial-note-read-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  margin-top: auto;
+  padding-top: 1.15rem;
+  color: rgb(43 35 24 / 68%);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  transition: color 180ms ease, transform 180ms ease;
+}
+
+.memorial-note-read-hint svg { width: .85rem; height: .85rem; }
+.memorial-note-open:hover .memorial-note-read-hint { color: #2b2318; transform: translate(.12rem, -.08rem); }
+
+.memorial-note-dialog {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  background: rgb(31 36 42 / 68%);
+  backdrop-filter: blur(10px);
+  animation: memorial-dialog-enter 220ms ease-out both;
+}
+
+.memorial-note-expanded {
+  position: relative;
+  display: flex;
+  width: min(100% - 2rem, 44rem);
+  min-height: min(64svh, 34rem);
+  max-height: min(82svh, 48rem);
+  flex-direction: column;
+  padding: clamp(2.6rem, 7vw, 5rem);
+  border-radius: .4rem;
+  background: linear-gradient(135deg, rgb(255 255 255 / 32%), transparent 42%), var(--note-color);
+  box-shadow: 0 2.5rem 7rem rgb(15 18 22 / 38%);
+  color: #2b2318;
+  animation: memorial-note-expand 260ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.memorial-note-expanded-pin {
+  position: absolute;
+  top: -.65rem;
+  left: 50%;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff8, transparent 40%), #e02020;
+  box-shadow: 0 .25rem .45rem rgb(0 0 0 / 35%);
+  transform: translateX(-50%);
+}
+
+.memorial-note-expanded-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 62%);
+  color: #2b2318;
+  cursor: pointer;
+}
+
+.memorial-note-expanded-close svg { width: 1.25rem; height: 1.25rem; }
+.memorial-note-expanded-kicker { margin: 0 0 1.4rem; color: rgb(43 35 24 / 62%); font-size: .72rem; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+.memorial-note-expanded-message { flex: 1; margin: 0; padding-right: .75rem; overflow-wrap: anywhere; overflow-y: auto; color: #2b2318; font-size: clamp(1.2rem, 2.4vw, 1.65rem); line-height: 1.55; scrollbar-color: rgb(43 35 24 / 34%) transparent; white-space: pre-wrap; }
+.memorial-note-expanded-signature { margin: 2rem 0 0; color: #4d5864; font-size: 1.05rem; font-style: italic; font-weight: 500; text-align: right; }
+
+.memorial-note-skeleton {
+  min-height: 10.5rem;
+  transform: rotate(0);
+  background: linear-gradient(110deg, #e4d7c5 20%, #f3eadc 40%, #e4d7c5 60%);
+  background-size: 220% 100%;
+  animation: memorial-skeleton 1.5s ease-in-out infinite;
+}
+
+.memorial-note.is-highlighted { animation: memorial-note-highlight 1.2s ease-out both; }
+
+.memorial-pin {
+  position: absolute;
+  top: -.5rem;
+  left: 50%;
+  width: 1rem;
+  height: 1rem;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff8, transparent 40%), #e02020;
+  box-shadow: 0 .2rem .3rem rgb(0 0 0 / 35%);
+}
+
+.memorial-note-edit {
+  position: absolute;
+  top: .45rem;
+  right: .45rem;
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 55%);
+  color: #4d3c21;
+  cursor: pointer;
+}
+
+.memorial-note-edit svg { width: 1rem; }
+.memorial-note-message { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.48; }
+.memorial-note-signature { margin: 1rem 0 0; color: #4d5864; font-style: italic; font-weight: 500; text-align: right; }
+
+.memorial-footer {
+  display: grid;
+  gap: .8rem;
+  padding: 4rem 1.5rem calc(4rem + env(safe-area-inset-bottom));
+  color: #5a6572;
+  font-size: .75rem;
+  text-align: center;
+}
+
+.memorial-footer button {
+  min-height: 2.75rem;
+  border: 0;
+  background: transparent;
+  color: #c91616;
+  text-decoration: underline;
+  text-underline-offset: .25rem;
+  cursor: pointer;
+}
+
+@keyframes memorial-scroll-cue {
+  0%, 100% { transform: translateY(0); opacity: .55; }
+  45% { transform: translateY(.45rem); opacity: 1; }
+}
+
+@keyframes memorial-spin { to { transform: rotate(1turn); } }
+
+@keyframes memorial-skeleton {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+@keyframes memorial-note-highlight {
+  0% { filter: brightness(1.18); box-shadow: 0 0 0 .45rem rgb(224 32 32 / 18%), 0 .7rem 1.2rem rgb(48 27 10 / 28%); }
+  100% { filter: brightness(1); box-shadow: 0 .7rem 1.2rem rgb(48 27 10 / 28%); }
+}
+
+@keyframes memorial-dialog-enter { from { opacity: 0; } to { opacity: 1; } }
+@keyframes memorial-note-expand { from { opacity: 0; transform: translateY(1.25rem) scale(.96) rotate(-.4deg); } to { opacity: 1; transform: translateY(0) scale(1) rotate(.15deg); } }
+
+@media (max-width: 640px) {
+  .memorial-hero {
+    min-height: 86svh;
+    padding: 4.5rem max(1.15rem, env(safe-area-inset-left)) 3rem max(1.15rem, env(safe-area-inset-right));
+  }
+  .memorial-hero h1 { font-size: clamp(3rem, 15vw, 5rem); line-height: .93; }
+  .memorial-eyebrow { margin-bottom: 1.35rem; font-size: .64rem; }
+  .memorial-subtitle { margin-top: 1.5rem; font-size: 1rem; }
+  .memorial-scroll-cue { margin-top: 1.25rem; }
+
+  .memorial-video-section { height: 220svh; }
+  .memorial-video-frame {
+    width: min(
+      calc(
+        11rem
+        + (var(--memorial-video-expand-progress) * (100% - 13rem))
+        - (var(--memorial-video-contract-progress) * (100% - 19.5rem))
+      ),
+      calc(100% - 2rem),
+      calc((100svh - 2rem) * .5625)
+    );
+    aspect-ratio: 9 / 16;
+  }
+  .memorial-video-frame video,
+  .memorial-video-poster { object-position: left center; }
+  .memorial-contribution { width: min(100% - 1.25rem, 52rem); margin-block: 3.5rem 5rem; }
+  .memorial-form-card { padding: 2rem 1.35rem 2.25rem; }
+  .memorial-form-card h2 { font-size: clamp(2rem, 10vw, 2.8rem); }
+  .memorial-form-card > button[type="submit"],
+  .memorial-danger { width: 100%; }
+  .memorial-form-meta { align-items: flex-start; }
+  .memorial-form-secondary-actions { display: grid; gap: 0; }
+  .memorial-board { grid-template-columns: 1fr; gap: 2rem; padding: 2.3rem 1.4rem; }
+  .memorial-note { transform: rotate(calc(var(--note-rotation) * .5)); }
+  .memorial-note-dialog { padding: .75rem; }
+  .memorial-note-expanded { width: 100%; min-height: min(74svh, 36rem); max-height: calc(100svh - 1.5rem); padding: 3.5rem 1.5rem 2rem; }
+  .memorial-note-expanded-message { padding-right: .35rem; font-size: 1.12rem; }
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .memorial-hero { min-height: 100svh; padding-block: 3rem 2rem; }
+  .memorial-hero h1 { font-size: clamp(2.8rem, 9vw, 4.5rem); }
+  .memorial-subtitle { margin-top: 1rem; font-size: .95rem; }
+  .memorial-scroll-cue { margin-top: 1rem; }
+  .memorial-video-section { height: 210svh; }
+  .memorial-video-frame {
+    width: min(
+      calc(
+        18rem
+        + (var(--memorial-video-expand-progress) * (100% - 20rem))
+        - (var(--memorial-video-contract-progress) * (100% - 28rem))
+      ),
+      calc(100% - 1.5rem),
+      calc(80svh * 1.7778)
+    );
+    aspect-ratio: 16 / 9;
+  }
+  .memorial-video-frame video,
+  .memorial-video-poster { object-position: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .memorial-scroll-cue { display: none; }
+  .memorial-video-section { height: auto; margin: 0; padding: 1rem; }
+  .memorial-video-stage { position: relative; top: auto; height: auto; overflow: visible; }
+  .memorial-video-frame {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: min(100%, 75rem);
+    aspect-ratio: 16 / 9;
+    margin: 0 auto;
+    transform: none;
+  }
+  .memorial-note,
+  .memorial-note.is-highlighted,
+  .memorial-note-skeleton { animation: none; }
+  .memorial-note-dialog,
+  .memorial-note-expanded { animation: none; }
+  .memorial-board-sync svg { animation: none; }
+  .silvana-memorial * { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}

@@ -1,363 +1,534 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { ArrowRight, ChevronRight } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { cn } from '@/lib/utils'
+import { normalizeHomeCases } from '@/data/homeCases'
 
-const CARD_TRANSITION_MS = 600;
-const CARD_TRANSITION_FALLBACK_MS = CARD_TRANSITION_MS + 120;
-const CARD_TRANSITION = `transform ${CARD_TRANSITION_MS}ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow ${CARD_TRANSITION_MS}ms ease`;
-const LOOP_COPIES = 3;
-const LOOP_MIDDLE_COPY = 1;
+const CAROUSEL_COPIES = 3
+const DESKTOP_CARD_SIZE = 365
+const MOBILE_CARD_SIZE = 276
+const DESKTOP_CARD_GAP = 24
+const MOBILE_CARD_GAP = 12
+const TOUCH_DRAG_MULTIPLIER = 1.45
+const TOUCH_AXIS_LOCK_PX = 8
+const TOUCH_AXIS_BIAS = 1.15
+const TOUCH_SWIPE_THRESHOLD = 36
+const MAX_TOUCH_SWIPE_STEPS = 2
+const RELEASE_GAIN = 0.24
+const RELEASE_FRICTION = 0.94
+const MAX_RELEASE_SPEED = 40
+const MAX_INERTIA_FRAMES = 38
+const SNAP_DURATION_MS = 360
 
-const testimonials = [
-  {
-    id: 0,
-    testimonial: "A Otimiza trouxe uma clareza operacional que nunca tivemos. Nossos processos agora são 5x mais eficientes e escaláveis.",
-    by: "Ricardo Silveira, CEO na TechFlow",
-    imgSrc: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=faces&q=80"
-  },
-  {
-    id: 1,
-    testimonial: "A segurança e confiabilidade da OTMSuite nos permitiu expandir para novos mercados com tranquilidade total.",
-    by: "Camila Arantes, CTO na SecureSystems",
-    imgSrc: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=faces&q=80"
-  },
-  {
-    id: 2,
-    testimonial: "Implementar a metodologia Otimiza foi o melhor investimento estratégico que fizemos nos últimos anos.",
-    by: "Marcos Oliveira, Diretor de Operações na InnovaCorp",
-    imgSrc: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=faces&q=80"
-  },
-  {
-    id: 3,
-    testimonial: "A interface é intuitiva e o suporte é excepcional. Mudou completamente a cultura de produtividade da nossa equipe.",
-    by: "Beatriz Santos, CFO na FutureLog",
-    imgSrc: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=faces&q=80"
-  },
-  {
-    id: 4,
-    testimonial: "Uma solução atemporal que resolve problemas reais de gestão com elegância e eficiência.",
-    by: "André Mendes, Head de Design na CreativeFlow",
-    imgSrc: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=faces&q=80"
-  },
-  {
-    id: 5,
-    testimonial: "Recuperamos centenas de horas produtivas em poucos meses de uso. O impacto no faturamento foi imediato.",
-    by: "Juliana Costa, Gerente de Produto na TimeLess",
-    imgSrc: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop&crop=faces&q=80"
-  },
-  {
-    id: 6,
-    testimonial: "A robustez da plataforma Otimiza é impressionante. É o motor que impulsiona nosso crescimento diário.",
-    by: "Felipe Almeida, Diretor de Marketing na BrandScale",
-    imgSrc: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&h=150&fit=crop&crop=faces&q=80"
-  },
-  {
-    id: 7,
-    testimonial: "Análise de dados precisa e dashboards que realmente ajudam na tomada de decisão. Essencial para nós.",
-    by: "Carla Nunes, Cientista de Dados na DataDriven",
-    imgSrc: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=faces&q=80"
-  },
-  {
-    id: 8,
-    testimonial: "Simplesmente a melhor solução de automação e gestão que já utilizamos. Nível global.",
-    by: "Roberto Lima, UX Designer na UserFirst",
-    imgSrc: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=faces&q=80"
-  },
-  {
-    id: 9,
-    testimonial: "A escalabilidade é real. O sistema cresce sem fricção, acompanhando nossa demanda global.",
-    by: "Thiago Pires, Engenheiro DevOps na CloudScale",
-    imgSrc: "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=150&h=150&fit=crop&crop=faces&q=80"
-  }
-];
-
-const middleWindowIndex = Math.floor(testimonials.length / 2);
-const MIN_WINDOW_POSITION = -middleWindowIndex;
-const MAX_WINDOW_POSITION = testimonials.length - middleWindowIndex - 1;
-
-function getLoopedIndex(index) {
-  return ((index % testimonials.length) + testimonials.length) % testimonials.length;
-}
-
-const initialActiveIndex = middleWindowIndex;
-const initialVirtualIndex = testimonials.length * LOOP_MIDDLE_COPY + initialActiveIndex;
-const virtualTestimonials = Array.from({ length: testimonials.length * LOOP_COPIES }, (_, virtualIndex) => ({
-  virtualIndex,
-  testimonial: testimonials[getLoopedIndex(virtualIndex)],
-}));
-
-function TestimonialCard({ position, testimonial, handleMove, cardSize, transitionEnabled }) {
-  const isCenter = position === 0;
-  const isInCarouselWindow = position >= MIN_WINDOW_POSITION && position <= MAX_WINDOW_POSITION;
-  const zIndex = Math.max(0, 20 - Math.abs(position));
+function CaseCard({ caseStudy, cardSize, isActive, isDragging, logicalIndex, copyIndex, virtualIndex }) {
+  const tilt = logicalIndex % 2 === 0 ? -1.4 : 1.4
+  const activeTransform = isDragging
+    ? 'translateY(-10px) rotate(0deg) scale(0.985)'
+    : 'translateY(-18px) rotate(0deg) scale(1)'
 
   return (
-    <div
-      onClick={() => handleMove(position)}
-      data-carousel-position={position}
-      aria-hidden={!isInCarouselWindow}
+    <article
+      data-testid="home-case-card"
+      data-carousel-active={isActive ? 'true' : 'false'}
+      data-copy-index={copyIndex}
+      data-virtual-index={virtualIndex}
+      data-dragging={isActive && isDragging ? 'true' : 'false'}
+      aria-hidden={copyIndex !== 1}
+      aria-label={copyIndex === 1 ? `Case ${caseStudy.company}` : undefined}
       className={cn(
-        "absolute left-1/2 top-1/2 cursor-pointer rounded-2xl p-8 bg-white border border-slate-200/60 antialiased",
-        isCenter ? "shadow-2xl shadow-slate-900/10" : "shadow-sm"
+        'relative flex-none rounded-2xl border border-slate-200/60 bg-[#EFEFF4] p-7 antialiased sm:p-8',
+        'transition-[transform,opacity,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
+        isActive ? 'z-10 opacity-100 shadow-2xl shadow-slate-900/10' : 'opacity-45 shadow-sm',
       )}
       style={{
         width: cardSize,
         height: cardSize,
-        zIndex,
-        backfaceVisibility: 'hidden',
-        WebkitFontSmoothing: 'antialiased',
-        pointerEvents: isInCarouselWindow ? 'auto' : 'none',
-        transition: transitionEnabled ? CARD_TRANSITION : 'none',
-        transform: `
-          translate(-50%, -50%) 
-          translateX(${(cardSize / 1.5) * position}px)
-          translateY(${isCenter ? -50 : position % 2 ? 20 : -20}px)
-          rotate(${isCenter ? 0 : position % 2 ? 3 : -3}deg)
-          translateZ(0)
-        `,
+        transform: isActive
+          ? activeTransform
+          : `translateY(${logicalIndex % 2 === 0 ? -5 : 8}px) rotate(${tilt}deg) scale(0.985)`,
       }}
     >
-      <div
-        className="h-full"
-        style={{
-          opacity: isCenter ? 1 : 0.4,
-          transition: 'opacity 500ms ease'
-        }}
-      >
-        {/* Red accent dot */}
-        {isCenter && (
-          <div className="absolute top-6 right-6 w-2.5 h-2.5 rounded-full bg-brand-red/60" />
-        )}
+      {isActive && <span className="absolute right-6 top-6 h-2.5 w-2.5 rounded-full bg-brand-red/60" />}
+      <div className="mb-4 flex h-16 items-center sm:mb-5 sm:h-[4.5rem]">
         <img
-          src={testimonial.imgSrc}
-          alt={`${testimonial.by.split(',')[0]}`}
-          className="mb-4 h-14 w-14 rounded-full bg-slate-100 object-cover object-top ring-2 ring-slate-100"
+          src={caseStudy.logoUrl}
+          alt={copyIndex === 1 ? caseStudy.logoAlt || caseStudy.company : ''}
+          draggable="false"
+          className={cn(
+            'max-h-10 w-auto max-w-[8.5rem] object-contain transition-[filter] duration-500 sm:max-h-12 sm:max-w-[10rem]',
+            isActive ? 'grayscale-0' : 'grayscale',
+          )}
         />
-        <h3 className={cn(
-          "text-base sm:text-lg font-medium leading-snug",
-          isCenter ? "text-slate-900" : "text-slate-700"
-        )}>
-          &ldquo;{testimonial.testimonial}&rdquo;
+      </div>
+      <p
+        data-testid="home-case-summary"
+        className={cn('line-clamp-2 text-[0.92rem] font-medium leading-snug sm:line-clamp-none sm:text-lg', isActive ? 'text-slate-900' : 'text-slate-700')}
+      >
+        {caseStudy.summary}
+      </p>
+      <div
+        data-testid="home-case-details"
+        className="absolute bottom-7 left-7 right-7 border-t border-slate-300/70 pt-3 sm:bottom-8 sm:left-8 sm:right-8"
+      >
+        <h3 className={cn('text-sm font-semibold sm:text-base', isActive ? 'text-brand-red' : 'text-slate-500')}>
+          {caseStudy.company}
         </h3>
-        <p className={cn(
-          "absolute bottom-8 left-8 right-8 mt-2 text-sm",
-          isCenter ? "text-brand-red font-medium" : "text-slate-400 italic"
-        )}>
-          - {testimonial.by}
+        <p className="mt-0.5 text-[0.68rem] font-medium uppercase tracking-[0.08em] text-slate-500 sm:text-xs">
+          {caseStudy.sector}
         </p>
       </div>
-    </div>
-  );
+    </article>
+  )
 }
 
-export function StaggerTestimonials() {
-  const [cardSize, setCardSize] = useState(365);
-  const [activeVirtualIndex, setActiveVirtualIndex] = useState(initialVirtualIndex);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [isNormalizing, setIsNormalizing] = useState(false);
-  const [sectionRef, isVisible] = useScrollReveal(0.1);
+export function StaggerTestimonials({ cases }) {
+  const activeCases = useMemo(() => normalizeHomeCases(cases), [cases])
+  const loopedCases = useMemo(
+    () => Array.from({ length: CAROUSEL_COPIES }, (_, copyIndex) =>
+      activeCases.map((caseStudy, logicalIndex) => ({
+        caseStudy,
+        logicalIndex,
+        copyIndex,
+        virtualIndex: copyIndex * activeCases.length + logicalIndex,
+      }))).flat(),
+    [activeCases],
+  )
+  const [cardSize, setCardSize] = useState(DESKTOP_CARD_SIZE)
+  const [cardGap, setCardGap] = useState(DESKTOP_CARD_GAP)
+  const [carouselSidePadding, setCarouselSidePadding] = useState(0)
+  const [activeVirtualIndex, setActiveVirtualIndex] = useState(activeCases.length)
+  const [isDragging, setIsDragging] = useState(false)
+  const [isHintVisible, setIsHintVisible] = useState(false)
+  const [dragDirection, setDragDirection] = useState('right')
+  const [hintPosition, setHintPosition] = useState({ x: 0, y: 0 })
+  const [sectionRef, isVisible] = useScrollReveal(0.1)
+  const viewportRef = useRef(null)
+  const animationFrameRef = useRef(null)
+  const hintFrameRef = useRef(null)
+  const hintHasPositionRef = useRef(false)
+  const hintPositionRef = useRef({ x: 0, y: 0 })
+  const hintTargetRef = useRef({ x: 0, y: 0 })
+  const dragStateRef = useRef({
+    isDragging: false,
+    pointerId: null,
+    axis: 'idle',
+    startX: 0,
+    startY: 0,
+    startScrollLeft: 0,
+    lastX: 0,
+    lastMoveX: 0,
+    dragMultiplier: 1,
+    pointerType: 'mouse',
+  })
+  const cardInterval = cardSize + cardGap
+  const loopWidth = activeCases.length * cardInterval
 
-  const finishAnimation = useCallback(() => {
-    if (!isAnimating) return;
+  const stopAnimation = useCallback(() => {
+    if (animationFrameRef.current !== null) {
+      cancelAnimationFrame(animationFrameRef.current)
+      animationFrameRef.current = null
+    }
+  }, [])
 
-    setIsAnimating(false);
-    setActiveVirtualIndex((currentIndex) => {
-      const normalizedIndex = testimonials.length * LOOP_MIDDLE_COPY + getLoopedIndex(currentIndex);
+  const normalizeScrollLeft = useCallback((value) => {
+    if (loopWidth === 0) return 0
+    let normalized = value
+    while (normalized < loopWidth * 0.5) normalized += loopWidth
+    while (normalized >= loopWidth * 2.5) normalized -= loopWidth
+    return normalized
+  }, [loopWidth])
 
-      if (normalizedIndex !== currentIndex) {
-        setIsNormalizing(true);
+  const updateScrollLeft = useCallback((nextValue) => {
+    const viewport = viewportRef.current
+    if (!viewport) return
+    const normalized = normalizeScrollLeft(nextValue)
+    viewport.scrollLeft = normalized
+    setActiveVirtualIndex(Math.round(normalized / cardInterval))
+  }, [cardInterval, normalizeScrollLeft])
+
+  const updateHintPosition = useCallback((event) => {
+    if (event.pointerType === 'touch') {
+      setIsHintVisible(false)
+      return
+    }
+
+    setIsHintVisible(true)
+    const target = {
+      x: event.clientX + 14,
+      y: event.clientY + 12,
+    }
+    hintTargetRef.current = target
+
+    if (!hintHasPositionRef.current) {
+      hintHasPositionRef.current = true
+      hintPositionRef.current = target
+      setHintPosition(target)
+      return
+    }
+
+    if (hintFrameRef.current !== null) return
+
+    const animateHint = () => {
+      const current = hintPositionRef.current
+      const next = {
+        x: current.x + (hintTargetRef.current.x - current.x) * 0.2,
+        y: current.y + (hintTargetRef.current.y - current.y) * 0.2,
+      }
+      hintPositionRef.current = next
+      setHintPosition(next)
+
+      if (
+        Math.abs(hintTargetRef.current.x - next.x) < 0.4
+        && Math.abs(hintTargetRef.current.y - next.y) < 0.4
+      ) {
+        hintPositionRef.current = hintTargetRef.current
+        setHintPosition(hintTargetRef.current)
+        hintFrameRef.current = null
+        return
       }
 
-      return normalizedIndex;
-    });
-  }, [isAnimating]);
+      hintFrameRef.current = requestAnimationFrame(animateHint)
+    }
 
-  const handleMove = (steps) => {
-    if (steps === 0 || isAnimating || isNormalizing) return;
+    hintFrameRef.current = requestAnimationFrame(animateHint)
+  }, [])
 
-    setIsAnimating(true);
-    setActiveVirtualIndex((currentIndex) => currentIndex + steps);
-  };
+  const animateToScrollLeft = useCallback((target) => {
+    const viewport = viewportRef.current
+    if (!viewport) return
+    const start = viewport.scrollLeft
+    const distance = target - start
+    const startedAt = performance.now()
 
-  const handleCarouselTransitionEnd = (event) => {
-    if (event.propertyName !== 'transform') return;
-    finishAnimation();
-  };
+    const step = (now) => {
+      const progress = Math.min(1, (now - startedAt) / SNAP_DURATION_MS)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      updateScrollLeft(start + distance * eased)
+      if (progress < 1) {
+        animationFrameRef.current = requestAnimationFrame(step)
+      } else {
+        updateScrollLeft(target)
+        animationFrameRef.current = null
+      }
+    }
 
-  useEffect(() => {
-    if (!isAnimating) return undefined;
+    animationFrameRef.current = requestAnimationFrame(step)
+  }, [updateScrollLeft])
 
-    const timeoutId = window.setTimeout(() => {
-      finishAnimation();
-    }, CARD_TRANSITION_FALLBACK_MS);
+  const snapToNearestCard = useCallback(() => {
+    const viewport = viewportRef.current
+    if (!viewport) return
+    animateToScrollLeft(Math.round(viewport.scrollLeft / cardInterval) * cardInterval)
+  }, [animateToScrollLeft, cardInterval])
 
-    return () => window.clearTimeout(timeoutId);
-  }, [isAnimating, finishAnimation]);
+  const snapTouchSwipe = useCallback((dragState) => {
+    const totalDrag = (dragState.lastX - dragState.startX) * dragState.dragMultiplier
+    const draggedDistance = Math.abs(totalDrag)
 
-  useEffect(() => {
-    if (!isNormalizing) return undefined;
+    if (draggedDistance < TOUCH_SWIPE_THRESHOLD) {
+      snapToNearestCard()
+      return
+    }
 
-    const frameId = window.requestAnimationFrame(() => {
-      setIsNormalizing(false);
-    });
+    const direction = totalDrag < 0 ? 1 : -1
+    const steps = Math.min(
+      MAX_TOUCH_SWIPE_STEPS,
+      Math.max(1, Math.round(draggedDistance / cardInterval)),
+    )
+    const startIndex = Math.round(dragState.startScrollLeft / cardInterval)
+    animateToScrollLeft((startIndex + direction * steps) * cardInterval)
+  }, [animateToScrollLeft, cardInterval, snapToNearestCard])
 
-    return () => window.cancelAnimationFrame(frameId);
-  }, [isNormalizing]);
+  const startInertia = useCallback((pointerVelocity) => {
+    stopAnimation()
+    let velocity = Math.max(-MAX_RELEASE_SPEED, Math.min(MAX_RELEASE_SPEED, -pointerVelocity * RELEASE_GAIN))
+    let frameCount = 0
+
+    const step = () => {
+      const viewport = viewportRef.current
+      if (!viewport) return
+      updateScrollLeft(viewport.scrollLeft + velocity)
+      velocity *= RELEASE_FRICTION
+      frameCount += 1
+      if (Math.abs(velocity) < 0.35 || frameCount >= MAX_INERTIA_FRAMES) {
+        animationFrameRef.current = null
+        snapToNearestCard()
+        return
+      }
+      animationFrameRef.current = requestAnimationFrame(step)
+    }
+
+    if (Math.abs(velocity) < 0.35) {
+      snapToNearestCard()
+      return
+    }
+    animationFrameRef.current = requestAnimationFrame(step)
+  }, [snapToNearestCard, stopAnimation, updateScrollLeft])
+
+  const handlePointerDown = (event) => {
+    if (event.button !== undefined && event.button !== 0) return
+    const viewport = viewportRef.current
+    if (!viewport) return
+    const isTouch = event.pointerType === 'touch'
+    if (!isTouch) event.preventDefault()
+    stopAnimation()
+    updateHintPosition(event)
+    dragStateRef.current = {
+      isDragging: !isTouch,
+      pointerId: event.pointerId,
+      axis: isTouch ? 'pending' : 'horizontal',
+      startX: event.clientX,
+      startY: event.clientY,
+      startScrollLeft: viewport.scrollLeft,
+      lastX: event.clientX,
+      lastMoveX: 0,
+      dragMultiplier: event.pointerType === 'touch' ? TOUCH_DRAG_MULTIPLIER : 1,
+      pointerType: event.pointerType || 'mouse',
+    }
+    setIsDragging(!isTouch)
+    if (!isTouch) event.currentTarget.setPointerCapture?.(event.pointerId)
+  }
+
+  const handlePointerMove = (event) => {
+    updateHintPosition(event)
+    const dragState = dragStateRef.current
+    if (dragState.pointerId !== event.pointerId || dragState.axis === 'vertical') return
+
+    if (dragState.axis === 'pending') {
+      const totalX = event.clientX - dragState.startX
+      const totalY = event.clientY - dragState.startY
+      const absoluteX = Math.abs(totalX)
+      const absoluteY = Math.abs(totalY)
+
+      if (absoluteX < TOUCH_AXIS_LOCK_PX && absoluteY < TOUCH_AXIS_LOCK_PX) return
+
+      if (absoluteY > absoluteX * TOUCH_AXIS_BIAS) {
+        dragState.axis = 'vertical'
+        dragState.isDragging = false
+        if (viewportRef.current) viewportRef.current.scrollLeft = dragState.startScrollLeft
+        setIsDragging(false)
+        return
+      }
+
+      if (absoluteX <= absoluteY * TOUCH_AXIS_BIAS) return
+
+      dragState.axis = 'horizontal'
+      dragState.isDragging = true
+      setIsDragging(true)
+      event.currentTarget.setPointerCapture?.(event.pointerId)
+    }
+
+    if (!dragState.isDragging) return
+    event.preventDefault()
+    const moveDelta = event.clientX - dragState.lastX
+    dragState.lastMoveX = moveDelta * dragState.dragMultiplier
+    dragState.lastX = event.clientX
+    if (dragState.lastMoveX > 0.5) setDragDirection('right')
+    if (dragState.lastMoveX < -0.5) setDragDirection('left')
+    updateScrollLeft(dragState.startScrollLeft - ((event.clientX - dragState.startX) * dragState.dragMultiplier))
+  }
+
+  const handlePointerEnd = (event) => {
+    const dragState = dragStateRef.current
+    if (dragState.pointerId !== event.pointerId) return
+    if (!dragState.isDragging || dragState.axis !== 'horizontal') {
+      dragState.isDragging = false
+      dragState.pointerId = null
+      dragState.axis = 'idle'
+      setIsDragging(false)
+      return
+    }
+    dragState.isDragging = false
+    dragState.pointerId = null
+    dragState.axis = 'idle'
+    setIsDragging(false)
+    event.currentTarget.releasePointerCapture?.(event.pointerId)
+    if (dragState.pointerType === 'touch') {
+      snapTouchSwipe(dragState)
+      return
+    }
+    startInertia(dragState.lastMoveX)
+  }
+
+  const handlePointerLeave = () => {
+    if (!dragStateRef.current.isDragging) setIsHintVisible(false)
+  }
+
+  const handleKeyDown = (event) => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+    const viewport = viewportRef.current
+    if (!viewport) return
+
+    event.preventDefault()
+    stopAnimation()
+    const direction = event.key === 'ArrowRight' ? 1 : -1
+    const currentIndex = Math.round(viewport.scrollLeft / cardInterval)
+    animateToScrollLeft((currentIndex + direction) * cardInterval)
+  }
 
   useEffect(() => {
     const updateSize = () => {
-      const { matches } = window.matchMedia("(min-width: 640px)");
-      setCardSize(matches ? 365 : 290);
-    };
+      const isDesktop = window.matchMedia('(min-width: 640px)').matches
+      const nextCardSize = isDesktop ? DESKTOP_CARD_SIZE : MOBILE_CARD_SIZE
+      const nextCardGap = isDesktop ? DESKTOP_CARD_GAP : MOBILE_CARD_GAP
+      const carouselWidth = viewportRef.current?.clientWidth || window.innerWidth
 
-    updateSize();
-    window.addEventListener("resize", updateSize);
-    return () => window.removeEventListener("resize", updateSize);
-  }, []);
+      setCardSize(nextCardSize)
+      setCardGap(nextCardGap)
+      setCarouselSidePadding(Math.max(16, (carouselWidth - nextCardSize) / 2))
+    }
+
+    updateSize()
+    window.addEventListener('resize', updateSize)
+    return () => window.removeEventListener('resize', updateSize)
+  }, [])
+
+  useEffect(() => {
+    const viewport = viewportRef.current
+    if (!viewport) return undefined
+
+    viewport.scrollLeft = loopWidth
+    const frameId = requestAnimationFrame(() => {
+      setActiveVirtualIndex(activeCases.length)
+    })
+
+    return () => cancelAnimationFrame(frameId)
+  }, [activeCases.length, loopWidth])
+
+  useEffect(() => () => {
+    stopAnimation()
+    if (hintFrameRef.current !== null) cancelAnimationFrame(hintFrameRef.current)
+  }, [stopAnimation])
 
   return (
     <section
       ref={sectionRef}
-      className="relative w-[100vw] left-[50%] right-[50%] -ml-[50vw] -mr-[50vw] overflow-hidden bg-white py-16 sm:py-24"
+      className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-[100vw] overflow-hidden bg-[#EFEFF4] py-16 sm:py-24"
     >
-      {/* Section Header */}
-      <div className="mx-auto max-w-[1380px] px-4 sm:px-6 lg:px-8 mb-8">
+      <div className="home-menu-shell mb-8" data-testid="home-menu-aligned-shell">
         <div className="text-center">
-          <p className={cn(
-            "mb-4 inline-block tracking-tight rounded-full bg-brand-red/10 px-4 py-1.5 text-[11px] font-semibold uppercase text-brand-red border border-brand-red/20",
-            isVisible ? 'animate-enter' : 'opacity-0'
-          )}>
-            Cases
-          </p>
           <h2 className={cn(
-            "mb-6 font-display text-4xl text-slate-900 sm:text-5xl lg:text-6xl",
+            'mb-6 font-display text-4xl text-slate-900 sm:text-5xl lg:text-6xl',
             isVisible ? 'animate-enter' : 'opacity-0',
-            '[animation-delay:150ms]'
+            '[animation-delay:150ms]',
           )}>
             Veja nossos cases de sucesso
           </h2>
           <p className={cn(
-            "mx-auto max-w-2xl text-base text-slate-600 sm:text-lg",
+            'mx-auto max-w-2xl text-base text-slate-600 sm:text-lg',
             isVisible ? 'animate-enter' : 'opacity-0',
-            '[animation-delay:300ms]'
+            '[animation-delay:300ms]',
           )}>
-            Mais de 400 empresas confiam na Otimiza para transformar seus processos e acelerar seus resultados.
+            Mais de mil clientes confiam na Otimiza para transformar seus processos e acelerar seus resultados.
           </p>
         </div>
       </div>
 
-      {/* Testimonials Carousel */}
       <div
+        ref={viewportRef}
+        data-testid="home-cases-carousel"
+        data-card-interval={cardInterval}
+        data-loop-width={loopWidth}
+        role="region"
+        aria-label="Carrossel de cases de sucesso"
+        tabIndex={0}
         className={cn(
-          "relative w-full overflow-hidden",
+          'group relative w-full overflow-hidden touch-pan-y select-none',
+          isDragging ? 'cursor-grabbing' : 'cursor-grab',
           isVisible ? 'animate-enter' : 'opacity-0',
-          '[animation-delay:450ms]'
+          '[animation-delay:450ms]',
         )}
-        style={{ height: 500 }}
-        onTransitionEnd={handleCarouselTransitionEnd}
+        style={{ height: cardSize + 92 }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerEnd}
+        onPointerCancel={handlePointerEnd}
+        onPointerLeave={handlePointerLeave}
+        onKeyDown={handleKeyDown}
       >
-        {/* Left gradient fade */}
+        <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 z-20 hidden w-[15%] bg-gradient-to-r from-[#EFEFF4] to-transparent sm:block" />
+        <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 z-20 hidden w-[15%] bg-gradient-to-l from-[#EFEFF4] to-transparent sm:block" />
         <div
-          className="pointer-events-none absolute left-0 top-0 bottom-0 z-20"
-          style={{
-            width: '15%',
-            background: 'linear-gradient(to right, rgb(255 255 255), transparent)'
-          }}
-        />
-        {/* Right gradient fade */}
-        <div
-          className="pointer-events-none absolute right-0 top-0 bottom-0 z-20"
-          style={{
-            width: '15%',
-            background: 'linear-gradient(to left, rgb(255 255 255), transparent)'
-          }}
-        />
-
-        {virtualTestimonials.map(({ virtualIndex, testimonial }) => {
-          const position = virtualIndex - activeVirtualIndex;
-          return (
-            <TestimonialCard
-              key={virtualIndex}
-              testimonial={testimonial}
-              handleMove={handleMove}
-              position={position}
+          data-testid="home-cases-track"
+          className="flex h-full w-max items-center"
+          style={{ gap: cardGap, paddingInline: carouselSidePadding }}
+        >
+          {loopedCases.map(({ caseStudy, logicalIndex, copyIndex, virtualIndex }) => (
+            <CaseCard
+              key={`${copyIndex}-${caseStudy.id}`}
+              caseStudy={caseStudy}
               cardSize={cardSize}
-              transitionEnabled={!isNormalizing}
+              logicalIndex={logicalIndex}
+              copyIndex={copyIndex}
+              virtualIndex={virtualIndex}
+              isActive={virtualIndex === activeVirtualIndex}
+              isDragging={isDragging}
             />
-          );
-        })}
-        <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-3 z-30">
-          <button
-            onClick={() => handleMove(-1)}
-            className={cn(
-              "flex h-12 w-12 items-center justify-center transition-all duration-300",
-              "bg-white border border-slate-200 text-slate-500",
-              "hover:bg-slate-900 hover:border-slate-900 hover:text-white",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2",
-              "rounded-full shadow-sm"
-            )}
-            aria-label="Depoimento anterior"
-          >
-            <ChevronLeft size={20} />
-          </button>
-          <button
-            onClick={() => handleMove(1)}
-            className={cn(
-              "flex h-12 w-12 items-center justify-center transition-all duration-300",
-              "bg-white border border-slate-200 text-slate-500",
-              "hover:bg-slate-900 hover:border-slate-900 hover:text-white",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2",
-              "rounded-full shadow-sm"
-            )}
-            aria-label="Próximo depoimento"
-          >
-            <ChevronRight size={20} />
-          </button>
+          ))}
         </div>
       </div>
 
-      {/* CTA Button */}
-      <div className={cn(
-        "flex justify-center mt-8",
-        isVisible ? 'animate-enter' : 'opacity-0',
-        '[animation-delay:600ms]'
-      )}>
-        <Link
-          to="/cases"
-          className="solutions-section__cta"
-          style={{ boxShadow: 'none' }}
+      {createPortal(
+        <span
+          data-testid="home-cases-drag-hint"
+          className={cn(
+            'pointer-events-none fixed left-0 top-0 z-[9999] inline-flex items-center rounded-full bg-slate-950/90 px-4 py-2 text-xs font-semibold text-white shadow-xl backdrop-blur transition-opacity duration-200 ease-out',
+            isHintVisible ? 'opacity-100' : 'opacity-0',
+          )}
+          style={{
+            transform: `translateX(${hintPosition.x}px) translateY(${hintPosition.y}px) scale(0.92)`,
+          }}
         >
+          <span>Arrastar</span>
+          <ChevronRight
+            data-testid="home-cases-drag-arrow"
+            className="ml-1.5 h-3.5 w-3.5"
+            aria-hidden="true"
+            style={{
+              transform: `rotate(${dragDirection === 'left' ? 180 : 0}deg) scale(${isDragging ? 1.12 : 1})`,
+              transition: 'transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+            }}
+          />
+        </span>,
+        document.body,
+      )}
+
+      <div
+        className={cn(
+        'home-menu-shell mt-8 flex justify-center',
+        isVisible ? 'animate-enter' : 'opacity-0',
+        '[animation-delay:600ms]',
+      )}
+        data-testid="home-menu-aligned-shell"
+      >
+        <Link to="/cases" className="solutions-section__cta" style={{ boxShadow: 'none' }}>
           Confira todos os cases
           <ArrowRight className="solutions-section__cta-arrow" />
         </Link>
       </div>
     </section>
-  );
+  )
 }
 
-// Scroll reveal hook (reused from the site pattern)
 function useScrollReveal(threshold = 0.15) {
-  const [isVisible, setIsVisible] = useState(false);
-  const ref = useRef(null);
+  const [isVisible, setIsVisible] = useState(false)
+  const ref = useRef(null)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setIsVisible(true);
-          if (ref.current) observer.unobserve(ref.current);
+          setIsVisible(true)
+          if (ref.current) observer.unobserve(ref.current)
         }
       },
-      { threshold }
-    );
+      { threshold },
+    )
 
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
+    if (ref.current) observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [threshold])
 
-    return () => observer.disconnect();
-  }, [threshold]);
-
-  return [ref, isVisible];
+  return [ref, isVisible]
 }

@@ -1,0 +1,417 @@
+[
+  {
+    "id": "home-client-aes-brasil",
+    "name": "AES Brasil",
+    "logoAlt": "AES",
+    "sector": "Energia",
+    "sourceFile": "01-aes.png",
+    "outputFile": "01-aes-brasil.png",
+    "website": "https://www.aesbrasil.com.br/",
+    "aliases": [
+      "AES Brasil",
+      "AES"
+    ],
+    "sortOrder": 1,
+    "recolorWhite": false
+  },
+  {
+    "id": "home-client-banco-moneo",
+    "name": "Banco Moneo S.A.",
+    "logoAlt": "Banco Moneo",
+    "sector": "Bancos",
+    "sourceFile": "02-moneo.png",
+    "outputFile": "02-banco-moneo.png",
+    "website": "https://www.bancomoneo.com.br/",
+    "aliases": [
+      "Banco Moneo S.A.",
+      "Banco Moneo",
+      "Banco Moneo"
+    ],
+    "sortOrder": 2,
+    "recolorWhite": true
+  },
+  {
+    "id": "home-client-bebidas-fruki",
+    "name": "Bebidas Fruki S.A.",
+    "logoAlt": "Fruki Bebidas",
+    "sector": "Alimentos, Bebidas e Supermercados",
+    "sourceFile": "03-fruki.png",
+    "outputFile": "03-bebidas-fruki.png",
+    "website": "https://fruki.com.br/",
+    "aliases": [
+      "Bebidas Fruki S.A.",
+      "Fruki Bebidas",
+      "Fruki"
+    ],
+    "sortOrder": 3,
+    "recolorWhite": false
+  },
+  {
+    "id": "home-client-bontempo",
+    "name": "Bontempo – Novatempo Franchising Ltda.",
+    "logoAlt": "Bontempo",
+    "sector": "Móveis",
+    "sourceFile": "04-bontempo.png",
+    "outputFile": "04-bontempo.png",
+    "website": "https://www.bontempo.com.br/",
+    "aliases": [
+      "Bontempo – Novatempo Franchising Ltda.",
+      "Bontempo",
+      "Bontempo"
+    ],
+    "sortOrder": 4,
+    "recolorWhite": false
+  },
+  {
+    "id": "home-client-brametal",
+    "name": "Brametal – Metalúrgica Brandão S.A.",
+    "logoAlt": "Brametal",
+    "sector": "Indústria",
+    "sourceFile": "05-brametal.svg",
+    "outputFile": "05-brametal.png",
+    "website": "https://www.brametal.com.br/",
+    "aliases": [
+      "Brametal – Metalúrgica Brandão S.A.",
+      "Brametal"
+    ],
+    "sortOrder": 5,
+    "recolorWhite": true
+  },
+  {
+    "id": "home-client-santa-clara",
+    "name": "Cooperativa Santa Clara",
+    "logoAlt": "Santa Clara",
+    "sector": "Alimentos, Bebidas e Supermercados",
+    "sourceFile": "06-santa-clara.png",
+    "outputFile": "06-santa-clara.png",
+    "website": "https://www.coopsantaclara.com.br/",
+    "aliases": [
+      "Cooperativa Santa Clara",
+      "Santa Clara"
+    ],
+    "sortOrder": 6,
+    "recolorWhite": false
+  },
+  {
+    "id": "home-client-engie-brasil",
+    "name": "ENGIE Brasil Energia S.A.",
+    "logoAlt": "ENGIE",
+    "sector": "Energia",
+    "sourceFile": "07-engie.svg",
+    "outputFile": "07-engie-brasil.png",
+    "website": "https://www.engie.com.br/",
+    "aliases": [
+      "ENGIE Brasil Energia S.A.",
+      "ENGIE"
+    ],
+    "sortOrder": 7,
+    "recolorWhite": false
+  },
+  {
+    "id": "home-client-fiergs",
+    "name": "Federação das Indústrias do RS (FIERGS)",
+    "logoAlt": "FIERGS",
+    "sector": "Associações, Fundações e Órgãos Públicos",
+    "sourceFile": "08-fiergs.png",
+    "outputFile": "08-fiergs.png",
+    "website": "https://www.fiergs.org.br/",
+    "aliases": [
+      "Federação das Indústrias do RS (FIERGS)",
+      "FIERGS"
+    ],
+    "sortOrder": 8,
+    "recolorWhite": false
+  },
+  {
+    "id": "home-client-freios-controil",
+    "name": "Freios Controil Ltda.",
+    "logoAlt": "Controil",
+    "sector": "Indústria",
+    "sourceFile": "09-controil.jpg",
+    "outputFile": "09-freios-controil.png",
+    "website": "https://controil.com.br/",
+    "aliases": [
+      "Freios Controil Ltda.",
+      "Controil"
+    ],
+    "sortOrder": 9,
+    "recolorWhite": false
+  },
+  {
+    "id": "home-client-grendene",
+    "name": "Grendene S.A.",
+    "logoAlt": "Grendene",
+    "sector": "Vestuário e Calçados",
+    "sourceFile": "10-grendene.png",
+    "outputFile": "10-grendene.png",
+    "website": "https://www.grendene.com.br/",
+    "aliases": [
+      "Grendene S.A.",
+      "Grendene"
+    ],
+    "sortOrder": 10,
+    "recolorWhite": false
+  },
+  {
+    "id": "home-client-irmaos-fischer",
+    "name": "Irmãos Fischer S.A. Ind. e Com.",
+    "logoAlt": "Fischer",
+    "sector": "Indústria",
+    "sourceFile": "11-fischer.svg",
+    "outputFile": "11-irmaos-fischer.png",
+    "website": "https://www.fischer.com.br/",
+    "aliases": [
+      "Irmãos Fischer S.A. Ind. e Com.",
+      "Fischer"
+    ],
+    "sortOrder": 11,
+    "recolorWhite": false
+  },
+  {
+    "id": "home-client-hacker-turbinas",
+    "name": "Hacker Turbinas Elétricas",
+    "logoAlt": "Hacker",
+    "sector": "Indústria",
+    "sourceFile": "12-hacker.webp",
+    "outputFile": "12-hacker-turbinas.png",
+    "website": "https://www.hackerturbinas.com.br/",
+    "aliases": [
+      "Hacker Turbinas Elétricas",
+      "Hacker"
+    ],
+    "sortOrder": 12,
+    "recolorWhite": false
+  },
+  {
+    "id": "home-client-lojas-colombo",
+    "name": "Lojas Colombo S.A.",
+    "logoAlt": "Lojas Colombo",
+    "sector": "Comércio e Distribuidoras",
+    "sourceFile": "13-colombo.svg",
+    "outputFile": "13-lojas-colombo.png",
+    "website": "https://www.colombo.com.br/",
+    "aliases": [
+      "Lojas Colombo S.A.",
+      "Lojas Colombo",
+      "Lojas Colombo"
+    ],
+    "sortOrder": 13,
+    "recolorWhite": true
+  },
+  {
+    "id": "home-client-marcopolo",
+    "name": "Marcopolo S.A.",
+    "logoAlt": "Marcopolo",
+    "sector": "Indústria",
+    "sourceFile": "14-marcopolo.svg",
+    "outputFile": "14-marcopolo.png",
+    "website": "https://www.marcopolo.com.br/",
+    "aliases": [
+      "Marcopolo S.A.",
+      "Marcopolo",
+      "Marcopolo"
+    ],
+    "sortOrder": 14,
+    "recolorWhite": false
+  },
+  {
+    "id": "home-client-metalurgica-siemsen",
+    "name": "Metalúrgica Siemsen",
+    "logoAlt": "Skymsen",
+    "sector": "Indústria",
+    "sourceFile": "15-skymsen.png",
+    "outputFile": "15-metalurgica-siemsen.png",
+    "website": "https://www.skymsen.com/",
+    "aliases": [
+      "Metalúrgica Siemsen",
+      "Skymsen"
+    ],
+    "sortOrder": 15,
+    "recolorWhite": false
+  },
+  {
+    "id": "home-client-moinho-do-nordeste",
+    "name": "Moinho do Nordeste S.A.",
+    "logoAlt": "Moinho do Nordeste",
+    "sector": "Alimentos, Bebidas e Supermercados",
+    "sourceFile": "16-moinho-nordeste.png",
+    "outputFile": "16-moinho-do-nordeste.png",
+    "website": "https://moinhodonordeste.com.br/",
+    "aliases": [
+      "Moinho do Nordeste S.A.",
+      "Moinho do Nordeste"
+    ],
+    "sortOrder": 16,
+    "recolorWhite": true
+  },
+  {
+    "id": "home-client-moinhos-galopolis",
+    "name": "Moinhos Galópolis S.A.",
+    "logoAlt": "Roseflor",
+    "sector": "Alimentos, Bebidas e Supermercados",
+    "sourceFile": "17-roseflor.jpg",
+    "outputFile": "17-moinhos-galopolis.png",
+    "website": "https://www.roseflor.com.br/",
+    "aliases": [
+      "Moinhos Galópolis S.A.",
+      "Roseflor"
+    ],
+    "sortOrder": 17,
+    "recolorWhite": false
+  },
+  {
+    "id": "home-client-pisani-plasticos",
+    "name": "Pisani Plásticos S.A.",
+    "logoAlt": "Pisani",
+    "sector": "Indústria",
+    "sourceFile": "18-pisani.svg",
+    "outputFile": "18-pisani-plasticos.png",
+    "website": "https://pisani.com.br/",
+    "aliases": [
+      "Pisani Plásticos S.A.",
+      "Pisani"
+    ],
+    "sortOrder": 18,
+    "recolorWhite": false
+  },
+  {
+    "id": "home-client-roni-da-silva-chaves",
+    "name": "Roni da Silva Chaves",
+    "logoAlt": "Roni Chaves",
+    "sector": "Comércio e Distribuidoras",
+    "sourceFile": "19-roni.png",
+    "outputFile": "19-roni-da-silva-chaves.png",
+    "website": "https://ronichaves.com.br/",
+    "aliases": [
+      "Roni da Silva Chaves",
+      "Roni Chaves"
+    ],
+    "sortOrder": 19,
+    "recolorWhite": false
+  },
+  {
+    "id": "home-client-sca-moveis",
+    "name": "SCA Indústria de Móveis Ltda.",
+    "logoAlt": "SCA",
+    "sector": "Móveis",
+    "sourceFile": "20-sca.svg",
+    "outputFile": "20-sca-moveis.png",
+    "website": "https://sca.com.br/",
+    "aliases": [
+      "SCA Indústria de Móveis Ltda.",
+      "SCA"
+    ],
+    "sortOrder": 20,
+    "recolorWhite": false
+  },
+  {
+    "id": "home-client-sim-rede-de-postos",
+    "name": "SIM Rede de Postos – Ditrento Postos e Logística Ltda.",
+    "logoAlt": "SIM Rede de Postos",
+    "sector": "Comércio e Distribuidoras",
+    "sourceFile": "21-sim.png",
+    "outputFile": "21-sim-rede-de-postos.png",
+    "website": "https://www.simrede.com.br/",
+    "aliases": [
+      "SIM Rede de Postos – Ditrento Postos e Logística Ltda.",
+      "SIM Rede de Postos",
+      "Postos SIM"
+    ],
+    "sortOrder": 21,
+    "recolorWhite": false
+  },
+  {
+    "id": "home-client-sulmaq-maquinas",
+    "name": "Sulmaq Máquinas",
+    "logoAlt": "Sulmaq",
+    "sector": "Indústria",
+    "sourceFile": "22-sulmaq.jpg",
+    "outputFile": "22-sulmaq-maquinas.png",
+    "website": "https://www.sulmaq.com.br/",
+    "aliases": [
+      "Sulmaq Máquinas",
+      "Sulmaq",
+      "Sulmaq"
+    ],
+    "sortOrder": 22,
+    "recolorWhite": false
+  },
+  {
+    "id": "home-client-tesouro-rs",
+    "name": "Tesouro e Receita do Estado do RS",
+    "logoAlt": "Tesouro do Estado RS",
+    "sector": "Associações, Fundações e Órgãos Públicos",
+    "sourceFile": "23-tesouro.png",
+    "outputFile": "23-tesouro-rs.png",
+    "website": "https://tesouro.fazenda.rs.gov.br/",
+    "aliases": [
+      "Tesouro e Receita do Estado do RS",
+      "Tesouro do Estado RS"
+    ],
+    "sortOrder": 23,
+    "recolorWhite": false
+  },
+  {
+    "id": "home-client-unicasa",
+    "name": "Unicasa Indústria de Móveis S.A.",
+    "logoAlt": "Dell Anno",
+    "sector": "Móveis",
+    "sourceFile": "24-dellanno.svg",
+    "outputFile": "24-unicasa.png",
+    "website": "https://www.dellanno.com.br/",
+    "aliases": [
+      "Unicasa Indústria de Móveis S.A.",
+      "Dell Anno",
+      "Unicasa"
+    ],
+    "sortOrder": 24,
+    "recolorWhite": true
+  },
+  {
+    "id": "home-client-unimed-porto-alegre",
+    "name": "Unimed Porto Alegre",
+    "logoAlt": "Unimed Porto Alegre",
+    "sector": "Saúde",
+    "sourceFile": "25-unimed-poa.png",
+    "outputFile": "25-unimed-porto-alegre.png",
+    "website": "https://www.unimedpoa.com.br/",
+    "aliases": [
+      "Unimed Porto Alegre",
+      "Unimed Porto Alegre"
+    ],
+    "sortOrder": 25,
+    "recolorWhite": false
+  },
+  {
+    "id": "home-client-unimed-vtrp",
+    "name": "Unimed Vales do Taquari e Rio Pardo",
+    "logoAlt": "Unimed VTRP",
+    "sector": "Saúde",
+    "sourceFile": "26-unimed-vtrp.png",
+    "outputFile": "26-unimed-vtrp.png",
+    "website": "https://www.unimedvtrp.com.br/",
+    "aliases": [
+      "Unimed Vales do Taquari e Rio Pardo",
+      "Unimed VTRP",
+      "Unimed VTRP"
+    ],
+    "sortOrder": 26,
+    "recolorWhite": false
+  },
+  {
+    "id": "home-client-zen",
+    "name": "Zen S.A.",
+    "logoAlt": "ZEN",
+    "sector": "Indústria",
+    "sourceFile": "27-zen.png",
+    "outputFile": "27-zen.png",
+    "website": "https://www.zensa.com.br/",
+    "aliases": [
+      "Zen S.A.",
+      "ZEN",
+      "Zen"
+    ],
+    "sortOrder": 27,
+    "recolorWhite": false
+  }
+]

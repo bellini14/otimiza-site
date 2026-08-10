@@ -1,25 +1,34 @@
-import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowRight, ChevronRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { ProjectCard } from './project-card'
 import { client } from '@/lib/sanity'
 import { staticBlogPosts } from '../../data/blogPosts'
+import { setCachedInspirePosts } from '../../lib/inspirePostCache'
+import { useDragCarousel } from '../../hooks/useDragCarousel'
+import { buildWordPressPostPath } from '../../lib/postUrl'
 
 
 
-const CAROUSEL_ANIMATION_MS = 340
-const CAROUSEL_UNLOCK_FALLBACK_MS = CAROUSEL_ANIMATION_MS + 120
-const STAGE_GAP_PX = 24
+const STAGE_GAP_PX = 32
 
 export function BlogHighlights() {
   const [sectionRef, isVisible] = useScrollReveal(0.1)
   const [blogPosts, setBlogPosts] = useState(staticBlogPosts)
-  const [displayIndex, setDisplayIndex] = useState(0)
   const [slidesPerView, setSlidesPerView] = useState(getSlidesPerView())
-  const [isAnimating, setIsAnimating] = useState(false)
-  const prefersReducedMotion = useReducedMotionPreference()
-  const unlockTimeoutRef = useRef(null)
+  const slideStep = getSlideStep(slidesPerView)
+  const isMobileCarousel = slidesPerView === 1
+  const {
+    shellRef,
+    trackRef,
+    translateX,
+    isDragging,
+    dragDirection,
+    hintPosition,
+    updateHintPosition,
+    trackHandlers,
+  } = useDragCarousel({ snapStep: slideStep, snapOnRelease: isMobileCarousel })
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -28,12 +37,14 @@ export function BlogHighlights() {
           title,
           description,
           "imgSrc": mainImage.asset->url,
-          "link": "/insights-e-blog/" + slug.current,
+          "slug": slug.current,
+          publishedAt,
           eyebrow,
           "linkText": "Ler artigo"
         }`
         const dynamicPosts = await client.fetch(query)
         if (dynamicPosts && dynamicPosts.length > 0) {
+          setCachedInspirePosts(dynamicPosts)
           setBlogPosts(dynamicPosts)
         }
       } catch (error) {
@@ -44,8 +55,7 @@ export function BlogHighlights() {
   }, [])
 
   const maxIndex = Math.max(blogPosts.length - slidesPerView, 0)
-  const currentIndex = Math.min(displayIndex, maxIndex)
-  const visiblePosts = blogPosts.slice(currentIndex, currentIndex + slidesPerView)
+  const currentIndex = Math.min(Math.max(Math.round(-translateX / slideStep), 0), maxIndex)
 
   useEffect(() => {
     function handleResize() {
@@ -56,69 +66,14 @@ export function BlogHighlights() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  useEffect(() => {
-    return () => {
-      clearUnlockFallback(unlockTimeoutRef)
-    }
-  }, [])
-
-  function handlePrevious() {
-    moveToIndex(currentIndex - 1)
-  }
-
-  function handleNext() {
-    moveToIndex(currentIndex + 1)
-  }
-
-  function moveToIndex(nextIndex) {
-    if (isAnimating) {
-      return
-    }
-
-    const clampedIndex = Math.min(Math.max(nextIndex, 0), maxIndex)
-
-    if (clampedIndex === currentIndex) {
-      return
-    }
-
-    setDisplayIndex(clampedIndex)
-
-    if (prefersReducedMotion) {
-      return
-    }
-
-    setIsAnimating(true)
-    clearUnlockFallback(unlockTimeoutRef)
-    unlockTimeoutRef.current = window.setTimeout(() => {
-      setIsAnimating(false)
-    }, CAROUSEL_UNLOCK_FALLBACK_MS)
-  }
-
-  function handleTrackTransitionEnd(event) {
-    if (event.target !== event.currentTarget || event.propertyName !== 'transform') {
-      return
-    }
-
-    clearUnlockFallback(unlockTimeoutRef)
-    setIsAnimating(false)
-  }
-
   return (
     <section
       ref={sectionRef}
-      className="relative w-[100vw] left-[50%] right-[50%] -ml-[50vw] -mr-[50vw] overflow-hidden bg-[#EFEFF4] py-16 sm:py-24"
+      className="relative w-[100vw] left-[50%] right-[50%] -ml-[50vw] -mr-[50vw] overflow-hidden bg-[#EFEFF4] pb-12 pt-16 sm:pb-16 sm:pt-24"
     >
-      <div className="mx-auto max-w-[1380px] px-4 sm:px-6 lg:px-8">
+      <div className="home-menu-shell" data-testid="home-menu-aligned-shell">
         <div className="mb-12 flex flex-col gap-8 lg:mb-14 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
-            <p
-              className={cn(
-                'mb-4 inline-flex rounded-full border border-slate-200 bg-slate-50 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600',
-                isVisible ? 'animate-enter' : 'opacity-0',
-              )}
-            >
-              Insights e Blog
-            </p>
             <h2
               className={cn(
                 'max-w-2xl font-display text-4xl text-slate-900 sm:text-5xl lg:text-6xl',
@@ -126,112 +81,129 @@ export function BlogHighlights() {
                 '[animation-delay:150ms]',
               )}
             >
-              Insights para quem opera no longo prazo
+              Inspire. Conteúdo de vanguarda para a gestão de alto impacto.
             </h2>
           </div>
 
           <div
             className={cn(
-              'flex items-center justify-between gap-4 lg:min-w-[22rem] lg:justify-end',
+              'flex items-center lg:justify-end',
               isVisible ? 'animate-enter' : 'opacity-0',
               '[animation-delay:300ms]',
             )}
           >
-            <p className="max-w-sm text-sm leading-6 text-slate-600 sm:text-base">
-              10 posts selecionados para leitura rapida, com navegacao direta por setas.
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handlePrevious}
-                disabled={isAnimating || currentIndex === 0}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition-colors duration-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35"
-                aria-label="Post anterior"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={handleNext}
-                disabled={isAnimating || currentIndex === maxIndex}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition-colors duration-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35"
-                aria-label="Proximo post"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
+            <Link
+              to="/inspire"
+              data-testid="blog-header-cta"
+              className="group inline-flex items-center gap-2 rounded-full border border-slate-200 px-5 py-3 text-sm font-medium text-slate-900 transition-all duration-300 hover:border-slate-300 hover:bg-slate-50"
+            >
+              Explorar Inspire
+              <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+            </Link>
           </div>
         </div>
 
+      </div>
+
+      <div
+        ref={shellRef}
+        data-testid="blog-slider-stage"
+        data-current-index={currentIndex}
+        className={cn(
+          'group relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen overflow-hidden py-2',
+          isVisible ? 'animate-enter' : 'opacity-0',
+          '[animation-delay:450ms]',
+        )}
+        onPointerMove={updateHintPosition}
+      >
+        <span
+          data-testid="blog-carousel-fade"
+          className="blog-carousel-fade pointer-events-none absolute inset-y-0 left-0 z-20 w-24 bg-gradient-to-r from-[#EFEFF4] via-[#EFEFF4]/85 to-transparent sm:w-36 lg:w-48"
+          aria-hidden="true"
+        />
+        <span
+          data-testid="blog-carousel-fade"
+          className="blog-carousel-fade pointer-events-none absolute inset-y-0 right-0 z-20 w-24 bg-gradient-to-l from-[#EFEFF4] via-[#EFEFF4]/85 to-transparent sm:w-36 lg:w-48"
+          aria-hidden="true"
+        />
+        <span
+          data-testid="blog-drag-hint"
+          className="pointer-events-none absolute left-0 top-0 z-30 hidden rounded-full bg-slate-950/80 px-4 py-2 text-xs font-semibold text-white opacity-0 shadow-xl backdrop-blur transition-opacity duration-300 ease-out group-hover:opacity-100 sm:inline-flex"
+          style={{ transform: `translateX(${hintPosition.x}px) translateY(${hintPosition.y}px) scale(0.92)` }}
+        >
+          <span>Arrastar</span>
+          <ChevronRight
+            data-testid="blog-drag-arrow"
+            className="ml-1.5 h-3.5 w-3.5"
+            aria-hidden="true"
+            style={{
+              transform: `rotate(${dragDirection === 'left' ? 180 : 0}deg) scale(${isDragging ? 1.12 : 1})`,
+              transition: 'transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+            }}
+          />
+        </span>
         <div
-          data-testid="blog-slider-stage"
-          data-phase={isAnimating ? 'animating' : 'idle'}
-          data-current-index={currentIndex}
+          ref={trackRef}
+          data-testid="blog-slider-track"
+          data-mobile-snap={isMobileCarousel ? 'true' : 'false'}
           className={cn(
-            'relative -mt-3 overflow-y-visible overflow-x-hidden pt-3',
-            isVisible ? 'animate-enter' : 'opacity-0',
-            '[animation-delay:450ms]',
+            'flex w-max gap-8 pb-4 pt-1 will-change-transform',
+            isDragging ? 'cursor-grabbing' : 'cursor-grab',
           )}
+          style={{
+            transform: `translateX(${translateX}px)`,
+            transition: 'none',
+            touchAction: 'pan-y',
+            userSelect: 'none',
+          }}
+          {...trackHandlers}
         >
           <div
-            data-testid="blog-slider-track"
-            data-animating={isAnimating ? 'true' : 'false'}
-            className="flex will-change-transform"
-            onTransitionEnd={handleTrackTransitionEnd}
-            style={{
-              gap: `${STAGE_GAP_PX}px`,
-              transform: `translate3d(calc(-${(currentIndex / slidesPerView) * 100}% - ${(currentIndex * STAGE_GAP_PX) / slidesPerView}px), 0, 0)`,
-              transition: prefersReducedMotion ? 'none' : `transform ${CAROUSEL_ANIMATION_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`,
-            }}
-          >
-            {blogPosts.map((post, index) => {
-              const isSlideVisible = index >= currentIndex && index < currentIndex + slidesPerView
+            data-testid="blog-carousel-edge-spacer"
+            className="blog-carousel-edge-spacer shrink-0"
+            aria-hidden="true"
+          />
+          {blogPosts.map((post, index) => {
+            const isSlideVisible = index >= currentIndex && index < currentIndex + slidesPerView
 
-              return (
-                <div
-                  key={post.title}
-                  data-testid="blog-slide"
-                  data-visible={isSlideVisible ? 'true' : 'false'}
-                  aria-hidden={isSlideVisible ? undefined : true}
-                  className="shrink-0"
-                  style={{ width: `calc((100% - ${(slidesPerView - 1) * STAGE_GAP_PX}px) / ${slidesPerView})` }}
-                >
-                  <ProjectCard {...post} />
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        <div
-          className={cn(
-            'mt-10 flex items-center justify-between gap-4',
-            isVisible ? 'animate-enter' : 'opacity-0',
-            '[animation-delay:600ms]',
-          )}
-        >
-          <p className="text-sm text-slate-500">
-            {String(currentIndex + 1).padStart(2, '0')}-{String(currentIndex + visiblePosts.length).padStart(2, '0')} /{' '}
-            {String(blogPosts.length).padStart(2, '0')}
-          </p>
-          <Link
-            to="/insights-e-blog"
-            className="group inline-flex items-center gap-2 rounded-full border border-slate-200 px-5 py-3 text-sm font-medium text-slate-900 transition-all duration-300 hover:border-slate-300 hover:bg-slate-50"
-          >
-            Ver todos os artigos
-            <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-          </Link>
+            return (
+              <div
+                key={post.title}
+                data-testid="blog-slide"
+                data-carousel-snap-slide="true"
+                data-visible={isSlideVisible ? 'true' : 'false'}
+                aria-hidden={isSlideVisible ? undefined : true}
+                className="blog-slide shrink-0"
+              >
+                <ProjectCard
+                  {...post}
+                  link={buildWordPressPostPath(post)}
+                  compact
+                  disableHover
+                  linkState={{
+                    postPreview: {
+                      title: post.title,
+                      description: post.description,
+                      publishedAt: post.publishedAt,
+                      eyebrow: post.eyebrow,
+                      imgSrc: post.imgSrc,
+                      slug: post.slug,
+                    },
+                  }}
+                />
+              </div>
+            )
+          })}
+          <div
+            data-testid="blog-carousel-edge-spacer"
+            className="blog-carousel-edge-spacer shrink-0"
+            aria-hidden="true"
+          />
         </div>
       </div>
+
     </section>
   )
-}
-
-function clearUnlockFallback(timeoutRef) {
-  if (timeoutRef.current) {
-    window.clearTimeout(timeoutRef.current)
-    timeoutRef.current = null
-  }
 }
 
 function getSlidesPerView() {
@@ -250,29 +222,26 @@ function getSlidesPerView() {
   return 1
 }
 
-function useReducedMotionPreference() {
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+function getHomeInlinePx(viewportWidth) {
+  if (viewportWidth >= 1024) return 40
+  if (viewportWidth >= 640) return 32
+  return 24
+}
 
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-      return undefined
-    }
+function getSlideStep(slidesPerView) {
+  if (typeof window === 'undefined') {
+    return (1380 - (slidesPerView - 1) * STAGE_GAP_PX) / slidesPerView + STAGE_GAP_PX
+  }
 
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const updatePreference = () => setPrefersReducedMotion(mediaQuery.matches)
+  if (slidesPerView === 1) {
+    return window.innerWidth - getHomeInlinePx(window.innerWidth) * 2 + STAGE_GAP_PX
+  }
 
-    updatePreference()
-
-    if (typeof mediaQuery.addEventListener === 'function') {
-      mediaQuery.addEventListener('change', updatePreference)
-      return () => mediaQuery.removeEventListener('change', updatePreference)
-    }
-
-    mediaQuery.addListener(updatePreference)
-    return () => mediaQuery.removeListener(updatePreference)
-  }, [])
-
-  return prefersReducedMotion
+  return Math.max(
+    ((Math.min(window.innerWidth, 1380) - (slidesPerView - 1) * STAGE_GAP_PX) / slidesPerView) +
+      STAGE_GAP_PX,
+    1,
+  )
 }
 
 function useScrollReveal(threshold = 0.15) {

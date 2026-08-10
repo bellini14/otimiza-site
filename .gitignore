@@ -12,6 +12,8 @@ dist
 dist-ssr
 *.local
 .worktrees/
+.superpowers/
+test-results/
 
 # Editor directories and files
 .vscode/*
@@ -23,3 +25,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+.vercel
+.env*.local

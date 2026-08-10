@@ -1,4 +1,6 @@
 import '@testing-library/jest-dom/vitest'
+import { beforeEach } from 'vitest'
+import { resetPostLikeCountCache } from '../lib/postLikes'
 
 class MockIntersectionObserver {
   constructor(callback) {
@@ -15,6 +17,20 @@ class MockIntersectionObserver {
 }
 
 globalThis.IntersectionObserver = MockIntersectionObserver
+
+class MockResizeObserver {
+  observe() {}
+
+  unobserve() {}
+
+  disconnect() {}
+}
+
+globalThis.ResizeObserver = MockResizeObserver
+
+beforeEach(() => {
+  resetPostLikeCountCache()
+})
 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

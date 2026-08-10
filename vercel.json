@@ -1,0 +1,75 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Expose-Headers",
+          "value": "Content-Encoding"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/quem-somos",
+      "destination": "/quem-somos.html"
+    },
+    {
+      "source": "/nossa-abordagem",
+      "destination": "/nossa-abordagem.html"
+    },
+    {
+      "source": "/o-que-fazemos",
+      "destination": "/o-que-fazemos.html"
+    },
+    {
+      "source": "/cases",
+      "destination": "/cases.html"
+    },
+    {
+      "source": "/tecnologia",
+      "destination": "/tecnologia.html"
+    },
+    {
+      "source": "/academia-otimiza",
+      "destination": "/academia-otimiza.html"
+    },
+    {
+      "source": "/contato",
+      "destination": "/contato.html"
+    },
+    {
+      "source": "/politica-de-privacidade",
+      "destination": "/politica-de-privacidade.html"
+    },
+    {
+      "source": "/inspire",
+      "destination": "/inspire.html"
+    },
+    {
+      "source": "/inspire/newsletter",
+      "destination": "/inspire/newsletter.html"
+    },
+    {
+      "source": "/silvana-bettiol",
+      "destination": "/silvana-bettiol.html"
+    },
+    {
+      "source": "/cases/:slug",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/inspire/:slug",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

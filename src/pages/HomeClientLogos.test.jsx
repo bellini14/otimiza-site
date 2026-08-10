@@ -40,6 +40,7 @@ describe('Home client logos', () => {
         name: 'Banco Azul',
         logoAlt: 'Marca Banco Azul',
         logoUrl: 'https://cdn.sanity.io/images/prod/banco-azul.svg',
+        website: 'https://banco-azul.example.com',
       },
       {
         _id: 'distribuidora-alfa',
@@ -58,10 +59,12 @@ describe('Home client logos', () => {
     expect(client.fetch).toHaveBeenCalledWith(expect.stringContaining('_type == "clientLogo"'))
     expect(client.fetch).toHaveBeenCalledWith(expect.stringContaining('showOnHome == true'))
 
-    expect(await screen.findByRole('img', { name: 'Marca Banco Azul' })).toHaveAttribute(
+    const bancoAzulLogo = await screen.findByRole('img', { name: 'Marca Banco Azul' })
+    expect(bancoAzulLogo).toHaveAttribute(
       'src',
       'https://cdn.sanity.io/images/prod/banco-azul.svg',
     )
+    expect(bancoAzulLogo.closest('a')).toBeNull()
     expect(screen.getByRole('img', { name: 'Distribuidora Alfa' })).toHaveAttribute(
       'src',
       'https://cdn.sanity.io/images/prod/distribuidora-alfa.svg',
@@ -78,9 +81,45 @@ describe('Home client logos', () => {
       </MemoryRouter>,
     )
 
-    expect(await screen.findByRole('img', { name: 'Moneo' })).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: 'Lojas Colombo' })).toBeInTheDocument()
-    expect(screen.getByTestId('home-client-logo-carousel')).toBeInTheDocument()
+    expect(await screen.findByRole('img', { name: 'Banco Moneo' })).toBeInTheDocument()
+
+    const carousel = screen.getByTestId('home-client-logo-carousel')
+    const fallbackLogoNames = Array.from(new Set(
+      Array.from(carousel.querySelectorAll('img[alt]:not([alt=""])'))
+        .map((logo) => logo.getAttribute('alt')),
+    )).sort((left, right) => left.localeCompare(right, 'pt-BR'))
+    const approvedLogoNames = [
+      'AES',
+      'Banco Moneo',
+      'Bontempo',
+      'Brametal',
+      'Controil',
+      'Dell Anno',
+      'ENGIE',
+      'FIERGS',
+      'Fischer',
+      'Fruki Bebidas',
+      'Grendene',
+      'Hacker',
+      'Lojas Colombo',
+      'Marcopolo',
+      'Moinho do Nordeste',
+      'Pisani',
+      'Roni Chaves',
+      'Roseflor',
+      'Santa Clara',
+      'SCA',
+      'SIM Rede de Postos',
+      'Skymsen',
+      'Sulmaq',
+      'Tesouro do Estado RS',
+      'Unimed Porto Alegre',
+      'Unimed VTRP',
+      'ZEN',
+    ].sort((left, right) => left.localeCompare(right, 'pt-BR'))
+
+    expect(fallbackLogoNames).toEqual(approvedLogoNames)
+    expect(fallbackLogoNames).not.toEqual(expect.arrayContaining(['Cinex', 'Randon', 'Sicredi']))
   })
 
   it('repeats a short client logo list enough to fill the home carousel', async () => {
@@ -279,11 +318,16 @@ describe('Home client logos', () => {
     expect(tailwindConfig).not.toMatch(/-20s/)
   })
 
-  it('keeps the duplicated marquee tracks separated by the same gap used in the keyframes', () => {
-    expect(indexCss).toMatch(/\.home-client-logo-marquee__scroller\s*\{[^}]*gap:\s*1\.5rem;/s)
+  it('keeps mobile logo tracks compact and restores desktop spacing at the sm breakpoint', () => {
+    expect(indexCss).toMatch(/\.home-client-logo-card\s*\{[^}]*width:\s*8rem;/s)
+    expect(indexCss).toMatch(/\.home-client-logo-marquee__scroller\s*\{[^}]*--home-client-logo-gap-offset:\s*0\.375rem;[^}]*gap:\s*0\.75rem;/s)
+    expect(indexCss).toMatch(/\.home-client-logo-marquee__track\s*\{[^}]*gap:\s*0\.75rem;/s)
+    expect(indexCss).toMatch(/@media\s*\(min-width:\s*640px\)\s*\{[\s\S]*\.home-client-logo-card\s*\{[\s\S]*width:\s*13rem;/s)
+    expect(indexCss).toMatch(/@media\s*\(min-width:\s*640px\)\s*\{[\s\S]*\.home-client-logo-marquee__scroller\s*\{[\s\S]*--home-client-logo-gap-offset:\s*0\.75rem;/s)
+    expect(indexCss).toMatch(/@media\s*\(min-width:\s*640px\)\s*\{[\s\S]*\.home-client-logo-marquee__scroller,\s*\.home-client-logo-marquee__track\s*\{[\s\S]*gap:\s*1\.5rem;/s)
     expect(indexCss).toMatch(/animation:\s*home-client-logo-scroll\s+var\(--home-client-logo-duration,\s*54s\)\s+linear\s+infinite;/)
     expect(indexCss).toMatch(/\.home-client-logo-marquee__scroller\[data-scroll-velocity-enhanced="true"\]\s*\{[^}]*animation:\s*none;/s)
-    expect(indexCss).toMatch(/translate3d\(calc\(-50% - 0\.75rem\), 0, 0\)/)
+    expect(indexCss).toMatch(/translate3d\(calc\(-50% - var\(--home-client-logo-gap-offset,\s*0\.375rem\)\), 0, 0\)/)
   })
 
   it('keeps the base logo marquee pace until scroll velocity accelerates it', async () => {

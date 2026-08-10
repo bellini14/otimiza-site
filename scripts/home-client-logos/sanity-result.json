@@ -1,0 +1,245 @@
+[
+  {
+    "_id": "home-client-aes-brasil",
+    "assetId": "image-e71ef8ce88e8abce3b24b3ad02117ce803d35ddf-1197x489-png",
+    "logoAlt": "AES",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/e71ef8ce88e8abce3b24b3ad02117ce803d35ddf-1197x489.png",
+    "name": "AES Brasil",
+    "sector": "Energia",
+    "sortOrder": 1
+  },
+  {
+    "_id": "08d1c5fa-324d-4550-a27d-9ec20f30d102",
+    "assetId": "image-27406390c300eb040d3c5484ff205dc563b65088-281x42-png",
+    "logoAlt": "Banco Moneo",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/27406390c300eb040d3c5484ff205dc563b65088-281x42.png",
+    "name": "Banco Moneo S.A.",
+    "sector": "Bancos",
+    "sortOrder": 2
+  },
+  {
+    "_id": "d3bdd644-bdb8-4933-94bf-03fbf2c8b100",
+    "assetId": "image-ad15b3b5fccf2a67d738cb8bcdd1fdeb52a11fd9-654x654-png",
+    "logoAlt": "Fruki Bebidas",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/ad15b3b5fccf2a67d738cb8bcdd1fdeb52a11fd9-654x654.png",
+    "name": "Bebidas Fruki S.A.",
+    "sector": "Alimentos, Bebidas e Supermercados",
+    "sortOrder": 3
+  },
+  {
+    "_id": "e248ea3b-d7ff-4831-8d0c-610eefef8cdd",
+    "assetId": "image-61386feb33e400a75457d26f94f59752df46e439-303x21-png",
+    "logoAlt": "Bontempo",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/61386feb33e400a75457d26f94f59752df46e439-303x21.png",
+    "name": "Bontempo – Novatempo Franchising Ltda.",
+    "sector": "Móveis",
+    "sortOrder": 4
+  },
+  {
+    "_id": "home-client-brametal",
+    "assetId": "image-9c12cd872f7b6982a57499b13ec18c0efb32ea1c-1195x264-png",
+    "logoAlt": "Brametal",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/9c12cd872f7b6982a57499b13ec18c0efb32ea1c-1195x264.png",
+    "name": "Brametal – Metalúrgica Brandão S.A.",
+    "sector": "Indústria",
+    "sortOrder": 5
+  },
+  {
+    "_id": "9c460c83-ef2c-482c-9fc9-91bcdbf84305",
+    "assetId": "image-c85aeafd35989f12fbdf15c8da391ff91f902308-1196x597-png",
+    "logoAlt": "Santa Clara",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/c85aeafd35989f12fbdf15c8da391ff91f902308-1196x597.png",
+    "name": "Cooperativa Santa Clara",
+    "sector": "Alimentos, Bebidas e Supermercados",
+    "sortOrder": 6
+  },
+  {
+    "_id": "home-client-engie-brasil",
+    "assetId": "image-cd4a2d65711381dd45c8235d4293e16b7a3f6494-1197x424-png",
+    "logoAlt": "ENGIE",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/cd4a2d65711381dd45c8235d4293e16b7a3f6494-1197x424.png",
+    "name": "ENGIE Brasil Energia S.A.",
+    "sector": "Energia",
+    "sortOrder": 7
+  },
+  {
+    "_id": "home-client-fiergs",
+    "assetId": "image-f463f81eaceebc16a9769a8d0d836dd03e3be39f-460x103-png",
+    "logoAlt": "FIERGS",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/f463f81eaceebc16a9769a8d0d836dd03e3be39f-460x103.png",
+    "name": "Federação das Indústrias do RS (FIERGS)",
+    "sector": "Associações, Fundações e Órgãos Públicos",
+    "sortOrder": 8
+  },
+  {
+    "_id": "home-client-freios-controil",
+    "assetId": "image-5b62a5c9db1f633e21c5af97d94d1bd00163cb69-580x568-png",
+    "logoAlt": "Controil",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/5b62a5c9db1f633e21c5af97d94d1bd00163cb69-580x568.png",
+    "name": "Freios Controil Ltda.",
+    "sector": "Indústria",
+    "sortOrder": 9
+  },
+  {
+    "_id": "home-client-grendene",
+    "assetId": "image-0179246dd0cabf4924cc67418d8cc136e957b5fd-1197x165-png",
+    "logoAlt": "Grendene",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/0179246dd0cabf4924cc67418d8cc136e957b5fd-1197x165.png",
+    "name": "Grendene S.A.",
+    "sector": "Vestuário e Calçados",
+    "sortOrder": 10
+  },
+  {
+    "_id": "home-client-irmaos-fischer",
+    "assetId": "image-f54cfb663c11bf074be55bf952c9b6a9b2d38fe7-1195x408-png",
+    "logoAlt": "Fischer",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/f54cfb663c11bf074be55bf952c9b6a9b2d38fe7-1195x408.png",
+    "name": "Irmãos Fischer S.A. Ind. e Com.",
+    "sector": "Indústria",
+    "sortOrder": 11
+  },
+  {
+    "_id": "home-client-hacker-turbinas",
+    "assetId": "image-01d02ec9714fc074dd93319119083d0af6375881-344x87-png",
+    "logoAlt": "Hacker",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/01d02ec9714fc074dd93319119083d0af6375881-344x87.png",
+    "name": "Hacker Turbinas Elétricas",
+    "sector": "Indústria",
+    "sortOrder": 12
+  },
+  {
+    "_id": "87a7d9b5-0a42-4683-b789-278e9b3adc83",
+    "assetId": "image-26387abd92b891c9c9a4aa26fa26249866b699b1-1189x237-png",
+    "logoAlt": "Lojas Colombo",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/26387abd92b891c9c9a4aa26fa26249866b699b1-1189x237.png",
+    "name": "Lojas Colombo S.A.",
+    "sector": "Comércio e Distribuidoras",
+    "sortOrder": 13
+  },
+  {
+    "_id": "d76c95b4-e724-4fed-af4a-ba5d5ed60bae",
+    "assetId": "image-b3c1d6dccbc8eb94cd6b0274b919ee2dde839c48-1197x212-png",
+    "logoAlt": "Marcopolo",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/b3c1d6dccbc8eb94cd6b0274b919ee2dde839c48-1197x212.png",
+    "name": "Marcopolo S.A.",
+    "sector": "Indústria",
+    "sortOrder": 14
+  },
+  {
+    "_id": "home-client-metalurgica-siemsen",
+    "assetId": "image-4d604ad76ab27407953d660ed258be1c6369dd91-626x264-png",
+    "logoAlt": "Skymsen",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/4d604ad76ab27407953d660ed258be1c6369dd91-626x264.png",
+    "name": "Metalúrgica Siemsen",
+    "sector": "Indústria",
+    "sortOrder": 15
+  },
+  {
+    "_id": "home-client-moinho-do-nordeste",
+    "assetId": "image-40f91f973eab82c57052fd0df1772cac396ab16b-957x208-png",
+    "logoAlt": "Moinho do Nordeste",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/40f91f973eab82c57052fd0df1772cac396ab16b-957x208.png",
+    "name": "Moinho do Nordeste S.A.",
+    "sector": "Alimentos, Bebidas e Supermercados",
+    "sortOrder": 16
+  },
+  {
+    "_id": "home-client-moinhos-galopolis",
+    "assetId": "image-e9336b250399379582cada6c8504f37818a80155-324x193-png",
+    "logoAlt": "Roseflor",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/e9336b250399379582cada6c8504f37818a80155-324x193.png",
+    "name": "Moinhos Galópolis S.A.",
+    "sector": "Alimentos, Bebidas e Supermercados",
+    "sortOrder": 17
+  },
+  {
+    "_id": "home-client-pisani-plasticos",
+    "assetId": "image-98d3532a840fce49edaa8fc3e7f9d31a9a341b04-1195x426-png",
+    "logoAlt": "Pisani",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/98d3532a840fce49edaa8fc3e7f9d31a9a341b04-1195x426.png",
+    "name": "Pisani Plásticos S.A.",
+    "sector": "Indústria",
+    "sortOrder": 18
+  },
+  {
+    "_id": "home-client-roni-da-silva-chaves",
+    "assetId": "image-59c6e5d4c7c23b2d3c276852bc25e3ce0cf74318-339x99-png",
+    "logoAlt": "Roni Chaves",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/59c6e5d4c7c23b2d3c276852bc25e3ce0cf74318-339x99.png",
+    "name": "Roni da Silva Chaves",
+    "sector": "Comércio e Distribuidoras",
+    "sortOrder": 19
+  },
+  {
+    "_id": "home-client-sca-moveis",
+    "assetId": "image-351ed0057c403f265c498fd02ef22218b5928ce8-1195x438-png",
+    "logoAlt": "SCA",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/351ed0057c403f265c498fd02ef22218b5928ce8-1195x438.png",
+    "name": "SCA Indústria de Móveis Ltda.",
+    "sector": "Móveis",
+    "sortOrder": 20
+  },
+  {
+    "_id": "bf9b7b22-9be0-4a83-9555-3f63e1465124",
+    "assetId": "image-6408e02bfcb2b3483c1125634403e5dfa31bde9a-1197x794-png",
+    "logoAlt": "SIM Rede de Postos",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/6408e02bfcb2b3483c1125634403e5dfa31bde9a-1197x794.png",
+    "name": "SIM Rede de Postos – Ditrento Postos e Logística Ltda.",
+    "sector": "Comércio e Distribuidoras",
+    "sortOrder": 21
+  },
+  {
+    "_id": "5100cb4a-b9c3-490d-adc7-7cf30feea92a",
+    "assetId": "image-c5f81e078d7ab6e2d5707b4f63e2544a7513089b-226x61-png",
+    "logoAlt": "Sulmaq",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/c5f81e078d7ab6e2d5707b4f63e2544a7513089b-226x61.png",
+    "name": "Sulmaq Máquinas",
+    "sector": "Indústria",
+    "sortOrder": 22
+  },
+  {
+    "_id": "home-client-tesouro-rs",
+    "assetId": "image-59811841f711fbdf6d87cfea3242271bbce086aa-169x100-png",
+    "logoAlt": "Tesouro do Estado RS",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/59811841f711fbdf6d87cfea3242271bbce086aa-169x100.png",
+    "name": "Tesouro e Receita do Estado do RS",
+    "sector": "Associações, Fundações e Órgãos Públicos",
+    "sortOrder": 23
+  },
+  {
+    "_id": "dde6e2fc-bdd5-4efe-b0d9-f52ded3c1de4",
+    "assetId": "image-c704be579562b62f2ecc498f2a9ec2a3f9795b7b-348x99-png",
+    "logoAlt": "Dell Anno",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/c704be579562b62f2ecc498f2a9ec2a3f9795b7b-348x99.png",
+    "name": "Unicasa Indústria de Móveis S.A.",
+    "sector": "Móveis",
+    "sortOrder": 24
+  },
+  {
+    "_id": "home-client-unimed-porto-alegre",
+    "assetId": "image-1b82339f7a705e75719daaa3bcc10cc4be436975-218x78-png",
+    "logoAlt": "Unimed Porto Alegre",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/1b82339f7a705e75719daaa3bcc10cc4be436975-218x78.png",
+    "name": "Unimed Porto Alegre",
+    "sector": "Saúde",
+    "sortOrder": 25
+  },
+  {
+    "_id": "1795eb32-c56f-45bb-874e-057af813224b",
+    "assetId": "image-2f4326caaa17248c0e0b78e0bf33d089d6aca065-564x222-png",
+    "logoAlt": "Unimed VTRP",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/2f4326caaa17248c0e0b78e0bf33d089d6aca065-564x222.png",
+    "name": "Unimed Vales do Taquari e Rio Pardo",
+    "sector": "Saúde",
+    "sortOrder": 26
+  },
+  {
+    "_id": "3623bf8b-f2ce-4a0c-b992-06d64819f2d5",
+    "assetId": "image-b85cf1bfa3094ab644e9d491eb053d81dad4fc88-192x192-png",
+    "logoAlt": "ZEN",
+    "logoUrl": "https://cdn.sanity.io/images/igy822g7/production/b85cf1bfa3094ab644e9d491eb053d81dad4fc88-192x192.png",
+    "name": "Zen S.A.",
+    "sector": "Indústria",
+    "sortOrder": 27
+  }
+]

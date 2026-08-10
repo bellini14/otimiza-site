@@ -35,7 +35,8 @@ export const postType = defineType({
     }),
     defineField({
       name: 'mainImage',
-      title: 'Imagem Principal',
+      title: 'Imagem Destacada (SEO/Redes Sociais)',
+      description: 'Usada como capa do link quando o artigo for compartilhado nas redes sociais.',
       type: 'image',
       options: {
         hotspot: true,
