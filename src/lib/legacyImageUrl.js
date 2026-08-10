@@ -1,4 +1,4 @@
-import { legacyImageManifest } from '../data/legacyImageManifest'
+import { legacyImageManifest } from '../data/legacyImageManifest.js'
 
 const SANITY_IMAGE_PATH = /^\/images\/igy822g7\/production\/([^/]+)$/
 
