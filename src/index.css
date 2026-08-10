@@ -6578,6 +6578,25 @@ html.page-transition-active body *:not(.page-curtain):not(.page-curtain *) {
       font-size: 0.75rem;
     }
 
+    .post-detail__hero-like {
+      position: relative;
+      display: block;
+    }
+
+    .post-detail__hero-like .post-like-button--labeled {
+      padding-right: 2.15rem;
+    }
+
+    .post-detail__hero-like .post-like-button__count {
+      position: absolute;
+      top: 50%;
+      right: 0.7rem;
+      min-width: 1rem;
+      pointer-events: none;
+      text-align: center;
+      transform: translateY(-50%);
+    }
+
     .post-detail__article-body > p {
       margin-bottom: 1.5rem;
       font-size: 1.05rem;

@@ -220,7 +220,8 @@ describe('PostDetail', () => {
     const likeButton = await screen.findByRole('button', { name: /7 curtidas/i })
     const count = container.querySelector('.post-like-button__count')
     expect(count?.textContent).toBe('7')
-    expect(likeButton).toContainElement(count)
+    expect(likeButton).not.toContainElement(count)
+    expect(container.querySelector('.post-like-button-group')).toContainElement(count)
     expect(fetchMock).toHaveBeenCalledWith('/api/posts/post-com-imagem-inline/likes', { method: 'GET' })
   })
 
