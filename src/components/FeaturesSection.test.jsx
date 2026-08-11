@@ -174,9 +174,9 @@ describe('FeaturesSection', () => {
 
     const section = document.querySelector('#nossas-solucoes')
 
-    expect(section).toHaveClass('bg-white')
+    expect(section).toHaveClass('bg-[#EFEFF4]')
     expect(section).toHaveClass('w-screen', 'left-1/2', '-ml-[50vw]', '-mr-[50vw]')
-    expect(section.querySelector('.max-w-\\[1320px\\]')).toBeInTheDocument()
+    expect(section.querySelector('[data-testid="home-menu-aligned-shell"]')).toBeInTheDocument()
   })
 
   it('shows only titles in the side selector cards', () => {
