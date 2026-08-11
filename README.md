@@ -43,6 +43,24 @@ npm run lint
 npm run build
 ```
 
+## Publicação segura
+
+O deploy de produção deve ser executado somente pelo comando protegido:
+
+```powershell
+npm run deploy:prod
+```
+
+Antes da primeira publicação, instale a CLI da Vercel para que o executável
+`vercel` esteja disponível no `PATH` e execute `vercel link` uma vez para criar
+`.vercel/project.json`. Faça commit e push da branch pretendida antes de iniciar
+o comando.
+
+O fluxo confirma que o commit local corresponde ao upstream, cria um worktree
+temporário nesse hash, instala as dependências da aplicação e do Studio, executa
+testes e build e só então chama a Vercel. Alterações locais pendentes permanecem
+intactas e nunca são incluídas na publicação.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

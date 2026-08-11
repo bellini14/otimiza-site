@@ -195,6 +195,14 @@ describe('deployProduction', () => {
 })
 
 describe('deployment adapters', () => {
+  it('exposes the guarded deployment as deploy:prod', async () => {
+    const packageJson = JSON.parse(
+      await fs.readFile(path.resolve(process.cwd(), 'package.json'), 'utf8'),
+    )
+
+    expect(packageJson.scripts['deploy:prod']).toBe('node scripts/deploy-production.mjs')
+  })
+
   it('accepts only non-empty orgId and projectId in project.json', () => {
     expect(parseProjectLink('{"orgId":"org","projectId":"project","extra":true}')).toEqual({
       orgId: 'org',
