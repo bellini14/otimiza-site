@@ -8,6 +8,7 @@ import timelessBackground from '../../imagens/shutterstock_2714404709-optimized.
 import timelessComparisonBackground from '../../imagens/criar o atemporal.webp'
 import iconeLine from '../../imagens/icone line.svg'
 import { client, urlFor } from '../lib/sanity'
+import { resolveLegacyImageUrl } from '../lib/legacyImageUrl'
 
 const MotionSpan = motion.span
 
@@ -563,7 +564,9 @@ function buildNossaAbordagemLogoRows(logos) {
 }
 
 function NossaAbordagemLogoPill({ logo, isDecorative = false }) {
-  const logoSrc = logo.logoUrl || (logo.logo ? urlFor(logo.logo).ignoreImageParams().width(360).fit('max').url() : null)
+  const logoSrc = resolveLegacyImageUrl(
+    logo.logoUrl || (logo.logo ? urlFor(logo.logo).ignoreImageParams().width(360).fit('max').url() : null),
+  )
 
   if (!logoSrc) return null
 
@@ -1277,7 +1280,10 @@ function ContentBlock({ block, index, timelineBlocks, abordagemLogos = [] }) {
 }
 
 function NossaAbordagem() {
-  const [abordagemLogos, setAbordagemLogos] = useState(NOSSA_ABORDAGEM_LOGO_FALLBACKS)
+  const [abordagemLogos, setAbordagemLogos] = useState(() => NOSSA_ABORDAGEM_LOGO_FALLBACKS.map((logo) => ({
+    ...logo,
+    logoUrl: resolveLegacyImageUrl(logo.logoUrl),
+  })))
 
   useEffect(() => {
     let isMounted = true
@@ -1286,11 +1292,18 @@ function NossaAbordagem() {
       try {
         const logos = await client.fetch(nossaAbordagemLogoQuery)
         if (isMounted) {
-          setAbordagemLogos(Array.isArray(logos) && logos.length > 0 ? logos : NOSSA_ABORDAGEM_LOGO_FALLBACKS)
+          const resolvedLogos = Array.isArray(logos) && logos.length > 0 ? logos : NOSSA_ABORDAGEM_LOGO_FALLBACKS
+          setAbordagemLogos(resolvedLogos.map((logo) => ({
+            ...logo,
+            logoUrl: resolveLegacyImageUrl(logo.logoUrl),
+          })))
         }
       } catch {
         if (isMounted) {
-          setAbordagemLogos(NOSSA_ABORDAGEM_LOGO_FALLBACKS)
+          setAbordagemLogos(NOSSA_ABORDAGEM_LOGO_FALLBACKS.map((logo) => ({
+            ...logo,
+            logoUrl: resolveLegacyImageUrl(logo.logoUrl),
+          })))
         }
       }
     }

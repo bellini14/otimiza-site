@@ -1,4 +1,5 @@
 import { pathToFileURL } from 'node:url'
+import { resolveLegacyImageUrl } from '../src/lib/legacyImageUrl.js'
 
 export const DESCRIPTION = 'Confira a publicação do Inspire.'
 export const INSPIRE_POSTS_QUERY = `*[_type == "post"] | order(publishedAt desc) {
@@ -170,7 +171,7 @@ export function renderPostSocialPage({ post, siteOrigin, fallbackImageUrl, baseH
   const metadata = {
     title,
     url: new URL(postPath, `${siteOrigin}/`).toString(),
-    imageUrl: post.mainImageUrl || post.contentImageUrl || fallbackImageUrl,
+    imageUrl: resolveLegacyImageUrl(post.mainImageUrl || post.contentImageUrl || fallbackImageUrl),
   }
   const documentHtml = baseHtml || '<!doctype html><html lang="pt-BR"><head></head><body><div id="root"></div></body></html>'
 

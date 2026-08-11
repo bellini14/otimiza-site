@@ -56,6 +56,24 @@ describe('PostLikeButton', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/posts/post-com-imagem-inline/likes', { method: 'GET' })
   })
 
+  it('renders the count inside the labeled detail button', async () => {
+    fetchMock.mockResolvedValueOnce(createJsonResponse({ slug: 'post-com-imagem-inline', count: 7 }))
+
+    const { container } = render(
+      <PostLikeButton slug="post-com-imagem-inline" variant="detail" showLabel />,
+    )
+
+    const button = await screen.findByRole('button', { name: /7 curtidas/i })
+    const count = container.querySelector('.post-like-button__count')
+
+    expect(count).not.toBeNull()
+    expect(count?.textContent).toBe('7')
+    expect(button).toContainElement(count)
+    expect(button.firstElementChild).toHaveClass('post-like-button__icon-shell')
+    expect(button.firstElementChild?.nextElementSibling).toBe(count)
+    expect(count?.nextElementSibling).toHaveClass('post-like-button__label')
+  })
+
   it('renders active immediately when the browser already liked the post', async () => {
     window.localStorage.setItem('post-like:post-com-imagem-inline', 'true')
     fetchMock.mockResolvedValueOnce(createJsonResponse({ slug: 'post-com-imagem-inline', count: 7 }))

@@ -45,7 +45,7 @@ describe('TechnologySection', () => {
       </MemoryRouter>,
     )
 
-    const title = screen.getByRole('heading', { name: 'Nossa tecnologia' })
+    const title = screen.getByRole('heading', { name: 'Nossa Tecnologia' })
     const body = screen.getByRole('heading', {
       name: /E assim, são todos os serviços de consultoria/i,
     })

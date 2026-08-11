@@ -92,6 +92,25 @@ afterEach(() => {
 })
 
 describe('PostDetail', () => {
+  it('resolves mapped urlFor output for inline images and social metadata', async () => {
+    const legacySanityUrl = 'https://cdn.sanity.io/images/igy822g7/production/0122eed8d7195fe28022797c883bcb730ac02641-856x314.png?w=1200'
+    const response = buildPostResponse()
+    response.post.mainImage = { assetUrl: legacySanityUrl }
+    response.post.content[1].assetUrl = legacySanityUrl
+    client.fetch.mockResolvedValue(response)
+
+    renderPostDetail()
+
+    expect(await screen.findByRole('img', { name: 'Equipe em workshop' })).toHaveAttribute(
+      'src',
+      'https://www.otm.com.br/wp-content/uploads/2020/10/Screenshot_11.png',
+    )
+    expect(document.head.querySelector('meta[property="og:image"]')).toHaveAttribute(
+      'content',
+      'https://www.otm.com.br/wp-content/uploads/2020/10/Screenshot_11.png',
+    )
+  })
+
   it('lets native mouse-wheel scrolling reach the article column', () => {
     client.fetch.mockReturnValue(new Promise(() => {}))
 

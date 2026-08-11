@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { client, urlFor } from '../lib/sanity'
+import { resolveCaseStudySlug } from '../data/caseStudies'
 import { groupClientsBySector } from '../data/clientSectors'
 import { sitePages } from '../data/sitePages'
 import Silk from '../components/Silk'
 import SplitText from '../components/SplitText'
 import { useDragCarousel } from '../hooks/useDragCarousel'
+import { resolveLegacyImageUrl } from '../lib/legacyImageUrl'
 
 const CAROUSEL_DRAG_RESPONSE = 0.96
 const CAROUSEL_RELEASE_VELOCITY = 0.18
@@ -96,15 +98,6 @@ const MOCK_CASE_TESTIMONIALS = [
   },
 ]
 
-function slugify(value) {
-  return value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-}
-
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max)
 }
@@ -150,7 +143,9 @@ function testimonialRevealClass(isVisible, direction, className = '') {
 }
 
 function ClientLogoCard({ logo, variant = 'client', className = '', testId, fluid = false }) {
-  const logoSrc = logo.logo ? urlFor(logo.logo).ignoreImageParams().width(420).fit('max').url() : logo.logoUrl
+  const logoSrc = resolveLegacyImageUrl(
+    logo.logo ? urlFor(logo.logo).ignoreImageParams().width(420).fit('max').url() : logo.logoUrl,
+  )
   const logoImage = (
     <img
       src={logoSrc}
@@ -162,7 +157,7 @@ function ClientLogoCard({ logo, variant = 'client', className = '', testId, flui
   )
   const title = variant === 'case' ? logo.caseTitle || logo.name : logo.name
   const description = variant === 'case' ? logo.caseDescription : ''
-  const caseSlug = logo.caseSlug || slugify(logo.name)
+  const caseSlug = logo.caseSlug || resolveCaseStudySlug(logo.name)
   const caseHref = caseSlug ? `/cases/${caseSlug}` : null
   const CardTag = variant === 'case' ? 'article' : 'div'
   const isCaseCard = variant === 'case'
@@ -1307,7 +1302,10 @@ function Cases() {
         const data = await client.fetch(clientLogoQuery)
         if (isMounted) {
           setCaseLogos(Array.isArray(data?.caseLogos) ? data.caseLogos : [])
-          setCaseTestimonials(Array.isArray(data?.caseTestimonials) ? data.caseTestimonials : [])
+          setCaseTestimonials((Array.isArray(data?.caseTestimonials) ? data.caseTestimonials : []).map((testimonial) => ({
+            ...testimonial,
+            avatarUrl: resolveLegacyImageUrl(testimonial.avatarUrl),
+          })))
           setClientLogos(Array.isArray(data?.clientLogos) ? data.clientLogos : [])
         }
       } catch (error) {

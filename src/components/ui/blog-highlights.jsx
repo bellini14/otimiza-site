@@ -8,6 +8,7 @@ import { staticBlogPosts } from '../../data/blogPosts'
 import { setCachedInspirePosts } from '../../lib/inspirePostCache'
 import { useDragCarousel } from '../../hooks/useDragCarousel'
 import { buildWordPressPostPath } from '../../lib/postUrl'
+import { resolveLegacyImageUrl } from '../../lib/legacyImageUrl'
 
 
 
@@ -44,8 +45,12 @@ export function BlogHighlights() {
         }`
         const dynamicPosts = await client.fetch(query)
         if (dynamicPosts && dynamicPosts.length > 0) {
-          setCachedInspirePosts(dynamicPosts)
-          setBlogPosts(dynamicPosts)
+          const resolvedPosts = dynamicPosts.map((post) => ({
+            ...post,
+            imgSrc: resolveLegacyImageUrl(post.imgSrc),
+          }))
+          setCachedInspirePosts(resolvedPosts)
+          setBlogPosts(resolvedPosts)
         }
       } catch (error) {
         console.error('Error fetching posts from Sanity:', error)

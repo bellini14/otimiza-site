@@ -148,3 +148,22 @@ export const caseStudies = {
 }
 
 caseStudies.moneo = caseStudies['banco-moneo']
+
+const caseStudySlugByClientName = {
+  'Banco Moneo S.A.': 'banco-moneo',
+  'Bontempo – Novatempo Franchising Ltda.': 'bontempo',
+  Cinex: 'cinex',
+  'Cooperativa Santa Clara': 'santa-clara',
+  'Hospital Bruno Born': 'hospital-bruno-born',
+  'Masterpower Turbo': 'master-power',
+  Neobus: 'neobus',
+  'Sulmaq Máquinas': 'sulmaq',
+  Tabone: 'tabone',
+  'Unicasa Indústria de Móveis S.A.': 'unicasa',
+  'Unimed Vales do Taquari e Rio Pardo': 'unimed-vtrp',
+  'Zen S.A.': 'zen',
+}
+
+export function resolveCaseStudySlug(clientName) {
+  return caseStudySlugByClientName[clientName] || null
+}
