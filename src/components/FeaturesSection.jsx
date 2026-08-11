@@ -158,7 +158,7 @@ export default function FeaturesSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-10 sm:py-16 md:py-20 lg:py-24 bg-white dark:bg-neutral-950" id="nossas-solucoes">
+    <section ref={sectionRef} className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-10 sm:py-16 md:py-20 lg:py-24 bg-[#EFEFF4] dark:bg-neutral-950" id="nossas-solucoes">
       <div className="home-menu-shell" data-testid="home-menu-aligned-shell">
         <div className={`text-center mb-10 md:mb-14 ${isVisible ? 'animate-enter [animation-duration:800ms]' : 'opacity-0'}`}>
           <h2 className="mb-3 font-display text-3xl sm:text-4xl lg:text-5xl text-neutral-900 dark:text-white tracking-tight">
