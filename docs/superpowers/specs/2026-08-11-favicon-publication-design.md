@@ -23,6 +23,7 @@ Garantir que navegadores e serviços externos encontrem o favicon oficial da Oti
 - O build contém `favicon.svg`, `favicon.png` e `favicon.ico` na raiz de `dist`.
 - O `index.html` declara exatamente os três links especificados, todos com `v=20260811`, e cada `href` corresponde a um arquivo de `public`.
 - O preview do build responde a `/favicon.ico` com `200`, um tipo de conteúdo de ícone/imagem e os quatro bytes iniciais `00 00 01 00`; a resposta não contém HTML nem o fallback da SPA.
+- Após a publicação, a verificação HTTP em `https://www.otm.com.br/favicon.ico` confirma os mesmos critérios. Essa checagem no domínio efetivo é obrigatória porque o fallback de SPA é configurado pelo ambiente de produção.
 - O ICO publicado é byte a byte idêntico à sua origem na raiz do repositório.
 
 ## Riscos e limites
