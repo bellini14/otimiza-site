@@ -22,4 +22,4 @@ Exibir o número de curtidas dentro do botão textual de cada post, na ordem vis
 
 ## Publicação segura
 
-O repositório local está divergente do remoto. Antes de qualquer deploy de produção, buscar os refs atuais, rebasear os commits locais sobre a branch remota sem `reset` ou push forçado, resolver conflitos de forma explícita e verificar o diff final. Após validação, publicar com o projeto Vercel já vinculado e confirmar a URL de produção.
+O repositório local está divergente do remoto e contém outras alterações não publicadas. Antes de qualquer deploy de produção, buscar os refs atuais e criar um worktree separado a partir da branch remota. Aplicar nele, por cherry-pick, apenas o commit isolado da alteração de curtidas. Esse fluxo preserva os commits remotos e todas as alterações locais não relacionadas, sem `reset` ou push forçado. Em caso de conflito, resolvê-lo explicitamente no worktree e verificar que o diff final contém somente os dois arquivos de curtidas. Após validação, publicar com o projeto Vercel já vinculado e confirmar a URL de produção.
