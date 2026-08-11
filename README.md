@@ -51,10 +51,11 @@ O deploy de produção deve ser executado somente pelo comando protegido:
 npm run deploy:prod
 ```
 
-Antes da primeira publicação, instale a CLI da Vercel para que o executável
-`vercel` esteja disponível no `PATH` e execute `vercel link` uma vez para criar
+Antes da primeira publicação, instale globalmente a CLI da Vercel com
+`npm install -g vercel` e execute `vercel link` uma vez para criar
 `.vercel/project.json`. Faça commit e push da branch pretendida antes de iniciar
-o comando.
+o comando. No Windows, npm e Vercel são executados pelos respectivos entrypoints
+JavaScript via Node, sem habilitar um shell intermediário.
 
 O fluxo confirma que o commit local corresponde ao upstream, cria um worktree
 temporário nesse hash, instala as dependências da aplicação e do Studio, executa

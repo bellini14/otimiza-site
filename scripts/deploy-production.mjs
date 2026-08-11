@@ -30,6 +30,7 @@ class DeploymentCleanupError extends Error {
     this.name = 'DeploymentCleanupError'
     this.cause = primaryError
     this.cleanupError = cleanupError
+    this.exitCode = primaryError.exitCode
   }
 }
 
@@ -57,15 +58,19 @@ export function parseProjectLink(raw) {
   }
 }
 
-export async function prepareProjectLink({ mainRoot, worktreeRoot }) {
-  const source = path.join(mainRoot, '.vercel', 'project.json')
+export async function prepareProjectLink({ mainRoot, worktreeRoot, projectLink }) {
   let link
 
-  try {
-    link = parseProjectLink(await fs.readFile(source, 'utf8'))
-  } catch (error) {
-    if (error.message.startsWith('Vínculo inválido')) throw error
-    throw new Error('Vínculo da Vercel ausente. Execute `vercel link` no projeto principal.')
+  if (projectLink) {
+    link = parseProjectLink(JSON.stringify(projectLink))
+  } else {
+    const source = path.join(mainRoot, '.vercel', 'project.json')
+    try {
+      link = parseProjectLink(await fs.readFile(source, 'utf8'))
+    } catch (error) {
+      if (error.message.startsWith('Vínculo inválido')) throw error
+      throw new Error('Vínculo da Vercel ausente. Execute `vercel link` no projeto principal.')
+    }
   }
 
   const targetDirectory = path.join(worktreeRoot, '.vercel')
@@ -79,10 +84,25 @@ export async function prepareProjectLink({ mainRoot, worktreeRoot }) {
   return link
 }
 
-export function resolveExecutables(platform = process.platform) {
-  return platform === 'win32'
-    ? { npm: 'npm.cmd', vercel: 'vercel.cmd' }
-    : { npm: 'npm', vercel: 'vercel' }
+export function resolveExecutables(platform = process.platform, {
+  nodeExecutable = process.execPath,
+  npmCliPath = process.env.npm_execpath
+    ?? path.join(path.dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js'),
+  vercelCliPath,
+} = {}) {
+  if (platform === 'win32') {
+    return {
+      npm: { executable: nodeExecutable, prefixArgs: [npmCliPath] },
+      vercel: vercelCliPath
+        ? { executable: nodeExecutable, prefixArgs: [vercelCliPath] }
+        : null,
+    }
+  }
+
+  return {
+    npm: { executable: 'npm', prefixArgs: [] },
+    vercel: { executable: 'vercel', prefixArgs: [] },
+  }
 }
 
 export async function createWorktreeWorkspace({
@@ -180,35 +200,57 @@ export function createProductionDependencies({
   platform = process.platform,
   runner = createCommandRunner(),
 } = {}) {
-  const executables = resolveExecutables(platform)
+  let executables = resolveExecutables(platform)
   let repositoryRoot = cwd
   let workspace = null
 
-  const getOptionalGitValue = async (args) => {
+  const runTool = (tool, args, options) => runner.runCommand(
+    tool.executable,
+    [...tool.prefixArgs, ...args],
+    options,
+  )
+
+  const getOptionalGitValue = async (args, expectedExitCodes) => {
     try {
       return await runner.runCommand('git', args, { cwd, capture: true })
     } catch (error) {
-      if (error instanceof CommandError) return null
+      if (error instanceof CommandError && expectedExitCodes.includes(error.code)) return null
       throw error
     }
   }
 
   return {
     async getRepositoryRoot() {
-      const resolvedRoot = await getOptionalGitValue(['rev-parse', '--show-toplevel'])
+      const resolvedRoot = await getOptionalGitValue(['rev-parse', '--show-toplevel'], [128])
       if (resolvedRoot) repositoryRoot = path.resolve(resolvedRoot)
       return resolvedRoot ? repositoryRoot : null
     },
-    ensureVercelCli: () => runner.runCommand(executables.vercel, ['--version'], {
-      cwd: repositoryRoot,
-      capture: true,
-    }),
-    getBranch: () => getOptionalGitValue(['symbolic-ref', '--quiet', '--short', 'HEAD']),
+    async ensureVercelCli() {
+      if (!executables.vercel) {
+        const globalModulesRoot = await runTool(executables.npm, ['root', '-g'], {
+          cwd: repositoryRoot,
+          capture: true,
+        })
+        const vercelCliPath = path.join(globalModulesRoot, 'vercel', 'dist', 'index.js')
+        try {
+          await fs.access(vercelCliPath)
+        } catch {
+          throw new Error('CLI da Vercel não encontrada. Instale-a globalmente antes de publicar.')
+        }
+        executables = resolveExecutables(platform, { vercelCliPath })
+      }
+
+      return runTool(executables.vercel, ['--version'], {
+        cwd: repositoryRoot,
+        capture: true,
+      })
+    },
+    getBranch: () => getOptionalGitValue(['symbolic-ref', '--quiet', '--short', 'HEAD'], [1]),
     getHead: () => runner.runCommand('git', ['rev-parse', 'HEAD'], {
       cwd: repositoryRoot,
       capture: true,
     }),
-    getUpstream: () => getOptionalGitValue(['rev-parse', '--verify', '@{upstream}']),
+    getUpstream: () => getOptionalGitValue(['rev-parse', '--verify', '@{upstream}'], [128]),
     async readProjectLink() {
       const source = path.join(repositoryRoot, '.vercel', 'project.json')
       try {
@@ -225,22 +267,22 @@ export function createProductionDependencies({
         runCommand: runner.runCommand,
       })
     },
-    installRoot: () => runner.runCommand(
+    installRoot: () => runTool(
       executables.npm,
       ['ci', '--ignore-scripts', '--no-audit'],
       { cwd: workspace.worktreeRoot },
     ),
-    installStudio: () => runner.runCommand(
+    installStudio: () => runTool(
       executables.npm,
       ['ci', '--ignore-scripts', '--no-audit', '--prefix', 'studio'],
       { cwd: workspace.worktreeRoot },
     ),
-    runTests: () => runner.runCommand(
+    runTests: () => runTool(
       executables.npm,
       ['test', '--', '--testTimeout', '20000'],
       { cwd: workspace.worktreeRoot },
     ),
-    runBuild: () => runner.runCommand(
+    runBuild: () => runTool(
       executables.npm,
       ['run', 'build'],
       {
@@ -248,11 +290,12 @@ export function createProductionDependencies({
         env: { ...process.env, VITE_SITE_URL: PUBLIC_SITE_URL },
       },
     ),
-    copyProjectLink: () => prepareProjectLink({
+    copyProjectLink: (projectLink) => prepareProjectLink({
       mainRoot: repositoryRoot,
       worktreeRoot: workspace.worktreeRoot,
+      projectLink,
     }),
-    deployVercel: () => runner.runCommand(
+    deployVercel: () => runTool(
       executables.vercel,
       ['deploy', '--prod', '--yes'],
       { cwd: workspace.worktreeRoot },
@@ -379,6 +422,6 @@ const isMain = process.argv[1]
 if (isMain) {
   main().catch((error) => {
     console.error(error.message)
-    process.exitCode = error instanceof DeploymentSignalError ? error.exitCode : 1
+    process.exitCode = Number.isInteger(error.exitCode) ? error.exitCode : 1
   })
 }

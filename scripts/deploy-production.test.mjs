@@ -3,7 +3,9 @@ import os from 'node:os'
 import path from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  CommandError,
   DeploymentSignalError,
+  createProductionDependencies,
   createWorktreeWorkspace,
   deployProduction,
   parseProjectLink,
@@ -182,6 +184,22 @@ describe('deployProduction', () => {
     expect(context.dependencies.deployVercel).not.toHaveBeenCalled()
   })
 
+  it('preserves the signal exit code when cleanup also fails', async () => {
+    const context = makeDependencies({
+      cleanup: vi.fn(async () => {
+        throw new Error('cleanup failed')
+      }),
+    })
+    context.dependencies.installRoot.mockImplementationOnce(async () => {
+      context.sendSignal('SIGINT')
+    })
+
+    const error = await deployProduction(context.dependencies).catch((caught) => caught)
+
+    expect(error.message).toContain('cleanup failed')
+    expect(error.exitCode).toBe(130)
+  })
+
   it('fails after a successful deploy when cleanup fails', async () => {
     const context = makeDependencies({
       cleanup: vi.fn(async () => {
@@ -195,6 +213,18 @@ describe('deployProduction', () => {
 })
 
 describe('deployment adapters', () => {
+  it('propagates unexpected Git command failures instead of reporting a missing repository', async () => {
+    const runner = {
+      runCommand: vi.fn(async () => {
+        throw new CommandError('git', ['rev-parse', '--show-toplevel'], 'spawn', 'EACCES')
+      }),
+      abortActiveStep: vi.fn(),
+    }
+    const dependencies = createProductionDependencies({ runner })
+
+    await expect(dependencies.getRepositoryRoot()).rejects.toThrow('EACCES')
+  })
+
   it('exposes the guarded deployment as deploy:prod', async () => {
     const packageJson = JSON.parse(
       await fs.readFile(path.resolve(process.cwd(), 'package.json'), 'utf8'),
@@ -236,9 +266,42 @@ describe('deployment adapters', () => {
     await expect(fs.access(path.join(worktreeRoot, 'dirty-local-file.txt'))).rejects.toThrow()
   })
 
-  it('uses command shims on Windows without enabling a shell', () => {
-    expect(resolveExecutables('win32')).toEqual({ npm: 'npm.cmd', vercel: 'vercel.cmd' })
-    expect(resolveExecutables('linux')).toEqual({ npm: 'npm', vercel: 'vercel' })
+  it('writes the captured project link without rereading a changed source file', async () => {
+    const fixtureRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'otimiza-link-capture-test-'))
+    temporaryDirectories.push(fixtureRoot)
+    const mainRoot = path.join(fixtureRoot, 'main')
+    const worktreeRoot = path.join(fixtureRoot, 'worktree')
+    await fs.mkdir(path.join(mainRoot, '.vercel'), { recursive: true })
+    await fs.mkdir(worktreeRoot, { recursive: true })
+    await fs.writeFile(
+      path.join(mainRoot, '.vercel', 'project.json'),
+      JSON.stringify({ orgId: 'changed-org', projectId: 'changed-project' }),
+    )
+
+    await prepareProjectLink({
+      mainRoot,
+      worktreeRoot,
+      projectLink: { orgId: 'captured-org', projectId: 'captured-project' },
+    })
+
+    expect(
+      JSON.parse(await fs.readFile(path.join(worktreeRoot, '.vercel', 'project.json'), 'utf8')),
+    ).toEqual({ orgId: 'captured-org', projectId: 'captured-project' })
+  })
+
+  it('runs Windows npm and Vercel entrypoints through Node without enabling a shell', () => {
+    expect(resolveExecutables('win32', {
+      nodeExecutable: 'C:/node/node.exe',
+      npmCliPath: 'C:/node/npm-cli.js',
+      vercelCliPath: 'C:/npm/vercel/dist/index.js',
+    })).toEqual({
+      npm: { executable: 'C:/node/node.exe', prefixArgs: ['C:/node/npm-cli.js'] },
+      vercel: { executable: 'C:/node/node.exe', prefixArgs: ['C:/npm/vercel/dist/index.js'] },
+    })
+    expect(resolveExecutables('linux')).toEqual({
+      npm: { executable: 'npm', prefixArgs: [] },
+      vercel: { executable: 'vercel', prefixArgs: [] },
+    })
   })
 
   it('removes the temporary root when git worktree add fails', async () => {
