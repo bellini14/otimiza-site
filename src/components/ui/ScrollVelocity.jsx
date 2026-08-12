@@ -116,7 +116,7 @@ export function VelocityRow({
     for (let i = 0; i < (numCopies ?? 6); i++) {
       copies.push(
         <div
-          className={`shrink-0 ${className}`}
+          className={`shrink-0 w-max ${className}`}
           key={i}
           ref={i === 0 ? copyRef : null}
           aria-hidden={i > 0 ? 'true' : undefined}
