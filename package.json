@@ -9,6 +9,7 @@
     "test": "vitest run",
     "lint": "eslint .",
     "preview": "vite preview",
+    "deploy:prod": "node scripts/deploy-production.mjs",
     "verify:compression": "node scripts/verify-compression.mjs"
   },
   "dependencies": {
