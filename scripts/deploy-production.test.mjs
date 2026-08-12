@@ -36,7 +36,7 @@ function makeDependencies(overrides = {}) {
     ensureVercelCli: vi.fn(async () => events.push('vercel:version')),
     getBranch: vi.fn(async () => {
       events.push('git:branch')
-      return 'publish/site'
+      return 'main'
     }),
     getHead: vi.fn(async () => {
       events.push('git:head')
@@ -93,6 +93,15 @@ describe('deployProduction', () => {
     const context = makeDependencies({ getBranch: vi.fn(async () => null) })
 
     await expect(deployProduction(context.dependencies)).rejects.toThrow('HEAD destacado')
+    expect(context.dependencies.createWorktree).not.toHaveBeenCalled()
+  })
+
+  it('rejects a branch other than main before creating a worktree', async () => {
+    const context = makeDependencies({ getBranch: vi.fn(async () => 'codex/release') })
+
+    await expect(deployProduction(context.dependencies)).rejects.toThrow(
+      'A publicacao de producao so e permitida pela branch main',
+    )
     expect(context.dependencies.createWorktree).not.toHaveBeenCalled()
   })
 

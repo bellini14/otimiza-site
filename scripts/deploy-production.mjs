@@ -366,6 +366,10 @@ export async function deployProduction(dependencies) {
     throwIfAborted()
     if (!branch) throw new Error('HEAD destacado: faça o deploy a partir de uma branch com upstream.')
 
+    if (branch !== 'main') {
+      throw new Error('A publicacao de producao so e permitida pela branch main.')
+    }
+
     const head = await dependencies.getHead()
     throwIfAborted()
     const upstream = await dependencies.getUpstream(branch)
