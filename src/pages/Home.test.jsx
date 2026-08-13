@@ -109,6 +109,18 @@ describe('Home', () => {
     expect(homeContent.lastElementChild).toBe(technologySection)
   })
 
+  it('uses a light gray background for the Nossas Soluções section', () => {
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>,
+    )
+
+    const featuresSection = screen.getByRole('heading', { name: 'Nossas Soluções' }).closest('section')
+
+    expect(featuresSection).toHaveClass('bg-[#EFEFF4]')
+  })
+
   it('does not render section eyebrow labels', () => {
     render(
       <MemoryRouter>
