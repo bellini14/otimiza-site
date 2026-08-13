@@ -26,6 +26,7 @@ describe('WhatsAppSupportWidget', () => {
     )
     expect(link.getAttribute('target')).toBe('_blank')
     expect(link.getAttribute('rel')).toBe('noopener noreferrer')
+    expect(document.querySelectorAll('[data-brand-icon="whatsapp"]')).toHaveLength(2)
   })
 
   it('closes from the trigger, close button, and Escape key', () => {
