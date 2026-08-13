@@ -158,6 +158,12 @@ function PostLikeButton({
     .filter(Boolean)
     .join(' ')
 
+  const visibleLikeCount = typeof likeCount === 'number' && (
+    <span className="post-like-button__count" aria-hidden="true">
+      {likeCount}
+    </span>
+  )
+
   return (
     <span className={groupClassName}>
       <button
@@ -178,15 +184,12 @@ function PostLikeButton({
             <Heart size={16} strokeWidth={1.8} fill={liked ? 'currentColor' : 'none'} />
           </span>
         </span>
+        {showLabel && visibleLikeCount}
         {showLabel && (
           <span className="post-like-button__label">{liked ? 'Curtido' : 'Curtir'}</span>
         )}
       </button>
-      {typeof likeCount === 'number' && (
-        <span className="post-like-button__count" aria-hidden="true">
-          {likeCount}
-        </span>
-      )}
+      {!showLabel && visibleLikeCount}
       <span className="post-like-button__status" role="status" aria-live="polite">
         {feedbackMessage}
       </span>
