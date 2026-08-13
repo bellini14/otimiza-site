@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
 import Layout from './components/Layout'
 import InspireLayout from './components/InspireLayout'
 import SmoothScroll from './components/SmoothScroll'
+import WhatsAppSupportWidget from './components/WhatsAppSupportWidget'
 import Home from './pages/Home'
 import AcademiaOtimiza from './pages/AcademiaOtimiza'
 import Cases from './pages/Cases'
@@ -99,6 +100,7 @@ function AppShell() {
       <PageTransition>
         <AppRoutes />
       </PageTransition>
+      <WhatsAppSupportWidget />
     </>
   )
 }
