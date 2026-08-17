@@ -110,6 +110,12 @@ describe('Inspire theme text color', () => {
     expect(indexCss).toMatch(/\.post-detail__hero-action-control\s*\{[^}]*width:\s*100%;[^}]*min-height:\s*2\.7rem;[^}]*border-radius:\s*999px;[^}]*background:\s*var\(--inspire-button-surface\);/s)
   })
 
+  it('keeps the global like count visible in the post hero', () => {
+    expect(indexCss).not.toMatch(
+      /\.post-detail__hero-like\s+\.post-like-button__count\s*\{[^}]*display:\s*none;/s,
+    )
+  })
+
   it('uses the subtle gray for secondary actions and stronger contrast for the modal submit', () => {
     expect(indexCss).toMatch(/--inspire-button-surface:\s*#eef1f3;/i)
     expect(indexCss).toMatch(/\.post-detail__hero-action-control\s*\{[^}]*border:\s*1px solid var\(--inspire-button-surface\);[^}]*background:\s*var\(--inspire-button-surface\);/s)

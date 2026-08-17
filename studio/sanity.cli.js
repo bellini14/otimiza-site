@@ -1,4 +1,7 @@
-import { defineCliConfig } from 'sanity/cli'
+import * as sanityCliNamespace from 'sanity/cli'
+
+const sanityCli = sanityCliNamespace.default ?? sanityCliNamespace
+const { defineCliConfig } = sanityCli
 
 export default defineCliConfig({
   api: {

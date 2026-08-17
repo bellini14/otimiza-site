@@ -8,7 +8,6 @@ import { sitePages } from '../data/sitePages'
 import Silk from '../components/Silk'
 import SplitText from '../components/SplitText'
 import { useDragCarousel } from '../hooks/useDragCarousel'
-import { resolveLegacyImageUrl } from '../lib/legacyImageUrl'
 
 const CAROUSEL_DRAG_RESPONSE = 0.96
 const CAROUSEL_RELEASE_VELOCITY = 0.18
@@ -143,9 +142,7 @@ function testimonialRevealClass(isVisible, direction, className = '') {
 }
 
 function ClientLogoCard({ logo, variant = 'client', className = '', testId, fluid = false }) {
-  const logoSrc = resolveLegacyImageUrl(
-    logo.logo ? urlFor(logo.logo).ignoreImageParams().width(420).fit('max').url() : logo.logoUrl,
-  )
+  const logoSrc = logo.logo ? urlFor(logo.logo).ignoreImageParams().width(420).fit('max').url() : logo.logoUrl
   const logoImage = (
     <img
       src={logoSrc}
@@ -1302,10 +1299,7 @@ function Cases() {
         const data = await client.fetch(clientLogoQuery)
         if (isMounted) {
           setCaseLogos(Array.isArray(data?.caseLogos) ? data.caseLogos : [])
-          setCaseTestimonials((Array.isArray(data?.caseTestimonials) ? data.caseTestimonials : []).map((testimonial) => ({
-            ...testimonial,
-            avatarUrl: resolveLegacyImageUrl(testimonial.avatarUrl),
-          })))
+          setCaseTestimonials(Array.isArray(data?.caseTestimonials) ? data.caseTestimonials : [])
           setClientLogos(Array.isArray(data?.clientLogos) ? data.clientLogos : [])
         }
       } catch (error) {

@@ -28,11 +28,12 @@ describe('InspireNewsletterSignup', () => {
     expect(consent).not.toBeChecked()
     expect(consent).toHaveAccessibleName('Aceito receber a newsletter Inspire e comunicações da Otimiza. Saiba mais em Política de Privacidade.')
     expect(screen.getAllByRole('link', { name: 'Política de Privacidade' })).toHaveLength(2)
+    fireEvent.change(screen.getByPlaceholderText('Nome'), { target: { value: 'Maria Oliveira' } })
     fireEvent.change(screen.getByPlaceholderText('Email'), { target: { value: 'reader@example.com' } })
     fireEvent.click(consent)
     fireEvent.click(screen.getByRole('button', { name: 'Assinar newsletter' }))
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/newsletter', expect.objectContaining({ method: 'POST' })))
-    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({ consent: true, source: 'otimiza-inspire-sidebar' })
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({ name: 'Maria Oliveira', consent: true, source: 'otimiza-inspire-sidebar' })
   })
 
   it('opens the shared contact dialog without article context and sends a message to the newsroom', async () => {

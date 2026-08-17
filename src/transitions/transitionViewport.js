@@ -1,11 +1,13 @@
+import { isWordPressPostPath } from '../lib/postUrl'
+
 const PAGE_TRANSITION_DESKTOP_MIN_WIDTH = 770
 
 export function isInspirePath(pathname = '') {
-  return pathname === '/inspire' || pathname.startsWith('/inspire/')
+  return pathname === '/inspire' || pathname.startsWith('/inspire/') || isWordPressPostPath(pathname)
 }
 
 export function shouldAnimatePageTransition(viewport = window, fromPath = '', toPath = '') {
-  if (isInspirePath(fromPath) && isInspirePath(toPath)) {
+  if (isInspirePath(fromPath) || isInspirePath(toPath)) {
     return false
   }
 

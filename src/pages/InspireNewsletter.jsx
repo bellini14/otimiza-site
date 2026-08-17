@@ -55,6 +55,7 @@ function InspireNewsletter() {
               autoComplete="name"
               placeholder="Seu nome"
               className="inspire-newsletter__input"
+              required
             />
           </label>
 

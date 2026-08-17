@@ -12,7 +12,7 @@ function InspireNewsletterSignup() {
     const data = new FormData(form)
     setStatus({ type: 'loading', message: 'Assinando…' })
     try {
-      const response = await fetch('/api/newsletter', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: data.get('email'), consent: data.get('consent') === 'on', source: 'otimiza-inspire-sidebar', company: data.get('company') }) })
+      const response = await fetch('/api/newsletter', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: data.get('name'), email: data.get('email'), consent: data.get('consent') === 'on', source: 'otimiza-inspire-sidebar', company: data.get('company') }) })
       const result = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(result.error || 'Não foi possível assinar agora.')
       form.reset()
@@ -31,6 +31,18 @@ function InspireNewsletterSignup() {
       </p>
 
       <form className="inspire-sidebar__newsletter-form" onSubmit={handleSubmit}>
+        <label className="inspire-sidebar__newsletter-field">
+          <span className="sr-only">Nome</span>
+          <input
+            className="inspire-sidebar__newsletter-input"
+            type="text"
+            name="name"
+            placeholder="Nome"
+            autoComplete="name"
+            required
+          />
+        </label>
+
         <label className="inspire-sidebar__newsletter-field">
           <span className="sr-only">Email</span>
           <input

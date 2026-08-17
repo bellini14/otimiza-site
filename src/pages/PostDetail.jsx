@@ -7,6 +7,7 @@ import PostLikeButton from '../components/PostLikeButton'
 import InspireNewsletterSignup from '../components/InspireNewsletterSignup'
 import InspireShareButton from '../components/InspireShareButton'
 import PostArticleContactPanel from '../components/PostArticleContactPanel'
+import RelatedContentRail from '../components/RelatedContentRail'
 import SeoHead from '../seo/SeoHead'
 import { getPageDescription, getPageTitle } from '../seo/siteMetadata'
 import { buildWordPressPostPath } from '../lib/postUrl'
@@ -54,7 +55,13 @@ function PostDetail() {
         publishedAt,
         eyebrow,
         mainImage,
-        content
+        content,
+        relatedContent {
+          enabled,
+          type,
+          images[] { _key, asset, alt },
+          posts[]-> { _id, title, "slug": slug.current, publishedAt, eyebrow, mainImage }
+        }
       },
       "more": *[_type == "post" && slug.current != $slug] | order(publishedAt desc)[0...3] {
         title,
@@ -256,6 +263,7 @@ function PostDetail() {
               </div>
             )}
           </section>
+          {!loading && <RelatedContentRail key={slug} content={post?.relatedContent} />}
         </header>
 
         {isShellLoading ? (

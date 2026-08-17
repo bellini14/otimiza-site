@@ -73,5 +73,29 @@ export const postType = defineType({
         }),
       ],
     }),
+    defineField({
+      name: 'relatedContent',
+      title: 'Conteúdo relacionado',
+      type: 'object',
+      options: { collapsible: true, collapsed: true },
+      fields: [
+        defineField({ name: 'enabled', title: 'Exibir conteúdo relacionado', type: 'boolean', initialValue: false }),
+        defineField({
+          name: 'type', title: 'Tipo de galeria', type: 'string',
+          options: { layout: 'radio', list: [{ title: 'Galeria de imagens', value: 'images' }, { title: 'Galeria de posts', value: 'posts' }] },
+          hidden: ({ parent }) => !parent?.enabled,
+        }),
+        defineField({
+          name: 'images', title: 'Imagens', type: 'array',
+          of: [defineArrayMember({ type: 'image', options: { hotspot: true }, fields: [defineField({ name: 'alt', title: 'Texto alternativo', type: 'string' })] })],
+          hidden: ({ parent }) => !parent?.enabled || parent?.type !== 'images',
+        }),
+        defineField({
+          name: 'posts', title: 'Posts relacionados', type: 'array',
+          of: [defineArrayMember({ type: 'reference', to: [{ type: 'post' }] })],
+          hidden: ({ parent }) => !parent?.enabled || parent?.type !== 'posts',
+        }),
+      ],
+    }),
   ],
 })

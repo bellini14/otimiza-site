@@ -81,7 +81,7 @@ describe('Inspire newsletter CTA', () => {
     expect(document.querySelector('.inspire-newsletter__threads-stage')).not.toBeNull()
     expect(document.querySelector('.inspire-newsletter__panel')).toBeNull()
     expect(document.querySelector('.inspire-newsletter__content')).not.toBeNull()
-    expect(screen.getByLabelText('Nome')).toBeInTheDocument()
+    expect(screen.getByLabelText('Nome')).toBeRequired()
     expect(screen.getByLabelText('Email')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Assinar newsletter' })).toHaveAttribute('data-inspire-tooltip', 'Assinar newsletter')
   })
@@ -103,7 +103,7 @@ describe('Inspire newsletter CTA', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Assinar newsletter' }))
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/newsletter', expect.objectContaining({ method: 'POST' })))
-    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({ consent: true, source: 'otimiza-inspire-newsletter-page' })
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({ name: 'Maria', consent: true, source: 'otimiza-inspire-newsletter-page' })
     await screen.findByText('Inscrição confirmada.')
     expect(consent).not.toBeChecked()
   })

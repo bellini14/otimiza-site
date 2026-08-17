@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-const cssPath = resolve(process.cwd(), 'src/index.css')
+const cssPath = resolve('src/index.css')
 const css = readFileSync(cssPath, 'utf8')
 
 function ruleFor(selector) {
@@ -53,6 +53,12 @@ describe('contact form layout styles', () => {
     const panelRule = ruleFor('.contact-form-panel')
 
     expect(panelRule).toContain('font-family: "elza", sans-serif')
+  })
+
+  it('keeps consent readable and keyboard-visible', () => {
+    expect(ruleFor('.contact-form__consent')).toContain('grid-template-columns: 1rem minmax(0, 1fr)')
+    expect(ruleFor('.contact-form__consent input:focus-visible')).toContain('outline: 2px solid')
+    expect(ruleFor('.privacy-policy')).toContain('background: #f7f8fa')
   })
 
   it('uses the contact hero color behind provider-rendered map tiles', () => {

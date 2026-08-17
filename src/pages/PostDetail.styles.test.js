@@ -20,4 +20,10 @@ describe('post detail mobile action styles', () => {
     expect(countRule).toContain('position: absolute')
     expect(countRule).toContain('right: 0.7rem')
   })
+
+  it('keeps each related post card on a white surface', () => {
+    const postCardRule = ruleFor('.related-content-rail__post')
+
+    expect(postCardRule).toContain('background: #fff')
+  })
 })
