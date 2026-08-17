@@ -1,0 +1,27 @@
+name: Verify production safety
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-production-safety:
+    name: Verify production safety
+    runs-on: ubuntu-latest
+    env:
+      VITE_SITE_URL: https://www.otm.com.br
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm test -- --run scripts/verify-production-source.test.mjs
+      - run: npm run build
