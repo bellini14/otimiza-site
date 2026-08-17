@@ -218,10 +218,10 @@ describe('StaggerTestimonials', () => {
     expect(carousel.scrollLeft).toBeLessThan(loopWidth * 2.5)
   })
 
-  it('uses the section gray on both the background and case cards', () => {
+  it('uses a white cases section with gray case cards', () => {
     const { container } = renderCarousel()
 
-    expect(container.firstElementChild).toHaveClass('bg-[#EFEFF4]')
+    expect(container.firstElementChild).toHaveClass('bg-white')
     for (const card of screen.getAllByTestId('home-case-card')) {
       expect(card).toHaveClass('bg-[#EFEFF4]')
       expect(card).not.toHaveClass('bg-white')

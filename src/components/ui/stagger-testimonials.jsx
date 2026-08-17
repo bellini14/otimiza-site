@@ -404,7 +404,7 @@ export function StaggerTestimonials({ cases }) {
   return (
     <section
       ref={sectionRef}
-      className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-[100vw] overflow-hidden bg-[#EFEFF4] py-16 sm:py-24"
+      className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-[100vw] overflow-hidden bg-white py-16 sm:py-24"
     >
       <div className="home-menu-shell mb-8" data-testid="home-menu-aligned-shell">
         <div className="text-center">
@@ -447,8 +447,8 @@ export function StaggerTestimonials({ cases }) {
         onPointerLeave={handlePointerLeave}
         onKeyDown={handleKeyDown}
       >
-        <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 z-20 hidden w-[15%] bg-gradient-to-r from-[#EFEFF4] to-transparent sm:block" />
-        <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 z-20 hidden w-[15%] bg-gradient-to-l from-[#EFEFF4] to-transparent sm:block" />
+        <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 z-20 hidden w-[15%] bg-gradient-to-r from-white to-transparent sm:block" />
+        <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 z-20 hidden w-[15%] bg-gradient-to-l from-white to-transparent sm:block" />
         <div
           data-testid="home-cases-track"
           className="flex h-full w-max items-center"
