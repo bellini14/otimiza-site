@@ -1,15 +1,8 @@
-import fs from 'node:fs'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { act, cleanup, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import Home from './Home'
 import { client } from '../lib/sanity'
-
-const testDir = path.dirname(fileURLToPath(import.meta.url))
-const tailwindConfig = fs.readFileSync(path.resolve(testDir, '../../tailwind.config.js'), 'utf8')
-const indexCss = fs.readFileSync(path.resolve(testDir, '../index.css'), 'utf8')
 
 vi.mock('../lib/sanity', () => ({
   client: {
@@ -144,7 +137,7 @@ describe('Home client logos', () => {
     expect(container.querySelectorAll('img[src="https://cdn.sanity.io/images/prod/banco-azul.svg"]').length).toBeGreaterThanOrEqual(8)
   })
 
-  it('keeps two visible logo rows and uses a smooth home marquee pace', async () => {
+  it('renders two velocity rows with accessible source copies and decorative repeats', async () => {
     const homeLogos = [
       {
         _id: 'banco-azul',
@@ -163,15 +156,19 @@ describe('Home client logos', () => {
 
     await screen.findByRole('img', { name: 'Marca Banco Azul' })
 
-    const rows = screen.getAllByTestId('home-client-logo-row')
+    const carousel = screen.getByTestId('home-client-logo-carousel')
+    const rows = carousel.querySelectorAll('.relative.overflow-hidden')
+
     expect(rows).toHaveLength(2)
-    expect(rows[0].querySelectorAll('.home-client-logo-marquee__track')).toHaveLength(2)
-    expect(rows[1].querySelectorAll('.home-client-logo-marquee__track--reverse')).toHaveLength(2)
-    expect(tailwindConfig).not.toMatch(/marquee:\s*'marquee 60s linear -20s infinite'/)
-    expect(tailwindConfig).not.toMatch(/marqueeReverse:\s*'marqueeReverse 60s linear -20s infinite'/)
+    rows.forEach((row) => {
+      const copies = row.querySelectorAll(':scope > div > .shrink-0')
+      expect(copies).toHaveLength(6)
+      expect(copies[0]).not.toHaveAttribute('aria-hidden')
+      Array.from(copies).slice(1).forEach((copy) => expect(copy).toHaveAttribute('aria-hidden', 'true'))
+    })
   })
 
-  it('balances CMS logo rows into full-width stable tracks', async () => {
+  it('balances CMS logo rows into stable velocity content', async () => {
     const homeLogos = Array.from({ length: 10 }, (_, index) => ({
       _id: `cliente-${index + 1}`,
       name: `Cliente ${index + 1}`,
@@ -188,22 +185,21 @@ describe('Home client logos', () => {
 
     await screen.findByRole('img', { name: 'Marca Cliente 1' })
 
-    const rows = screen.getAllByTestId('home-client-logo-row')
-    const firstRowTrack = rows[0].querySelector('.home-client-logo-marquee__track')
-    const secondRowTrack = rows[1].querySelector('.home-client-logo-marquee__track')
+    const carousel = screen.getByTestId('home-client-logo-carousel')
+    const rows = carousel.querySelectorAll('.relative.overflow-hidden')
 
-    expect(firstRowTrack.children).toHaveLength(6)
-    expect(secondRowTrack.children).toHaveLength(6)
-    expect(firstRowTrack.children.length).toBe(secondRowTrack.children.length)
-
+    expect(rows).toHaveLength(2)
     rows.forEach((row) => {
-      row.querySelectorAll('.home-client-logo-marquee__track').forEach((track) => {
-        expect(track.children).toHaveLength(6)
+      const sourceCopy = row.querySelector(':scope > div > .shrink-0')
+      const cards = sourceCopy.querySelectorAll('.home-client-logo-card')
 
-        Array.from(track.children).forEach((logoCard) => {
-          expect(logoCard.className).toMatch(/home-client-logo-card/)
-        })
+      expect(cards).toHaveLength(6)
+      cards.forEach((logoCard) => {
+        expect(logoCard.className).toMatch(/h-10/)
+        expect(logoCard.className).toMatch(/sm:h-16/)
       })
+      expect(sourceCopy.firstElementChild.className).toMatch(/gap-3/)
+      expect(sourceCopy.firstElementChild.className).toMatch(/sm:gap-6/)
     })
   })
 
@@ -231,10 +227,8 @@ describe('Home client logos', () => {
     expect(carousel.className).toMatch(/animation-delay:450ms/)
     expect(carousel.className).not.toMatch(/opacity-0/)
 
-    screen.getAllByTestId('home-client-logo-row').forEach((row) => {
-      row.querySelectorAll('.home-client-logo-marquee__track').forEach((track) => {
-        expect(track.className).not.toMatch(/animate-enter/)
-      })
+    carousel.querySelectorAll('.relative.overflow-hidden').forEach((row) => {
+      expect(row.className).not.toMatch(/animate-enter/)
     })
   })
 
@@ -254,7 +248,7 @@ describe('Home client logos', () => {
       return animationFrames.length
     })
     vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {})
-    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(1200)
+    vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockReturnValue(1200)
 
     render(
       <MemoryRouter>
@@ -264,39 +258,24 @@ describe('Home client logos', () => {
 
     await screen.findByRole('img', { name: 'Marca Banco Azul' })
 
-    const rows = screen.getAllByTestId('home-client-logo-row')
-    const firstScroller = rows[0].querySelector('.home-client-logo-marquee__scroller')
-    const secondScroller = rows[1].querySelector('.home-client-logo-marquee__scroller')
+    const carousel = screen.getByTestId('home-client-logo-carousel')
+    const rows = carousel.querySelectorAll('.relative.overflow-hidden')
+    const firstScroller = rows[0].querySelector(':scope > div')
+    const secondScroller = rows[1].querySelector(':scope > div')
 
     expect(firstScroller).toBeInTheDocument()
     expect(secondScroller).toBeInTheDocument()
-    expect(rows[0].querySelectorAll('.home-client-logo-marquee__track')).toHaveLength(2)
-    expect(rows[1].querySelectorAll('.home-client-logo-marquee__track--reverse')).toHaveLength(2)
-    expect(firstScroller).toHaveAttribute('data-scroll-velocity-enhanced', 'true')
-    expect(firstScroller).toHaveAttribute('data-scroll-velocity-direction', 'forward')
+    expect(rows[0].querySelectorAll(':scope > div > .shrink-0')).toHaveLength(6)
+    expect(rows[1].querySelectorAll(':scope > div > .shrink-0')).toHaveLength(6)
 
     act(() => {
       animationFrames.shift()(1000)
     })
 
-    expect(firstScroller.style.transform).toMatch(/^translate3d\(-/)
-
-    act(() => {
-      window.scrollY = 240
-      window.dispatchEvent(new Event('scroll'))
-    })
-
-    expect(firstScroller).toHaveAttribute('data-scroll-velocity-direction', 'forward')
-
-    act(() => {
-      window.scrollY = 0
-      window.dispatchEvent(new Event('scroll'))
-    })
-
-    expect(firstScroller).toHaveAttribute('data-scroll-velocity-direction', 'reverse')
+    expect(firstScroller.style.transform).not.toMatch(/translateX\(0px\)/)
   })
 
-  it('eager-loads carousel logos and starts marquee animations mid-cycle', async () => {
+  it('eager-loads carousel logos', async () => {
     const homeLogos = [
       {
         _id: 'banco-azul',
@@ -315,56 +294,5 @@ describe('Home client logos', () => {
 
     const logo = await screen.findByRole('img', { name: 'Marca Banco Azul' })
     expect(logo).toHaveAttribute('loading', 'eager')
-    expect(tailwindConfig).not.toMatch(/-20s/)
-  })
-
-  it('keeps mobile logo tracks compact and restores desktop spacing at the sm breakpoint', () => {
-    expect(indexCss).toMatch(/\.home-client-logo-card\s*\{[^}]*width:\s*8rem;/s)
-    expect(indexCss).toMatch(/\.home-client-logo-marquee__scroller\s*\{[^}]*--home-client-logo-gap-offset:\s*0\.375rem;[^}]*gap:\s*0\.75rem;/s)
-    expect(indexCss).toMatch(/\.home-client-logo-marquee__track\s*\{[^}]*gap:\s*0\.75rem;/s)
-    expect(indexCss).toMatch(/@media\s*\(min-width:\s*640px\)\s*\{[\s\S]*\.home-client-logo-card\s*\{[\s\S]*width:\s*13rem;/s)
-    expect(indexCss).toMatch(/@media\s*\(min-width:\s*640px\)\s*\{[\s\S]*\.home-client-logo-marquee__scroller\s*\{[\s\S]*--home-client-logo-gap-offset:\s*0\.75rem;/s)
-    expect(indexCss).toMatch(/@media\s*\(min-width:\s*640px\)\s*\{[\s\S]*\.home-client-logo-marquee__scroller,\s*\.home-client-logo-marquee__track\s*\{[\s\S]*gap:\s*1\.5rem;/s)
-    expect(indexCss).toMatch(/animation:\s*home-client-logo-scroll\s+var\(--home-client-logo-duration,\s*54s\)\s+linear\s+infinite;/)
-    expect(indexCss).toMatch(/\.home-client-logo-marquee__scroller\[data-scroll-velocity-enhanced="true"\]\s*\{[^}]*animation:\s*none;/s)
-    expect(indexCss).toMatch(/translate3d\(calc\(-50% - var\(--home-client-logo-gap-offset,\s*0\.375rem\)\), 0, 0\)/)
-  })
-
-  it('keeps the base logo marquee pace until scroll velocity accelerates it', async () => {
-    const homeLogos = [
-      {
-        _id: 'banco-azul',
-        name: 'Banco Azul',
-        logoAlt: 'Marca Banco Azul',
-        logoUrl: 'https://cdn.sanity.io/images/prod/banco-azul.svg',
-      },
-    ]
-    client.fetch.mockImplementation((query) => Promise.resolve(query.includes('clientLogo') ? homeLogos : []))
-
-    render(
-      <MemoryRouter>
-        <Home />
-      </MemoryRouter>,
-    )
-
-    await screen.findByRole('img', { name: 'Marca Banco Azul' })
-
-    vi.useFakeTimers()
-
-    const carousel = screen.getByTestId('home-client-logo-carousel')
-    expect(carousel).toHaveStyle({ '--home-client-logo-duration': '54s' })
-
-    act(() => {
-      window.scrollY = 240
-      window.dispatchEvent(new Event('scroll'))
-    })
-
-    expect(carousel.style.getPropertyValue('--home-client-logo-duration')).toBe('18s')
-
-    act(() => {
-      vi.advanceTimersByTime(260)
-    })
-
-    expect(carousel).toHaveStyle({ '--home-client-logo-duration': '54s' })
   })
 })

@@ -210,7 +210,9 @@ describe('FeaturesSection', () => {
     expect(detailPanelShell).toBeInTheDocument()
     expect(detailPanel).toBeInTheDocument()
     expect(detailHeader).toBeInTheDocument()
-    expect(animatedItems.length).toBeGreaterThan(2)
+    expect(animatedItems).toHaveLength(2)
+    expect(animatedItems[0]).toHaveTextContent('Processo')
+    expect(animatedItems[1]).toHaveTextContent('Resultados')
     expect(selectorAnimation).not.toBeInTheDocument()
   })
 
