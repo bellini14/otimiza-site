@@ -3,6 +3,7 @@ import path from 'node:path'
 import { JSDOM } from 'jsdom'
 import sanityCli from 'sanity/cli'
 import { htmlToPortableText, normalizeUrl } from './wordpressPortableText.mjs'
+import { filterMissingPosts, parseArgs, sanitizeSlug } from './wordpressImportSelection.mjs'
 
 const { getCliClient } = sanityCli
 const client = getCliClient({ apiVersion: '2025-03-01' })
@@ -13,40 +14,6 @@ const XML_PATH = path.resolve(
   'Posts Blog',
   'otimizaconsultoria.WordPress.2026-02-18.xml',
 )
-
-const DEFAULT_LIMIT = 3
-
-function parseArgs(argv) {
-  const options = {
-    limit: DEFAULT_LIMIT,
-    dryRun: false,
-    offset: 0,
-  }
-
-  for (let index = 0; index < argv.length; index += 1) {
-    const arg = argv[index]
-
-    if (arg === '--dry-run') {
-      options.dryRun = true
-      continue
-    }
-
-    if (arg === '--limit') {
-      const next = argv[index + 1]
-      options.limit = Number.parseInt(next, 10)
-      index += 1
-      continue
-    }
-
-    if (arg === '--offset') {
-      const next = argv[index + 1]
-      options.offset = Number.parseInt(next, 10)
-      index += 1
-    }
-  }
-
-  return options
-}
 
 function extractCdata(item, tagName) {
   const escapedTag = tagName.replace(':', '\\:')
@@ -99,20 +66,6 @@ function parseWordPressXml(xml) {
       thumbnailId: extractMetaValue(item, '_thumbnail_id'),
     }
   })
-}
-
-function sanitizeSlug(value, fallback = 'post') {
-  const cleanedValue = (value || fallback)
-    .replace(/__trashed$/i, '')
-    .replace(/[_\s]+/g, '-')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9-]+/g, '-')
-    .replace(/-{2,}/g, '-')
-    .replace(/^-+|-+$/g, '')
-
-  return cleanedValue || fallback
 }
 
 function extractFirstImageUrl(contentHtml) {
@@ -214,11 +167,19 @@ function normalizePublishedAt(post) {
   return `${iso}Z`
 }
 
-async function importPosts({ dryRun, limit, offset }) {
-  const xml = await readFile(XML_PATH, 'utf8')
-  const posts = parseWordPressXml(xml)
+async function importPosts({ dryRun, limit, offset, xmlPath, missingOnly }) {
+  const resolvedXmlPath = xmlPath ? path.resolve(xmlPath) : XML_PATH
+  const xml = await readFile(resolvedXmlPath, 'utf8')
+  let eligiblePosts = parseWordPressXml(xml)
     .filter((post) => post.postType === 'post' && post.status === 'publish')
-    .slice(offset, offset + limit)
+
+  if (missingOnly) {
+    const existingPosts = await client.fetch('*[_type == "post"]{_id, "slug": slug.current}')
+    eligiblePosts = filterMissingPosts(eligiblePosts, existingPosts)
+    console.log(`${eligiblePosts.length} post(s) ausente(s) encontrado(s) no XML.`)
+  }
+
+  const posts = eligiblePosts.slice(offset, offset + limit)
 
   if (posts.length === 0) {
     console.log('Nenhum post elegivel encontrado no XML.')

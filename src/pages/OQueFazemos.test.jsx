@@ -177,7 +177,7 @@ describe('OQueFazemos', () => {
     expect(mobileStyles).not.toContain('.oquefazemos-service-chapter__heading span')
   })
 
-  it('uses one scroll owner on mobile and a linear fallback for compact heights', () => {
+  it('uses one scroll owner and keeps the sticky chapters enabled at every mobile height', () => {
     const serviceStylesStart = indexCss.indexOf('  .oquefazemos-page {')
     const serviceStylesEnd = indexCss.indexOf('  .pillar-card {', serviceStylesStart)
 
@@ -273,23 +273,24 @@ describe('OQueFazemos', () => {
 
     const compactStyles = compactMatch[0]
     expect(compactStyles).toMatch(
-      /\.oquefazemos-service-chapter\s*\{[^}]*min-height:\s*auto\s*!important[^}]*margin-top:\s*0\s*!important/s,
+      /\.oquefazemos-page\s*\{[^}]*--oquefazemos-card-y:\s*clamp\(2rem,\s*6svh,\s*2\.5rem\)/s,
     )
     expect(compactStyles).toMatch(
-      /\.oquefazemos-service-chapter\s*\+\s*\.oquefazemos-service-chapter\s*\{[^}]*margin-top:\s*0\s*!important/s,
+      /\.oquefazemos-service-chapter__stack\s*\{[^}]*gap:\s*0\.75rem/s,
     )
     expect(compactStyles).toMatch(
-      /\.oquefazemos-service-chapter__panel,\s*\.oquefazemos-service-chapter--last\s+\.oquefazemos-service-chapter__panel\s*\{[^}]*position:\s*relative\s*!important[^}]*top:\s*auto\s*!important[^}]*height:\s*auto\s*!important[^}]*min-height:\s*auto\s*!important[^}]*overflow:\s*visible/s,
+      /\.oquefazemos-service-chapter__visual\s*\{[^}]*display:\s*flex[^}]*position:\s*relative[^}]*inset:\s*auto[^}]*flex:\s*1\s+1\s+auto[^}]*min-height:\s*clamp\(5rem,\s*14svh,\s*7rem\)[^}]*max-height:\s*clamp\(8rem,\s*24svh,\s*11rem\)/s,
     )
     expect(compactStyles).toMatch(
-      /\.oquefazemos-service-chapter__stack\s*\{[^}]*height:\s*auto[^}]*min-height:\s*auto[^}]*gap:\s*clamp\(2\.5rem,\s*10vw,\s*4rem\)[^}]*padding-block:\s*clamp\(3\.5rem,\s*12vw,\s*4\.5rem\)/s,
+      /\.oquefazemos-service-chapter__visual::after\s*\{[^}]*bottom:\s*0[^}]*font-size:\s*clamp\(5rem,\s*17\.5svh,\s*7rem\)/s,
     )
-    expect(compactStyles).toMatch(
-      /\.oquefazemos-service-chapter__content\s*\{[^}]*margin-top:\s*clamp\(1\.5rem,\s*7vw,\s*2\.5rem\)/s,
+    expect(compactStyles).not.toMatch(
+      /\.oquefazemos-service-chapter__panel[\s\S]*position:\s*relative/,
     )
-    expect(compactStyles).toMatch(
-      /\.oquefazemos-service-chapter__depth-overlay\s*\{[^}]*display:\s*none/s,
+    expect(compactStyles).not.toMatch(
+      /\.oquefazemos-service-chapter\s*\{[^}]*min-height:\s*auto/,
     )
+    expect(compactStyles).not.toMatch(/background:\s*none/)
 
     const reducedMotionStyles = reducedMotionMatch[0]
     const staticMotionRule = reducedMotionStyles.match(
@@ -325,7 +326,7 @@ describe('OQueFazemos', () => {
     })
 
     expect(chapters[chapters.length - 1]).toHaveClass('oquefazemos-service-chapter--last')
-    expect(indexCss).toMatch(/\.oquefazemos-service-chapter\s*\{[^}]*min-height:\s*300svh/s)
+    expect(indexCss).toMatch(/\.oquefazemos-service-chapter\s*\{[^}]*min-height:\s*360svh/s)
     expect(indexCss).toMatch(/\.oquefazemos-service-chapter\s*\+\s*\.oquefazemos-service-chapter\s*\{[^}]*margin-top:\s*-160svh/s)
     expect(indexCss).toMatch(/\.oquefazemos-service-chapter--last\s*\{[^}]*min-height:\s*auto\s*!important/s)
     expect(indexCss).toMatch(/\.oquefazemos-service-chapter--last\s*\{[^}]*margin-top:\s*-80svh\s*!important/s)
@@ -340,8 +341,8 @@ describe('OQueFazemos', () => {
     expect(indexCss).toMatch(/\.oquefazemos-service-chapter--last\s+\.oquefazemos-service-chapter__panel\s*\{[^}]*height:\s*auto\s*!important/s)
     expect(indexCss).toMatch(/\.oquefazemos-service-chapter--last\s+\.oquefazemos-service-chapter__panel\s*\{[^}]*min-height:\s*100svh\s*!important/s)
     expect(indexCss).toMatch(/\.oquefazemos-service-chapter--last\s+\.oquefazemos-service-chapter__depth-overlay\s*\{[^}]*display:\s*none/s)
-    expect(indexCss).toMatch(/@media\s*\(max-width:\s*767px\)[\s\S]*\.oquefazemos-service-chapter\s*\{[\s\S]*min-height:\s*340svh/)
-    expect(indexCss).toMatch(/@media\s*\(max-width:\s*767px\)[\s\S]*\.oquefazemos-service-chapter\s*\+\s*\.oquefazemos-service-chapter\s*\{[\s\S]*margin-top:\s*-190svh/)
+    expect(indexCss).toMatch(/@media\s*\(max-width:\s*767px\)[\s\S]*\.oquefazemos-service-chapter\s*\{[\s\S]*min-height:\s*400svh/)
+    expect(indexCss).toMatch(/@media\s*\(max-width:\s*767px\)[\s\S]*\.oquefazemos-service-chapter\s*\+\s*\.oquefazemos-service-chapter\s*\{[\s\S]*margin-top:\s*-180svh/)
     expect(indexCss).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*\.oquefazemos-service-chapter\s*\{[\s\S]*min-height:\s*auto/)
     expect(indexCss).toMatch(/html\.oquefazemos-sticky-scroll\s+\.site-footer\s*\{[^}]*z-index:\s*80/s)
     expect(indexCss).toMatch(/html\.oquefazemos-sticky-scroll\s+\.site-footer\s*\{[^}]*background:\s*#f7f8fa/s)

@@ -12,7 +12,6 @@ import {
 import { client } from '../lib/sanity'
 import usePageTransitionNavigate from '../transitions/usePageTransitionNavigate'
 import { buildWordPressPostPath } from '../lib/postUrl'
-import { resolveLegacyImageUrl } from '../lib/legacyImageUrl'
 
 const INTERNAL_SEARCH_UPDATE_STATE_KEY = '__otimizaInspireSearchUpdateId'
 const SEARCH_SUGGESTIONS_DELAY_MS = 180
@@ -215,9 +214,7 @@ function InspireLayout() {
 
         setSuggestions(
           rankInspireSearchResults(
-            (nextSuggestions || [])
-              .filter((suggestion) => suggestion.slug)
-              .map((suggestion) => ({ ...suggestion, imgSrc: resolveLegacyImageUrl(suggestion.imgSrc) })),
+            (nextSuggestions || []).filter((suggestion) => suggestion.slug),
             normalizedValue,
           ).slice(0, 5),
         )
@@ -286,7 +283,7 @@ function InspireLayout() {
             </button>
 
             <Link to="/inspire" className="inspire-shell__wordmark" aria-label="Home Inspire">
-              {/* Icon — hidden by default, slides in on hover */}
+              {/* Icon — always visible beside the lettering */}
               <svg
                 className="inspire-shell__logo-icon"
                 xmlns="http://www.w3.org/2000/svg"

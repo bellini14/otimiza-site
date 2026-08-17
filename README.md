@@ -19,11 +19,19 @@ SMTP_USER=seu-usuario-smtp
 SMTP_PASS=sua-senha-smtp
 CONTACT_FROM_EMAIL=site@seudominio.com.br
 CONTACT_TO_EMAIL=contato@seudominio.com.br
+NEWSLETTER_TO_EMAIL=marketing@seudominio.com.br
+VITE_SITE_URL=https://www.seudominio.com.br
 ```
 
 `CONTACT_FROM_EMAIL` precisa pertencer a um remetente autorizado no SMTP2GO. O e-mail preenchido pelo visitante é utilizado como `Reply-To`.
 
-Na Vercel, adicione as mesmas seis variáveis em `Project Settings > Environment Variables` para Production e Preview. Faça um novo deploy depois de salvar. Não use o prefixo `VITE_` e nunca registre `SMTP_PASS` no Git.
+### Aviso de nova assinatura Inspire
+
+As inscrições diretas feitas em `/inspire/newsletter` e no formulário lateral continuam sendo registradas no RD Station e, depois, geram um aviso interno pelo SMTP2GO. Defina `NEWSLETTER_TO_EMAIL` com o endereço que deve receber esse aviso; se não for configurado, o site usa `CONTACT_TO_EMAIL`. A mensagem apresenta o logo Inspire, “Novo Assinante!” e uma tabela com nome e e-mail; o e-mail do assinante é usado como `Reply-To`.
+
+`VITE_SITE_URL` deve ser a URL HTTPS pública de produção do site, pois é usada para carregar o logo no cliente de e-mail. Não use um domínio local ou URL de preview da Vercel.
+
+Na Vercel, adicione as variáveis em `Project Settings > Environment Variables` para Production e Preview. Faça um novo deploy depois de salvar. `VITE_SITE_URL` é a única variável pública nesta lista; nunca registre `SMTP_PASS` no Git.
 
 Para testar a função localmente com as variáveis da Vercel:
 

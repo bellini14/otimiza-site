@@ -3,7 +3,7 @@ import React from 'react'
 export default function InspireAnimatedLogo({ className = '' }) {
   return (
     <span className={`inspire-shell__wordmark ${className}`}>
-      {/* Icon — hidden by default, slides in on hover, fixed size */}
+      {/* Icon — always visible beside the lettering */}
       <svg
         className="inspire-shell__logo-icon"
         xmlns="http://www.w3.org/2000/svg"

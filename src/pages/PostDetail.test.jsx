@@ -244,6 +244,50 @@ describe('PostDetail', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/posts/post-com-imagem-inline/likes', { method: 'GET' })
   })
 
+  it('renders the related image rail configured in Sanity', async () => {
+    const response = buildPostResponse()
+    response.post.relatedContent = {
+      enabled: true,
+      type: 'images',
+      images: [{
+        _key: 'related-workshop',
+        alt: 'Anotações de um workshop de estratégia',
+        assetUrl: 'https://cdn.sanity.io/images/demo/related-workshop.jpg',
+        asset: { _ref: 'image-related-workshop-900x675-jpg' },
+      }],
+    }
+    client.fetch.mockResolvedValue(response)
+
+    renderPostDetail()
+
+    const rail = await screen.findByRole('region', { name: /conteúdo relacionado/i })
+    expect(within(rail).getByRole('img', { name: 'Anotações de um workshop de estratégia' })).toHaveAttribute(
+      'src',
+      'https://cdn.sanity.io/images/demo/related-workshop.jpg',
+    )
+  })
+
+  it('moves through related gallery images in the lightbox', async () => {
+    const response = buildPostResponse()
+    response.post.relatedContent = {
+      enabled: true,
+      type: 'images',
+      images: [
+        { _key: 'first', alt: 'Primeira imagem', assetUrl: 'https://cdn.sanity.io/images/demo/first.jpg', asset: { _ref: 'image-first-900x675-jpg' } },
+        { _key: 'second', alt: 'Segunda imagem', assetUrl: 'https://cdn.sanity.io/images/demo/second.jpg', asset: { _ref: 'image-second-900x675-jpg' } },
+      ],
+    }
+    client.fetch.mockResolvedValue(response)
+
+    renderPostDetail()
+
+    const rail = await screen.findByRole('region', { name: /conteúdo relacionado/i })
+    fireEvent.click(within(rail).getByRole('button', { name: /ampliar imagem: primeira imagem/i }))
+    const dialog = screen.getByRole('dialog', { name: 'Primeira imagem' })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Ver próxima imagem' }))
+    expect(screen.getByRole('dialog', { name: 'Segunda imagem' })).toBeInTheDocument()
+  })
+
   it('places the post actions inside the article hero before the body', async () => {
     fetchMock.mockResolvedValueOnce(createJsonResponse({ slug: 'post-com-imagem-inline', count: 7 }))
 

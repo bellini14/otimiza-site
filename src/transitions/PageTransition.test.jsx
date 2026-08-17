@@ -15,13 +15,15 @@ describe('page transition timing', () => {
     expect(shouldAnimatePageTransition({ innerWidth: 770 })).toBe(true)
   })
 
-  it('skips the global curtain between Inspire routes only', () => {
+  it('skips the global curtain whenever navigation enters or leaves Inspire', () => {
     const viewport = { innerWidth: 1440 }
 
     expect(shouldAnimatePageTransition(viewport, '/inspire', '/inspire/artigo')).toBe(false)
     expect(shouldAnimatePageTransition(viewport, '/inspire/artigo', '/inspire')).toBe(false)
-    expect(shouldAnimatePageTransition(viewport, '/', '/inspire')).toBe(true)
-    expect(shouldAnimatePageTransition(viewport, '/inspire', '/')).toBe(true)
+    expect(shouldAnimatePageTransition(viewport, '/', '/inspire')).toBe(false)
+    expect(shouldAnimatePageTransition(viewport, '/inspire', '/')).toBe(false)
+    expect(shouldAnimatePageTransition(viewport, '/inspire', '/2026/07/28/eureka-heuristica-e-o-planejamento-estrategico')).toBe(false)
+    expect(shouldAnimatePageTransition(viewport, '/2026/07/28/eureka-heuristica-e-o-planejamento-estrategico', '/')).toBe(false)
   })
 
   it('keeps the complete transition light and avoids a perceptible frozen hold', () => {

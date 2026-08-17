@@ -113,29 +113,6 @@ afterEach(() => {
 })
 
 describe('Inspire', () => {
-  it('serves mapped Sanity feed images from the legacy OTM host and leaves new assets on Sanity', async () => {
-    const legacySanityUrl = 'https://cdn.sanity.io/images/igy822g7/production/0122eed8d7195fe28022797c883bcb730ac02641-856x314.png?w=1200'
-    const newSanityUrl = 'https://cdn.sanity.io/images/igy822g7/production/new-feed-image-1200x800.jpg'
-    client.fetch.mockResolvedValue([
-      makePost(1, { title: 'Post legado', imgSrc: legacySanityUrl }),
-      makePost(2, { title: 'Post novo', imgSrc: newSanityUrl }),
-    ])
-
-    renderInspirePage()
-
-    const legacyThumbnail = (await screen.findByRole('heading', { name: 'Post legado' }))
-      .closest('article')
-      .querySelector('img')
-    const newThumbnail = screen.getByRole('heading', { name: 'Post novo' })
-      .closest('article')
-      .querySelector('img')
-    expect(legacyThumbnail).toHaveAttribute(
-      'src',
-      'https://www.otm.com.br/wp-content/uploads/2020/10/Screenshot_11.png',
-    )
-    expect(newThumbnail).toHaveAttribute('src', newSanityUrl)
-  })
-
   it('lets native mouse-wheel scrolling reach the editorial feed', () => {
     client.fetch.mockResolvedValue([])
 
@@ -226,11 +203,43 @@ describe('Inspire', () => {
     const sidebar = document.querySelector('.inspire-sidebar')
     expect(within(sidebar).getByRole('heading', { name: 'Assine o Inspire' })).toBeInTheDocument()
     expect(within(sidebar).getByRole('textbox', { name: 'Email' })).toHaveAttribute('placeholder', 'Email')
-    expect(within(sidebar).getByRole('checkbox', { name: 'Eu aceito receber atualizações.' })).toBeRequired()
+    expect(within(sidebar).getByRole('checkbox', { name: /newsletter Inspire e comunicações da Otimiza/i })).toBeRequired()
     expect(sidebar.querySelector('.inspire-sidebar__newsletter-checkmark')).not.toBeInTheDocument()
     expect(within(sidebar).getByRole('button', { name: 'Assinar newsletter' })).toHaveAttribute('data-inspire-tooltip', 'Assinar newsletter')
     expect(within(sidebar).getByText(/todo dia 10 enviamos o Inspire Editorial/i)).toBeInTheDocument()
     expect(within(sidebar).getByText(/todo dia 25, uma nova edição do Inspire/i)).toBeInTheDocument()
+    const newsletterForm = sidebar.querySelector('.inspire-sidebar__newsletter-form')
+    const expediente = within(sidebar).getByRole('region', { name: 'Expediente' })
+    expect(expediente).toHaveTextContent(
+      'Inspire é uma publicação da Otimiza Consultoria em Administração',
+    )
+    const expedienteText = expediente.querySelector('.inspire-sidebar__expediente-text')
+    expect(expedienteText).toHaveTextContent(
+      'Fundadora (in memoriam): Silvana Tiburi Bettiol',
+    )
+    expect(within(expediente).getByText('(in memoriam)', { selector: 'em' })).toBeInTheDocument()
+    expect(expedienteText).toHaveTextContent('Publisher: Augusto Bellini')
+    expect(expedienteText).toHaveTextContent('Diretor Comercial: Rafael Tiburi Bettiol')
+    expect(expedienteText).toHaveTextContent(
+      'Diretor de Operações: Alceu Viegas Pires Machado',
+    )
+    expect(expedienteText).toHaveTextContent('Produção de Conteúdo: Augusto Bellini')
+    expect(expedienteText).toHaveTextContent('Revisão: Viviane Lanfredi')
+    expect(expedienteText).toHaveTextContent('Produção Digital: João Antônio Rizzon Bellini')
+    expect(expediente.querySelector('dl, dt, dd, strong, b')).not.toBeInTheDocument()
+    const editorialContactLink = within(sidebar).getByRole('button', {
+      name: 'Escreva para a redação',
+    })
+    expect(editorialContactLink).toHaveClass('inspire-sidebar__editorial-contact')
+    expect(editorialContactLink).toHaveAttribute('aria-haspopup', 'dialog')
+    expect(editorialContactLink).toHaveAttribute('aria-expanded', 'false')
+    expect(
+      newsletterForm.compareDocumentPosition(expediente) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(
+      expedienteText.compareDocumentPosition(editorialContactLink)
+      & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
     expect(within(sidebar).queryByText('Seleções da redação')).not.toBeInTheDocument()
     expect(within(sidebar).queryByText('Tópicos recomendados')).not.toBeInTheDocument()
     expect(within(sidebar).queryByText('Quem seguir')).not.toBeInTheDocument()
