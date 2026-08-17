@@ -288,6 +288,26 @@ describe('PostDetail', () => {
     expect(screen.getByRole('dialog', { name: 'Segunda imagem' })).toBeInTheDocument()
   })
 
+  it('opens a related image after a desktop pointer release on its open button', async () => {
+    const response = buildPostResponse()
+    response.post.relatedContent = {
+      enabled: true,
+      type: 'images',
+      images: [{ _key: 'first', alt: 'Primeira imagem', assetUrl: 'https://cdn.sanity.io/images/demo/first.jpg', asset: { _ref: 'image-first-900x675-jpg' } }],
+    }
+    client.fetch.mockResolvedValue(response)
+
+    renderPostDetail()
+
+    const rail = await screen.findByRole('region', { name: /conteúdo relacionado/i })
+    const openButton = within(rail).getByRole('button', { name: /ampliar imagem: primeira imagem/i })
+
+    fireEvent.pointerDown(openButton, { pointerId: 4, pointerType: 'mouse', button: 0, clientX: 120 })
+    fireEvent.pointerUp(rail.querySelector('.related-content-rail__track'), { pointerId: 4, pointerType: 'mouse', clientX: 120 })
+
+    expect(screen.getByRole('dialog', { name: 'Primeira imagem' })).toBeInTheDocument()
+  })
+
   it('keeps the related image rail draggable when a mobile gesture starts on its open button', async () => {
     const response = buildPostResponse()
     response.post.relatedContent = {
