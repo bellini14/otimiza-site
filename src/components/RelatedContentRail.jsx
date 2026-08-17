@@ -20,6 +20,7 @@ export default function RelatedContentRail({ content }) {
   const dragged = useRef(false)
   const trackRef = useRef(null)
   const lightboxSwipe = useRef(null)
+  const imageOpenOnRelease = useRef(null)
 
   useEffect(() => {
     if (!selectedImage) return undefined
@@ -64,8 +65,9 @@ export default function RelatedContentRail({ content }) {
     startDragging(event)
     event.stopPropagation()
   }
-  function startImageDragging(event) {
+  function startImageDragging(event, index) {
     startDragging(event)
+    imageOpenOnRelease.current = index
     event.stopPropagation()
   }
   function dragGallery(event) {
@@ -78,8 +80,11 @@ export default function RelatedContentRail({ content }) {
   function stopDragging(event) {
     if (dragState.current?.pointerId !== event.pointerId) return
     event.currentTarget.releasePointerCapture?.(event.pointerId)
+    const imageIndex = imageOpenOnRelease.current
+    imageOpenOnRelease.current = null
     dragState.current = null
     setIsDragging(false)
+    if (event.type !== 'pointercancel' && imageIndex !== null && !dragged.current) selectGalleryImage(imageIndex)
   }
   function startLightboxSwipe(event) {
     if (event.pointerType === 'mouse' && event.button !== 0) return
@@ -113,7 +118,7 @@ export default function RelatedContentRail({ content }) {
               return src ? (
                 <figure className="related-content-rail__image" key={image._key || index}>
                   <img src={src} alt={image.alt || ''} loading="lazy" draggable="false" />
-                  <button className="related-content-rail__image-open" type="button" aria-label={`Ampliar imagem: ${image.alt || 'conteúdo relacionado'}`} onPointerDown={startImageDragging} onPointerMove={dragGallery} onPointerUp={stopDragging} onPointerCancel={stopDragging} onClick={() => !dragged.current && selectGalleryImage(index)}>
+                  <button className="related-content-rail__image-open" type="button" aria-label={`Ampliar imagem: ${image.alt || 'conteúdo relacionado'}`} onPointerDown={(event) => startImageDragging(event, index)} onPointerMove={dragGallery} onPointerUp={stopDragging} onPointerCancel={stopDragging} onClick={() => !dragged.current && selectGalleryImage(index)}>
                     <Eye className="related-content-rail__image-open-icon related-content-rail__image-open-icon--eye" aria-hidden="true" size={18} strokeWidth={1.8} /><ZoomIn className="related-content-rail__image-open-icon related-content-rail__image-open-icon--search" aria-hidden="true" size={18} strokeWidth={1.8} />
                   </button>
                 </figure>
