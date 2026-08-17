@@ -71,7 +71,7 @@ describe('StaggerTestimonials', () => {
     })
   })
 
-  it('uses compact mobile card spacing so the summary and company details do not collide', () => {
+  it('clamps long case summaries so they do not collide with company details', () => {
     renderCarousel()
 
     const activeCard = screen.getAllByTestId('home-case-card').find((card) => card.dataset.carouselActive === 'true')
@@ -80,7 +80,7 @@ describe('StaggerTestimonials', () => {
     const logo = activeCard.querySelector('img')
 
     expect(activeCard).toHaveClass('p-7', 'sm:p-8')
-    expect(summary).toHaveClass('text-[0.92rem]', 'sm:text-lg', 'line-clamp-2', 'sm:line-clamp-none')
+    expect(summary).toHaveClass('text-[0.92rem]', 'sm:text-lg', 'line-clamp-4', 'sm:line-clamp-5')
     expect(details).toHaveClass('bottom-7', 'left-7', 'right-7', 'sm:bottom-8', 'sm:left-8', 'sm:right-8')
     expect(logo).toHaveClass('max-h-10', 'max-w-[8.5rem]', 'sm:max-h-12', 'sm:max-w-[10rem]')
   })
