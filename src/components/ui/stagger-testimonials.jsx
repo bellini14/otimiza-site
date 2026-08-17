@@ -63,7 +63,7 @@ function CaseCard({ caseStudy, cardSize, isActive, isDragging, logicalIndex, cop
       </div>
       <p
         data-testid="home-case-summary"
-        className={cn('line-clamp-2 text-[0.92rem] font-medium leading-snug sm:line-clamp-none sm:text-lg', isActive ? 'text-slate-900' : 'text-slate-700')}
+        className={cn('line-clamp-4 text-[0.92rem] font-medium leading-snug sm:line-clamp-5 sm:text-lg', isActive ? 'text-slate-900' : 'text-slate-700')}
       >
         {caseStudy.summary}
       </p>
