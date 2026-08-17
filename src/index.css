@@ -7649,6 +7649,7 @@ html.dark .testimonials-section-wrapper {
 .related-content-rail__post-open { display: inline-flex; margin: 0 .8rem .8rem; color: var(--inspire-text); font-size: .82rem; font-weight: 500; text-decoration: underline; }
 .related-content-lightbox { display: grid; place-items: center; padding: 2rem 0; overflow: hidden; }
 .related-content-lightbox__sequence, .related-content-lightbox__current { position: relative; display: grid; width: 100%; place-items: center; }
+.related-content-lightbox__current { touch-action: pan-y; }
 .related-content-lightbox__image { position: relative; z-index: 1; display: block; width: auto; height: min(84dvh, 48rem); max-width: 82vw; max-height: 84dvh; object-fit: contain; animation: related-content-lightbox-slide-from-right 300ms cubic-bezier(.22, 1, .36, 1) both; }
 .related-content-lightbox__image--previous { animation-name: related-content-lightbox-slide-from-left; }
 .related-content-lightbox__preview { position: absolute; top: 50%; display: block; height: min(70dvh, 40rem); max-width: 68vw; transform: translateY(-50%); background: transparent; border: 0; cursor: pointer; }

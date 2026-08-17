@@ -288,6 +288,58 @@ describe('PostDetail', () => {
     expect(screen.getByRole('dialog', { name: 'Segunda imagem' })).toBeInTheDocument()
   })
 
+  it('keeps the related image rail draggable when a mobile gesture starts on its open button', async () => {
+    const response = buildPostResponse()
+    response.post.relatedContent = {
+      enabled: true,
+      type: 'images',
+      images: [
+        { _key: 'first', alt: 'Primeira imagem', assetUrl: 'https://cdn.sanity.io/images/demo/first.jpg', asset: { _ref: 'image-first-900x675-jpg' } },
+        { _key: 'second', alt: 'Segunda imagem', assetUrl: 'https://cdn.sanity.io/images/demo/second.jpg', asset: { _ref: 'image-second-900x675-jpg' } },
+      ],
+    }
+    client.fetch.mockResolvedValue(response)
+
+    renderPostDetail()
+
+    const rail = await screen.findByRole('region', { name: /conteúdo relacionado/i })
+    const track = within(rail).getByLabelText(/galeria de conteúdo relacionado/i)
+    const openButton = within(rail).getByRole('button', { name: /ampliar imagem: primeira imagem/i })
+    Object.defineProperty(track, 'scrollLeft', { configurable: true, value: 100, writable: true })
+
+    fireEvent.pointerDown(openButton, { pointerId: 7, pointerType: 'touch', clientX: 200 })
+    fireEvent.pointerMove(openButton, { pointerId: 7, pointerType: 'touch', clientX: 80 })
+    fireEvent.pointerUp(openButton, { pointerId: 7, pointerType: 'touch', clientX: 80 })
+    fireEvent.click(openButton)
+
+    expect(track.scrollLeft).toBe(220)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('moves through related images by swiping the mobile lightbox', async () => {
+    const response = buildPostResponse()
+    response.post.relatedContent = {
+      enabled: true,
+      type: 'images',
+      images: [
+        { _key: 'first', alt: 'Primeira imagem', assetUrl: 'https://cdn.sanity.io/images/demo/first.jpg', asset: { _ref: 'image-first-900x675-jpg' } },
+        { _key: 'second', alt: 'Segunda imagem', assetUrl: 'https://cdn.sanity.io/images/demo/second.jpg', asset: { _ref: 'image-second-900x675-jpg' } },
+      ],
+    }
+    client.fetch.mockResolvedValue(response)
+
+    renderPostDetail()
+
+    const rail = await screen.findByRole('region', { name: /conteúdo relacionado/i })
+    fireEvent.click(within(rail).getByRole('button', { name: /ampliar imagem: primeira imagem/i }))
+    const currentImage = screen.getByRole('dialog', { name: 'Primeira imagem' }).querySelector('.related-content-lightbox__current')
+
+    fireEvent.pointerDown(currentImage, { pointerId: 9, pointerType: 'touch', clientX: 280 })
+    fireEvent.pointerUp(currentImage, { pointerId: 9, pointerType: 'touch', clientX: 120 })
+
+    expect(screen.getByRole('dialog', { name: 'Segunda imagem' })).toBeInTheDocument()
+  })
+
   it('places the post actions inside the article hero before the body', async () => {
     fetchMock.mockResolvedValueOnce(createJsonResponse({ slug: 'post-com-imagem-inline', count: 7 }))
 

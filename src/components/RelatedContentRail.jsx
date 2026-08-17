@@ -19,6 +19,7 @@ export default function RelatedContentRail({ content }) {
   const dragState = useRef(null)
   const dragged = useRef(false)
   const trackRef = useRef(null)
+  const lightboxSwipe = useRef(null)
 
   useEffect(() => {
     if (!selectedImage) return undefined
@@ -54,7 +55,7 @@ export default function RelatedContentRail({ content }) {
   function startDragging(event) {
     if (event.pointerType === 'mouse' && event.button !== 0) return
     const track = trackRef.current ?? event.currentTarget
-    dragState.current = { pointerId: event.pointerId, startX: event.clientX, startScrollLeft: track.scrollLeft }
+    dragState.current = { pointerId: event.pointerId, startX: event.clientX, startScrollLeft: track.scrollLeft, track }
     dragged.current = false
     track.setPointerCapture?.(event.pointerId)
     setIsDragging(true)
@@ -63,18 +64,37 @@ export default function RelatedContentRail({ content }) {
     startDragging(event)
     event.stopPropagation()
   }
+  function startImageDragging(event) {
+    startDragging(event)
+    event.stopPropagation()
+  }
   function dragGallery(event) {
     const state = dragState.current
     if (!state || state.pointerId !== event.pointerId) return
     const distance = event.clientX - state.startX
     if (Math.abs(distance) > 6) dragged.current = true
-    event.currentTarget.scrollLeft = state.startScrollLeft - distance
+    state.track.scrollLeft = state.startScrollLeft - distance
   }
   function stopDragging(event) {
     if (dragState.current?.pointerId !== event.pointerId) return
     event.currentTarget.releasePointerCapture?.(event.pointerId)
     dragState.current = null
     setIsDragging(false)
+  }
+  function startLightboxSwipe(event) {
+    if (event.pointerType === 'mouse' && event.button !== 0) return
+    lightboxSwipe.current = { pointerId: event.pointerId, startX: event.clientX }
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+  }
+  function finishLightboxSwipe(event) {
+    const swipe = lightboxSwipe.current
+    if (!swipe || swipe.pointerId !== event.pointerId) return
+    event.currentTarget.releasePointerCapture?.(event.pointerId)
+    lightboxSwipe.current = null
+    const distance = event.clientX - swipe.startX
+    if (Math.abs(distance) < 40) return
+    if (distance < 0 && selectedImage.index < galleryImages.length - 1) selectGalleryImage(selectedImage.index + 1, 'next')
+    if (distance > 0 && selectedImage.index > 0) selectGalleryImage(selectedImage.index - 1, 'previous')
   }
 
   return (
@@ -93,7 +113,7 @@ export default function RelatedContentRail({ content }) {
               return src ? (
                 <figure className="related-content-rail__image" key={image._key || index}>
                   <img src={src} alt={image.alt || ''} loading="lazy" draggable="false" />
-                  <button className="related-content-rail__image-open" type="button" aria-label={`Ampliar imagem: ${image.alt || 'conteúdo relacionado'}`} onPointerDown={(event) => event.stopPropagation()} onClick={() => selectGalleryImage(index)}>
+                  <button className="related-content-rail__image-open" type="button" aria-label={`Ampliar imagem: ${image.alt || 'conteúdo relacionado'}`} onPointerDown={startImageDragging} onPointerMove={dragGallery} onPointerUp={stopDragging} onPointerCancel={stopDragging} onClick={() => !dragged.current && selectGalleryImage(index)}>
                     <Eye className="related-content-rail__image-open-icon related-content-rail__image-open-icon--eye" aria-hidden="true" size={18} strokeWidth={1.8} /><ZoomIn className="related-content-rail__image-open-icon related-content-rail__image-open-icon--search" aria-hidden="true" size={18} strokeWidth={1.8} />
                   </button>
                 </figure>
@@ -113,7 +133,7 @@ export default function RelatedContentRail({ content }) {
           <button className="related-content-lightbox__close" type="button" aria-label="Fechar imagem ampliada" onClick={() => setSelectedImage(null)}><X aria-hidden="true" size={20} /></button>
           <div className="related-content-lightbox__sequence">
             {selectedImage.index > 0 && <button className="related-content-lightbox__preview" type="button" aria-label="Ver imagem anterior" onMouseDown={(event) => event.stopPropagation()} onClick={() => selectGalleryImage(selectedImage.index - 1, 'previous')}><img src={galleryImages[selectedImage.index - 1].src} alt="" aria-hidden="true" /></button>}
-            <div className="related-content-lightbox__current" onMouseDown={(event) => event.stopPropagation()}><img key={selectedImage.index} className={`related-content-lightbox__image related-content-lightbox__image--${slideDirection}`} src={selectedImage.src} alt={selectedImage.alt} /></div>
+            <div className="related-content-lightbox__current" onMouseDown={(event) => event.stopPropagation()} onPointerDown={startLightboxSwipe} onPointerUp={finishLightboxSwipe} onPointerCancel={finishLightboxSwipe}><img key={selectedImage.index} className={`related-content-lightbox__image related-content-lightbox__image--${slideDirection}`} src={selectedImage.src} alt={selectedImage.alt} /></div>
             {selectedImage.index < galleryImages.length - 1 && <button className="related-content-lightbox__preview" type="button" aria-label="Ver próxima imagem" onMouseDown={(event) => event.stopPropagation()} onClick={() => selectGalleryImage(selectedImage.index + 1, 'next')}><img src={galleryImages[selectedImage.index + 1].src} alt="" aria-hidden="true" /></button>}
           </div>
         </div>, document.body,
