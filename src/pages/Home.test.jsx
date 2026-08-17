@@ -109,6 +109,18 @@ describe('Home', () => {
     expect(homeContent.lastElementChild).toBe(technologySection)
   })
 
+  it('uses a light gray background for the Nossas Soluções section', () => {
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>,
+    )
+
+    const featuresSection = screen.getByRole('heading', { name: 'Nossas Soluções' }).closest('section')
+
+    expect(featuresSection).toHaveClass('bg-[#EFEFF4]')
+  })
+
   it('does not render section eyebrow labels', () => {
     render(
       <MemoryRouter>
@@ -242,6 +254,37 @@ describe('Home', () => {
     expect(caseQuery).toContain('caseDescription')
     expect(caseQuery).toContain('"caseSlug": caseSlug.current')
     expect(caseQuery).toContain('"logoUrl": logo.asset->url')
+  })
+
+  it('uses the published OTM URL for mapped legacy home logos', async () => {
+    const defaultImplementation = sanityFetchMock.getMockImplementation()
+    sanityFetchMock.mockImplementation(async (query) => (
+      query.includes('showOnCases == true')
+        ? []
+        : [
+            {
+              _id: 'legacy-home-logo',
+              name: 'Cliente legado',
+              logoAlt: 'Logo legado',
+              logoUrl: 'https://cdn.sanity.io/images/igy822g7/production/0122eed8d7195fe28022797c883bcb730ac02641-856x314.png?w=1200&auto=format',
+            },
+          ]
+    ))
+
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('img', { name: 'Logo legado' })).toHaveAttribute(
+        'src',
+        'https://www.otm.com.br/wp-content/uploads/2020/10/Screenshot_11.png',
+      )
+    })
+
+    sanityFetchMock.mockImplementation(defaultImplementation)
   })
 
   it('renders the rebuilt hero with centered copy', () => {
