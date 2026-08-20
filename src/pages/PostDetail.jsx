@@ -32,6 +32,48 @@ function getPreviewPost(locationState) {
   }
 }
 
+function InspireTable({ value }) {
+  if (!Array.isArray(value?.rows) || value.rows.length === 0) {
+    return null
+  }
+
+  const [headerRow, ...bodyRows] = value.rows
+
+  return (
+    <div className="my-8 overflow-x-auto rounded-xl border border-[#e2e8f0] bg-white shadow-sm">
+      <table className="w-full min-w-[600px] border-collapse">
+        <thead className="bg-[#f8fafc]">
+          <tr>
+            {(headerRow?.cells ?? []).map((cell, index) => (
+              <th
+                key={cell?._key ?? index}
+                scope="col"
+                className="border-b border-[#e2e8f0] px-5 py-3 text-left text-xs font-semibold uppercase tracking-[0.12em] text-[#5A6572]"
+              >
+                {typeof cell === 'string' ? cell : cell?.text}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {bodyRows.map((row, rowIndex) => (
+            <tr key={row?._key ?? rowIndex} className="transition-colors hover:bg-[#f8fafc]/50">
+              {(row?.cells ?? []).map((cell, cellIndex) => (
+                <td
+                  key={cell?._key ?? cellIndex}
+                  className="border-b border-[#e2e8f0] px-5 py-4 text-[#5A6572]"
+                >
+                  {typeof cell === 'string' ? cell : cell?.text}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 function PostDetail() {
   const { slug } = useParams()
   const location = useLocation()
@@ -162,6 +204,8 @@ function PostDetail() {
           </figure>
         )
       },
+      table: InspireTable,
+      tableBlock: InspireTable,
     },
   }
 

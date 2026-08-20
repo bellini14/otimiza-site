@@ -1,4 +1,5 @@
 import { defineArrayMember, defineField, defineType } from 'sanity'
+import { PortableTextTableInput } from './PortableTextTableInput'
 
 export const postType = defineType({
   name: 'post',
@@ -51,6 +52,9 @@ export const postType = defineType({
       name: 'content',
       title: 'ConteÃºdo',
       type: 'array',
+      components: {
+        input: PortableTextTableInput,
+      },
       of: [
         defineArrayMember({ type: 'block' }),
         defineArrayMember({
@@ -71,6 +75,7 @@ export const postType = defineType({
             }),
           ],
         }),
+        defineArrayMember({ type: 'table' }),
       ],
     }),
     defineField({

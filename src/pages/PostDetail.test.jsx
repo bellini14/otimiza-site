@@ -244,6 +244,28 @@ describe('PostDetail', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/posts/post-com-imagem-inline/likes', { method: 'GET' })
   })
 
+  it('renders Portable Text tables with a responsive wrapper and header cells', async () => {
+    const response = buildPostResponse()
+    response.post.content = [{
+      _type: 'table',
+      _key: 'team-table',
+      rows: [
+        { _key: 'header-row', cells: ['Etapa', 'Responsável'] },
+        { _key: 'body-row', cells: ['Diagnóstico', 'Otimiza'] },
+      ],
+    }]
+    client.fetch.mockResolvedValue(response)
+
+    renderPostDetail()
+
+    const table = await screen.findByRole('table')
+    expect(table.parentElement).toHaveClass('overflow-x-auto')
+    expect(within(table).getByRole('columnheader', { name: 'Etapa' })).toBeInTheDocument()
+    expect(within(table).getByRole('columnheader', { name: 'Responsável' })).toBeInTheDocument()
+    expect(within(table).getByText('Diagnóstico')).toBeInTheDocument()
+    expect(within(table).getByText('Otimiza')).toBeInTheDocument()
+  })
+
   it('renders the related image rail configured in Sanity', async () => {
     const response = buildPostResponse()
     response.post.relatedContent = {

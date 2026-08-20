@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { schemaTypes } from './index'
 
 describe('postType', () => {
-  it('allows inline images inside post content with editorial metadata', () => {
+  it('allows inline images and tables inside post content with editorial metadata', () => {
     const postType = schemaTypes.find((schemaType) => schemaType.name === 'post')
 
     expect(postType).toBeDefined()
@@ -12,8 +12,8 @@ describe('postType', () => {
     const contentField = fieldsByName.content
 
     expect(contentField.type).toBe('array')
-    expect(contentField.of).toHaveLength(2)
-    expect(contentField.of.map((entry) => entry.type)).toEqual(['block', 'image'])
+    expect(contentField.of).toHaveLength(3)
+    expect(contentField.of.map((entry) => entry.type)).toEqual(['block', 'image', 'table'])
 
     const imageField = contentField.of.find((entry) => entry.type === 'image')
 
