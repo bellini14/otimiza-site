@@ -43,6 +43,12 @@ Recuperar somente os metadados sociais que estiveram publicados em 13 de agosto 
   - título: `caseTitle` do Sanity; se ausente, título do case local; se ainda ausente, nome do cliente;
   - descrição: `caseDescription` do Sanity; se ausente, subtítulo do case local; se ainda ausente, texto curto `Case de consultoria da Otimiza para <nome>.`;
   - imagem: hero local específico do case; se ausente, imagem do logo retornada pelo Sanity; se ambas estiverem ausentes, não gerar tags de imagem.
+- Restaurar exatamente o mapa `buildLocalCaseHeroImages` do commit de referência, sem selecionar imagens novas:
+  - `banco-moneo` e `moneo`: `https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1800&q=82`;
+  - `bontempo` e `unicasa`: `https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=1800&q=82`;
+  - `sulmaq`, `neobus`, `zen`, `tabone`, `cinex` e `master-power`: `https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1800&q=82`;
+  - `unimed-vtrp` e `hospital-bruno-born`: `https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=1800&q=82`;
+  - `santa-clara`: `https://images.unsplash.com/photo-1506368249639-73a05d6f6488?auto=format&fit=crop&w=1800&q=82`.
 - Gerar título, descrição, canonical, `og:type=article`, imagem específica e tags Twitter para cada case.
 - Não modificar as rotas React ou o conteúdo visual dos cases.
 
