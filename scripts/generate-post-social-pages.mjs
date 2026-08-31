@@ -4,6 +4,7 @@ import { resolveLegacyImageUrl } from '../src/lib/legacyImageUrl.js'
 export const DESCRIPTION = 'Confira a publicação do Inspire.'
 export const INSPIRE_POSTS_QUERY = `*[_type == "post"] | order(publishedAt desc) {
   "title": title,
+  description,
   "slug": slug.current,
   publishedAt,
   "mainImageUrl": mainImage.asset->url,
@@ -138,18 +139,27 @@ function getPostPath(post) {
 
 function replaceDocumentMetadata(baseHtml, metadata) {
   const titleTag = `<title>${escapeHtml(metadata.title)}</title>`
-  const descriptionTag = `<meta name="description" content="${escapeHtml(DESCRIPTION)}" />`
+  const descriptionTag = `<meta name="description" content="${escapeHtml(metadata.description)}" />`
+  const imageTags = metadata.imageUrl ? [
+    `<meta property="og:image" content="${escapeHtml(metadata.imageUrl)}" />`,
+    '<meta property="og:image:type" content="image/jpeg" />',
+    '<meta property="og:image:width" content="1200" />',
+    '<meta property="og:image:height" content="630" />',
+  ] : []
+  const twitterImageTags = metadata.imageUrl
+    ? [`<meta name="twitter:image" content="${escapeHtml(metadata.imageUrl)}" />`]
+    : []
   const socialTags = [
     `<link rel="canonical" href="${escapeHtml(metadata.url)}" />`,
     `<meta property="og:title" content="${escapeHtml(metadata.title)}" />`,
-    `<meta property="og:description" content="${escapeHtml(DESCRIPTION)}" />`,
+    `<meta property="og:description" content="${escapeHtml(metadata.description)}" />`,
     '<meta property="og:type" content="article" />',
     `<meta property="og:url" content="${escapeHtml(metadata.url)}" />`,
-    `<meta property="og:image" content="${escapeHtml(metadata.imageUrl)}" />`,
-    '<meta name="twitter:card" content="summary_large_image" />',
+    ...imageTags,
+    `<meta name="twitter:card" content="${metadata.imageUrl ? 'summary_large_image' : 'summary'}" />`,
     `<meta name="twitter:title" content="${escapeHtml(metadata.title)}" />`,
-    `<meta name="twitter:description" content="${escapeHtml(DESCRIPTION)}" />`,
-    `<meta name="twitter:image" content="${escapeHtml(metadata.imageUrl)}" />`,
+    `<meta name="twitter:description" content="${escapeHtml(metadata.description)}" />`,
+    ...twitterImageTags,
   ].join('\n  ')
 
   const withTitle = baseHtml.includes('</title>')
@@ -162,16 +172,29 @@ function replaceDocumentMetadata(baseHtml, metadata) {
   return withDescription.replace(/<\/head>/i, `  ${socialTags}\n  </head>`)
 }
 
+function getShareImageUrl(imageUrl) {
+  if (!imageUrl) return null
+  const resolved = new URL(resolveLegacyImageUrl(imageUrl))
+  if (resolved.hostname === 'cdn.sanity.io') {
+    resolved.searchParams.set('w', '1200')
+    resolved.searchParams.set('h', '630')
+    resolved.searchParams.set('fit', 'crop')
+    resolved.searchParams.set('fm', 'jpg')
+    resolved.searchParams.set('q', '82')
+  }
+  return resolved.toString()
+}
+
 export function renderPostSocialPage({ post, siteOrigin, fallbackImageUrl, baseHtml } = {}) {
   const postPath = getPostPath(post)
   if (!postPath) throw new Error('A valid dated Inspire post is required to render a social page.')
-  if (!fallbackImageUrl) throw new Error('A fallback social image URL is required.')
 
   const title = `${post.title || 'Inspire'} | Otimiza`
   const metadata = {
     title,
+    description: post.description || DESCRIPTION,
     url: new URL(postPath, `${siteOrigin}/`).toString(),
-    imageUrl: resolveLegacyImageUrl(post.mainImageUrl || post.contentImageUrl || fallbackImageUrl),
+    imageUrl: getShareImageUrl(post.mainImageUrl || post.contentImageUrl),
   }
   const documentHtml = baseHtml || '<!doctype html><html lang="pt-BR"><head></head><body><div id="root"></div></body></html>'
 
