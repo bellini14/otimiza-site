@@ -3,9 +3,9 @@ import { execFileSync } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
-  DESCRIPTION,
   generatePostSocialPages,
   getPostOutputPath,
+  INSPIRE_POSTS_QUERY,
   renderPostSocialPage,
   resolvePublicSiteOrigin,
 } from './generate-post-social-pages.mjs'
@@ -15,6 +15,7 @@ const fallbackImageUrl = `${siteOrigin}/assets/hero-bw.jpg`
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url))
 const post = {
   title: 'Um <post> & "especial"',
+  description: 'Descrição específica do artigo.',
   slug: 'exemplo',
   publishedAt: '2026-07-28T12:00:00Z',
   contentImageUrl: 'https://cdn.sanity.io/images/example/post.jpg?x=1&y=2',
@@ -48,24 +49,30 @@ describe('post social page generation', () => {
 
     expect(html).toContain('<title>Um &lt;post&gt; &amp; &quot;especial&quot; | Otimiza</title>')
     expect(html).toContain('<meta property="og:title" content="Um &lt;post&gt; &amp; &quot;especial&quot; | Otimiza" />')
-    expect(html).toContain(`<meta name="description" content="${DESCRIPTION}" />`)
-    expect(html).toContain(`<meta property="og:description" content="${DESCRIPTION}" />`)
+    expect(html).toContain('<meta name="description" content="Descrição específica do artigo." />')
+    expect(html).toContain('<meta property="og:description" content="Descrição específica do artigo." />')
     expect(html).toContain('<meta property="og:type" content="article" />')
     expect(html).toContain('<link rel="canonical" href="https://www.otm.com.br/2026/07/28/exemplo" />')
     expect(html).toContain('<meta property="og:url" content="https://www.otm.com.br/2026/07/28/exemplo" />')
-    expect(html).toContain('https://cdn.sanity.io/images/example/post.jpg?x=1&amp;y=2')
+    expect(html).toContain('https://cdn.sanity.io/images/example/post.jpg?x=1&amp;y=2&amp;w=1200&amp;h=630&amp;fit=crop&amp;fm=jpg&amp;q=82')
+    expect(html).toContain('<meta property="og:image:type" content="image/jpeg" />')
+    expect(html).toContain('<meta property="og:image:width" content="1200" />')
+    expect(html).toContain('<meta property="og:image:height" content="630" />')
     expect(html).toContain('<meta name="twitter:card" content="summary_large_image" />')
+    expect(html).toContain('<meta name="twitter:image"')
   })
 
-  it('uses the fallback image when a post has no featured image', () => {
+  it('omits image metadata when a post has no featured image', () => {
     const html = renderPostSocialPage({
       post: { ...post, contentImageUrl: null },
       siteOrigin,
       fallbackImageUrl,
     })
 
-    expect(html).toContain(`<meta property="og:image" content="${fallbackImageUrl}" />`)
-    expect(html).toContain(`<meta name="twitter:image" content="${fallbackImageUrl}" />`)
+    expect(html).not.toContain('<meta property="og:image"')
+    expect(html).not.toContain('<meta property="og:image:type"')
+    expect(html).not.toContain('<meta name="twitter:image"')
+    expect(html).toContain('<meta name="twitter:card" content="summary" />')
   })
 
   it('uses the Sanity main image before an inline content image', () => {
@@ -79,8 +86,20 @@ describe('post social page generation', () => {
       fallbackImageUrl,
     })
 
-    expect(html).toContain('https://cdn.sanity.io/images/example/featured-image.png')
+    expect(html).toContain('https://cdn.sanity.io/images/example/featured-image.png?w=1200&amp;h=630&amp;fit=crop&amp;fm=jpg&amp;q=82')
     expect(html).not.toContain('https://cdn.sanity.io/images/example/content-image.jpg')
+  })
+
+  it('rejects malformed featured image URLs', () => {
+    expect(() => renderPostSocialPage({
+      post: { ...post, mainImageUrl: 'not a valid URL' },
+      siteOrigin,
+      fallbackImageUrl,
+    })).toThrow('Invalid URL')
+  })
+
+  it('requests the post description from Sanity', () => {
+    expect(INSPIRE_POSTS_QUERY).toContain('description')
   })
 
   it('derives an output path only from valid dated post values', () => {
