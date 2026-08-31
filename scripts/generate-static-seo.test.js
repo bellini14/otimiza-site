@@ -26,6 +26,9 @@ function createStaticFixture({ includeHeroImage = true, includeMemorialImage = t
   if (includeHeroImage) {
     writeFileSync(join(directory, 'assets', 'hero-bw-test.jpg'), 'default-social-image')
   }
+  writeFileSync(join(directory, 'assets', 'hero quem somos-test.jpg'), 'about-social-image')
+  writeFileSync(join(directory, 'assets', 'shutterstock_2714404709-test.jpg'), 'approach-social-image')
+  writeFileSync(join(directory, 'inspire-newsletter-card.png'), 'newsletter-social-image')
   if (includeMemorialImage) {
     writeFileSync(
       join(directory, 'media', 'silvana-aniversario-05-08.png'),
@@ -58,12 +61,14 @@ describe('static SEO route generation', () => {
           mainImageUrl: null,
           contentImageUrl: null,
         }],
+        fetchCases: async () => [],
       })
 
       const html = readFileSync(join(directory, '2026', '07', '28', 'exemplo', 'index.html'), 'utf8')
-      expect(html).toContain('<meta property="og:image" content="https://cdn.sanity.io/images/example/main.jpg" />')
+      expect(html).toContain('<meta property="og:image" content="https://cdn.sanity.io/images/example/main.jpg?w=1200&amp;h=630&amp;fit=crop&amp;fm=jpg&amp;q=82" />')
       const fallbackHtml = readFileSync(join(directory, '2026', '07', '28', 'sem-imagem', 'index.html'), 'utf8')
-      expect(fallbackHtml).toContain('<meta property="og:image" content="https://www.otimiza.test/assets/hero-bw-test.jpg" />')
+      expect(fallbackHtml).not.toContain('<meta property="og:image"')
+      expect(fallbackHtml).toContain('<meta name="twitter:card" content="summary" />')
     } finally {
       rmSync(directory, { recursive: true, force: true })
     }
@@ -74,7 +79,7 @@ describe('static SEO route generation', () => {
     try {
       await expect(generateStaticSeoPages(directory, {
         VITE_SITE_URL: 'https://www.otimiza.test',
-      })).rejects.toThrow('Missing Vite hero social image')
+      }, { fetchPosts: async () => [], fetchCases: async () => [] })).rejects.toThrow('Missing Vite hero social image')
     } finally {
       rmSync(directory, { recursive: true, force: true })
     }
@@ -105,10 +110,13 @@ describe('static SEO route generation', () => {
     expect(html).not.toContain('<div id="root"></div>')
     expect(html).toContain('<main data-seo-fallback="true" style="display:none">')
     expect(html).toContain('<link rel="canonical" href="https://www.otimiza.test/quem-somos" />')
-    expect(html.match(/<meta property="og:/g)).toHaveLength(6)
+    expect(html.match(/<meta property="og:/g)).toHaveLength(9)
     expect(html).toContain('<meta property="og:title" content="Quem somos | Otimiza" />')
     expect(html).toContain('<meta property="og:url" content="https://www.otimiza.test/quem-somos" />')
     expect(html).toContain('<meta property="og:image" content="https://www.otimiza.test/assets/social.jpg" />')
+    expect(html).toContain('<meta property="og:image:type" content="image/jpeg" />')
+    expect(html).toContain('<meta property="og:image:width" content="1200" />')
+    expect(html).toContain('<meta property="og:image:height" content="630" />')
     expect(html.match(/<meta name="twitter:/g)).toHaveLength(4)
     expect(html).toContain('<meta name="twitter:card" content="summary_large_image" />')
     expect(html).toContain('<meta name="twitter:title" content="Quem somos | Otimiza" />')
@@ -153,6 +161,7 @@ describe('static SEO route generation', () => {
     try {
       await generateStaticSeoPages(directory, { VITE_SITE_URL: 'https://www.otimiza.test' }, {
         fetchPosts: async () => [],
+        fetchCases: async () => [],
       })
       const html = readRouteHtml(directory, '/silvana-bettiol')
       expect(html).toContain('<title>05/08 é aniversário da Silvana</title>')
@@ -176,7 +185,7 @@ describe('static SEO route generation', () => {
     try {
       await expect(generateStaticSeoPages(directory, {
         VITE_SITE_URL: 'https://www.otimiza.test',
-      }, { fetchPosts: async () => [] })).rejects.toThrow('Missing memorial social image')
+      }, { fetchPosts: async () => [], fetchCases: async () => [] })).rejects.toThrow('Missing memorial social image')
     } finally {
       rmSync(directory, { recursive: true, force: true })
     }
@@ -188,6 +197,7 @@ describe('static SEO route generation', () => {
     try {
       await generateStaticSeoPages(directory, { VITE_SITE_URL: origin }, {
         fetchPosts: async () => [],
+        fetchCases: async () => [],
       })
 
       const html = readRouteHtml(directory, '/inspire/newsletter')
@@ -200,6 +210,9 @@ describe('static SEO route generation', () => {
       expect(html).toContain(`<meta property="og:title" content="${title}" />`)
       expect(html).toContain(`<meta property="og:description" content="${description}" />`)
       expect(html).toContain(`<meta property="og:image" content="${imageUrl}" />`)
+      expect(html).toContain('<meta property="og:image:type" content="image/png" />')
+      expect(html).toContain('<meta property="og:image:width" content="1200" />')
+      expect(html).toContain('<meta property="og:image:height" content="630" />')
       expect(html).toContain(`<meta name="twitter:title" content="${title}" />`)
       expect(html).toContain(`<meta name="twitter:description" content="${description}" />`)
       expect(html).toContain(`<meta name="twitter:image" content="${imageUrl}" />`)
@@ -211,10 +224,15 @@ describe('static SEO route generation', () => {
   it('preserves complete metadata for every preexisting static route', async () => {
     const directory = createStaticFixture()
     const origin = 'https://www.otimiza.test'
-    const defaultImage = `${origin}/assets/hero-bw-test.jpg`
+    const imageByRoute = {
+      '/quem-somos': `${origin}/assets/hero%20quem%20somos-test.jpg`,
+      '/nossa-abordagem': `${origin}/assets/shutterstock_2714404709-test.jpg`,
+      '/inspire': `${origin}/inspire-newsletter-card.png`,
+    }
     try {
       await generateStaticSeoPages(directory, { VITE_SITE_URL: origin }, {
         fetchPosts: async () => [],
+        fetchCases: async () => [],
       })
       Object.entries(staticPageMetadata).filter(([route]) => route !== '/inspire/newsletter').forEach(([route, metadata]) => {
         const html = readRouteHtml(directory, route)
@@ -225,12 +243,35 @@ describe('static SEO route generation', () => {
         expect(html).toContain(`<meta property="og:title" content="${metadata.title}" />`)
         expect(html).toContain(`<meta property="og:description" content="${metadata.description}" />`)
         expect(html).toContain(`<meta property="og:url" content="${canonical}" />`)
-        expect(html).toContain(`<meta property="og:image" content="${defaultImage}" />`)
+        const expectedImage = imageByRoute[route] || `${origin}/assets/hero-bw-test.jpg`
+        expect(html).toContain(`<meta property="og:image" content="${expectedImage}" />`)
+        expect(html).toContain(`<meta property="og:image:type" content="${expectedImage.endsWith('.png') ? 'image/png' : 'image/jpeg'}" />`)
+        expect(html).toContain('<meta property="og:image:width" content="1200" />')
+        expect(html).toContain('<meta property="og:image:height" content="630" />')
         expect(html).toContain(`<meta name="twitter:title" content="${metadata.title}" />`)
         expect(html).toContain(`<meta name="twitter:description" content="${metadata.description}" />`)
-        expect(html).toContain(`<meta name="twitter:image" content="${defaultImage}" />`)
+        expect(html).toContain(`<meta name="twitter:image" content="${expectedImage}" />`)
         expect(html).not.toContain('<meta name="robots" content="noindex, nofollow" />')
       })
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
+  })
+
+  it('generates case pages with local copy and the recovered case hero', async () => {
+    const directory = createStaticFixture()
+    const origin = 'https://www.otimiza.test'
+    try {
+      await generateStaticSeoPages(directory, { VITE_SITE_URL: origin }, {
+        fetchPosts: async () => [],
+        fetchCases: async () => [{ name: 'Banco Moneo S.A.' }],
+      })
+
+      const html = readFileSync(join(directory, 'cases', 'banco-moneo', 'index.html'), 'utf8')
+      expect(html).toContain('<title>Case - Banco Moneo | Otimiza</title>')
+      expect(html).toContain('<meta name="description" content="Transformação que dá certo" />')
+      expect(html).toContain(`<link rel="canonical" href="${origin}/cases/banco-moneo" />`)
+      expect(html).toContain('https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&amp;fit=crop&amp;w=1800&amp;q=82')
     } finally {
       rmSync(directory, { recursive: true, force: true })
     }
