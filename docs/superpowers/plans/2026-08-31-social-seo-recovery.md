@@ -420,16 +420,25 @@ Fornecer a URL de preview ao usuário para teste opcional no WhatsApp, mas não 
 
 - [ ] **Step 3: Publicar via PR protegido**
 
-```bash
+```powershell
 git fetch origin main
+$productionBase = (git rev-parse origin/main).Trim()
+if ($productionBase -ne '6f2a4d73a8940b964908eed97cc2eb99410b9623') {
+  throw "origin/main avançou para $productionBase; interrompa e refaça a auditoria de preservação antes de publicar."
+}
 git merge-base --is-ancestor origin/main HEAD
 git push -u origin codex/social-seo-recovery-production
 gh pr create --base main --head codex/social-seo-recovery-production --title "fix: recover social SEO previews" --body "## Resumo`n- recupera metadados sociais específicos de posts, páginas e cases`n- preserva a interface e o idioma pt-BR já publicados`n- limita o código de produção aos três geradores estáticos autorizados`n`n## Verificação`n- testes focados de SEO e idioma`n- lint dos arquivos alterados`n- build com VITE_SITE_URL=https://www.otm.com.br`n- auditoria de diff contra origin/main"
 $prNumber = gh pr view --json number --jq .number
 gh pr checks $prNumber --watch --interval 10
+gh pr merge $prNumber --rebase --delete-branch
+$mergeState = gh pr view $prNumber --json state --jq .state
+if ($mergeState -ne 'MERGED') {
+  throw "O PR não foi integrado; não prossiga para a verificação de produção."
+}
 ```
 
-Expected: `Verify production safety` passa. Integrar por rebase somente se `origin/main` continuar compatível e o diff continuar restrito.
+Expected: `origin/main` ainda é exatamente `6f2a4d73a8940b964908eed97cc2eb99410b9623`, `Verify production safety` passa e o PR termina no estado `MERGED` por rebase. Qualquer diferença na base interrompe a publicação e exige nova auditoria completa do diff.
 
 - [ ] **Step 4: Aguardar deployment de produção e verificar o domínio**
 
