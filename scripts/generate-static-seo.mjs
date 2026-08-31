@@ -4,6 +4,8 @@ import { pathToFileURL } from 'node:url'
 import { buildCanonicalUrl, staticPageMetadata } from '../src/seo/siteMetadata.js'
 import { memorialMetadata } from '../src/seo/memorialMetadata.js'
 import { buildStructuredData } from '../src/seo/structuredData.js'
+import { caseStudies, resolveCaseStudySlug } from '../src/data/caseStudies.js'
+import { generateCaseSocialPages } from './generate-case-social-pages.mjs'
 import { generatePostSocialPages } from './generate-post-social-pages.mjs'
 
 const routeHeadings = {
@@ -154,7 +156,7 @@ const routeLinks = {
 }
 
 function escapeHtml(value) {
-  return value
+  return String(value ?? '')
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
@@ -172,6 +174,7 @@ export function resolveSiteOrigin(environment = process.env) {
 
 export function renderStaticRouteHtml(baseHtml, page) {
   const socialPreview = page.socialPreview || page
+  const imageMetadata = getSocialImageMetadata(socialPreview.imageUrl)
   const sections = (page.sections || []).map((section) => {
     const children = (section.children || [])
       .map((heading) => `<h3>${escapeHtml(heading)}</h3>`)
@@ -186,16 +189,21 @@ export function renderStaticRouteHtml(baseHtml, page) {
     ['og:description', socialPreview.description],
     ['og:type', 'website'],
     ['og:url', page.canonicalUrl],
-    ['og:image', socialPreview.imageUrl],
+    ...(socialPreview.imageUrl ? [
+      ['og:image', socialPreview.imageUrl],
+      ['og:image:type', imageMetadata.type],
+      ['og:image:width', imageMetadata.width],
+      ['og:image:height', imageMetadata.height],
+    ] : []),
     ['og:site_name', 'Otimiza'],
   ].map(([property, content]) => (
     `<meta property="${property}" content="${escapeHtml(content)}" />`
   )).join('\n  ')
   const twitterCards = [
-    ['twitter:card', 'summary_large_image'],
+    ['twitter:card', socialPreview.imageUrl ? 'summary_large_image' : 'summary'],
     ['twitter:title', socialPreview.title],
     ['twitter:description', socialPreview.description],
-    ['twitter:image', socialPreview.imageUrl],
+    ...(socialPreview.imageUrl ? [['twitter:image', socialPreview.imageUrl]] : []),
   ].map(([name, content]) => (
     `<meta name="${name}" content="${escapeHtml(content)}" />`
   )).join('\n  ')
@@ -240,7 +248,7 @@ export function getStaticRouteWordCount(route) {
 export async function generateStaticSeoPages(
   distDirectory,
   environment = process.env,
-  { fetchPosts } = {},
+  { fetchPosts, fetchCases } = {},
 ) {
   const indexPath = path.join(distDirectory, 'index.html')
   const baseHtml = fs.readFileSync(indexPath, 'utf8')
@@ -252,6 +260,11 @@ export async function generateStaticSeoPages(
     throw new Error(`Missing Vite hero social image in ${path.join(distDirectory, 'assets')}`)
   }
   const imageUrl = new URL(`/assets/${socialImageFile}`, siteOrigin).toString()
+  const socialImageByRoute = {
+    '/': imageUrl,
+    '/quem-somos': getAssetUrl('hero quem somos', siteOrigin, distDirectory),
+    '/nossa-abordagem': getAssetUrl('shutterstock_2714404709', siteOrigin, distDirectory),
+  }
   const newsletterSocialPreview = {
     title: 'Assine o Inspire',
     description: 'Receba novas leituras, repertorio de gestao e selecoes editoriais da Otimiza em uma curadoria direta no seu inbox.',
@@ -265,8 +278,10 @@ export async function generateStaticSeoPages(
       h1: routeHeadings[route],
       sections: routeSections[route],
       canonicalUrl,
-      imageUrl,
-      ...(route === '/inspire/newsletter' ? { socialPreview: newsletterSocialPreview } : {}),
+      imageUrl: socialImageByRoute[route] || imageUrl,
+      ...(route === '/inspire'
+        ? { socialPreview: { ...metadata, imageUrl: newsletterSocialPreview.imageUrl } }
+        : route === '/inspire/newsletter' ? { socialPreview: newsletterSocialPreview } : {}),
       links: routeLinks[route],
     }
     const html = renderStaticRouteHtml(baseHtml, {
@@ -311,6 +326,57 @@ export async function generateStaticSeoPages(
       fs.writeFileSync(absoluteOutputPath, html)
     },
   })
+  await generateCaseSocialPages({
+    siteOrigin,
+    baseHtml,
+    fetchCases,
+    localCases: caseStudies,
+    resolveLocalSlug: resolveCaseStudySlug,
+    localHeroImages: buildLocalCaseHeroImages(),
+    writeFile: async (outputPath, html) => {
+      const absoluteOutputPath = path.join(distDirectory, outputPath)
+      fs.mkdirSync(path.dirname(absoluteOutputPath), { recursive: true })
+      fs.writeFileSync(absoluteOutputPath, html)
+    },
+  })
+}
+
+function getSocialImageMetadata(imageUrl) {
+  return String(imageUrl).toLowerCase().includes('.png')
+    ? { type: 'image/png', width: '1200', height: '630' }
+    : { type: 'image/jpeg', width: '1200', height: '630' }
+}
+
+function buildLocalCaseHeroImages() {
+  const bySector = {
+    bancos: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1800&q=82',
+    moveis: 'https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=1800&q=82',
+    industria: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1800&q=82',
+    saude: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=1800&q=82',
+    alimentos: 'https://images.unsplash.com/photo-1506368249639-73a05d6f6488?auto=format&fit=crop&w=1800&q=82',
+  }
+  return {
+    'banco-moneo': bySector.bancos,
+    moneo: bySector.bancos,
+    bontempo: bySector.moveis,
+    unicasa: bySector.moveis,
+    sulmaq: bySector.industria,
+    neobus: bySector.industria,
+    zen: bySector.industria,
+    tabone: bySector.industria,
+    cinex: bySector.industria,
+    'master-power': bySector.industria,
+    'unimed-vtrp': bySector.saude,
+    'hospital-bruno-born': bySector.saude,
+    'santa-clara': bySector.alimentos,
+  }
+}
+
+function getAssetUrl(prefix, siteOrigin, distDirectory) {
+  const filename = fs.readdirSync(path.join(distDirectory, 'assets'))
+    .sort()
+    .find((file) => file.startsWith(`${prefix}-`))
+  return filename ? new URL(`/assets/${filename}`, siteOrigin).toString() : undefined
 }
 
 const invokedFile = process.argv[1] ? pathToFileURL(path.resolve(process.argv[1])).href : ''
