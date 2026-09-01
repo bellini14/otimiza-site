@@ -244,6 +244,39 @@ describe('PostDetail', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/posts/post-com-imagem-inline/likes', { method: 'GET' })
   })
 
+  it('renders the main image before the article text when the body has no inline image', async () => {
+    const response = buildPostResponse()
+    response.post.content = response.post.content.filter((block) => block._type !== 'image')
+    response.post.mainImage = {
+      assetUrl: 'https://cdn.sanity.io/images/demo/article-cover.jpg',
+      asset: { _ref: 'image-article-cover-1200x800-jpg' },
+    }
+    client.fetch.mockResolvedValue(response)
+
+    renderPostDetail()
+
+    const cover = await screen.findByRole('img', { name: 'Post com imagem inline' })
+    const articleBody = document.querySelector('.post-detail__article-body')
+
+    expect(cover).toHaveAttribute('src', 'https://cdn.sanity.io/images/demo/article-cover.jpg')
+    expect(articleBody?.firstElementChild).toContainElement(cover)
+    expect(articleBody?.firstElementChild?.nextElementSibling).toHaveTextContent('Paragrafo de abertura.')
+  })
+
+  it('does not repeat the main image when the article already has an inline image', async () => {
+    const response = buildPostResponse()
+    response.post.mainImage = {
+      assetUrl: 'https://cdn.sanity.io/images/demo/article-cover.jpg',
+      asset: { _ref: 'image-article-cover-1200x800-jpg' },
+    }
+    client.fetch.mockResolvedValue(response)
+
+    renderPostDetail()
+
+    expect(await screen.findByRole('img', { name: 'Equipe em workshop' })).toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: 'Post com imagem inline' })).not.toBeInTheDocument()
+  })
+
   it('renders Portable Text tables with a responsive wrapper and header cells', async () => {
     const response = buildPostResponse()
     response.post.content = [{

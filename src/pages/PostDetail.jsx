@@ -208,6 +208,7 @@ function PostDetail() {
       tableBlock: InspireTable,
     },
   }
+  const hasInlineImage = (post?.content ?? []).some((block) => block?._type === 'image' && block?.asset)
 
   return (
     <>
@@ -335,6 +336,18 @@ function PostDetail() {
               [&_li]:my-2 [&_li]:text-[1.25rem] [&_li]:leading-[1.85] [&_li]:text-[#5A6572] md:[&_li]:text-[1.375rem]
               [&_blockquote]:my-10 [&_blockquote]:border-l-4 [&_blockquote]:border-[#d8dde3] [&_blockquote]:bg-[#f9f9f9] [&_blockquote]:px-8 [&_blockquote]:py-3 [&_blockquote]:text-xl [&_blockquote]:italic [&_blockquote]:text-[#5A6572] md:[&_blockquote]:text-2xl"
             >
+              {post.mainImage && !hasInlineImage && (
+                <figure className="my-10 overflow-hidden rounded-2xl">
+                  <img
+                    src={resolveLegacyImageUrl(urlFor(post.mainImage).width(1200).url())}
+                    alt={post.title}
+                    className="w-full rounded-2xl object-cover"
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="sync"
+                  />
+                </figure>
+              )}
               <PortableText value={post.content ?? []} components={portableTextComponents} />
             </div>
 
