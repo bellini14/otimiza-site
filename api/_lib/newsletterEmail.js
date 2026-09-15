@@ -112,11 +112,12 @@ async function defaultCreateTransport(options) {
 
 export async function sendNewsletterEmail(subscriber, { createTransport, env = globalThis.process?.env || {} } = {}) {
   const { host, port, user, pass, sender, recipient, logoUrl } = readSmtpConfiguration(env)
-  const name = subscriber.name
+  const name = subscriber.name || 'Não informado'
   const email = subscriber.email
   const escapedName = escapeHtml(name)
   const escapedEmail = escapeHtml(email)
-  const text = ['Novo Assinante!', '', `Nome: ${name}`, `E-mail: ${email}`].join('\n')
+  const popup = subscriber.source === 'inspire-popup'
+  const text = ['Novo Assinante!', '', `Nome: ${name}`, `E-mail: ${email}`, ...(popup ? ['Origem: inspire-popup'] : [])].join('\n')
   const html = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;background:#eef0f2"><tr><td align="center" style="padding:42px 18px"><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;border-collapse:collapse;background:#ffffff"><tr><td align="center" style="padding:34px 48px 31px;border-bottom:1px solid #e6e9ed"><img src="${logoUrl}" alt="Inspire" width="184" style="display:block;border:0;max-width:100%;height:auto"></td></tr><tr><td style="padding:46px 48px 42px;font-family:Arial,Helvetica,sans-serif;color:#444b55"><p style="margin:0 0 16px;color:#6d7787;font-size:11px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase">Newsletter Inspire</p><h1 style="margin:0 0 14px;color:#444b55;font-size:32px;line-height:1.14;font-weight:500">Novo Assinante!</h1><p style="margin:0 0 30px;color:#626d7b;font-size:16px;line-height:1.6">Uma nova pessoa acabou de assinar a newsletter Inspire. Confira os dados abaixo.</p><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;border:1px solid #dfe4e9"><tr><td width="36%" style="padding:14px 18px;background:#f4f6f8;border-bottom:1px solid #dfe4e9;color:#6b7583;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase">Nome</td><td style="padding:14px 18px;border-bottom:1px solid #dfe4e9;color:#444b55;font-size:15px;line-height:1.4">${escapedName}</td></tr><tr><td width="36%" style="padding:14px 18px;background:#f4f6f8;color:#6b7583;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase">E-mail</td><td style="padding:14px 18px;color:#444b55;font-size:15px;line-height:1.4">${escapedEmail}</td></tr></table><p style="margin:30px 0 0;color:#7b8490;font-size:13px;line-height:1.55">Este aviso é enviado automaticamente pelo site da Otimiza após uma nova inscrição consentida.</p></td></tr><tr><td align="center" style="padding:22px 48px;background:#444b55;color:#dce1e7;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5"><strong style="color:#ffffff;font-weight:600">Inspire</strong> · uma publicação da Otimiza Consultoria em Administração</td></tr></table></td></tr></table>`
 
   const makeTransport = createTransport || defaultCreateTransport
@@ -131,9 +132,9 @@ export async function sendNewsletterEmail(subscriber, { createTransport, env = g
       from: sender,
       to: recipient,
       replyTo: email,
-      subject: `Novo assinante do Inspire — ${name}`,
+      subject: popup ? 'Novo assinante do Inspire — inspire-popup' : `Novo assinante do Inspire — ${name}`,
       text,
-      html,
+      html: popup ? html.replace('Newsletter Inspire</p>', 'Newsletter Inspire · Origem: inspire-popup</p>') : html,
     })
   } catch {
     throw new NewsletterEmailProviderError()

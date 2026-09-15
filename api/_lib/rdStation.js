@@ -4,6 +4,7 @@ export const NEWSLETTER_SOURCES = new Set([
   'otimiza-contact-page-newsletter',
   'otimiza-inspire-article-contact-newsletter',
   'otimiza-inspire-newsroom-contact-newsletter',
+  'inspire-popup',
 ])
 
 export class RDStationConfigurationError extends Error {
@@ -33,6 +34,7 @@ export async function sendNewsletterConversion(
   const payload = {
     conversion_identifier: source,
     email,
+    ...(source === 'inspire-popup' ? { tags: ['inspire-popup'] } : {}),
     ...(name?.trim() ? { name: name.trim() } : {}),
     legal_bases: [{ category: 'communications', type: 'consent', status: 'granted' }],
   }

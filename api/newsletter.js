@@ -13,6 +13,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const NEWSLETTER_SIGNUP_SOURCES = new Set([
   'otimiza-inspire-newsletter-page',
   'otimiza-inspire-sidebar',
+  'inspire-popup',
 ])
 
 function normalize(body) {
@@ -32,12 +33,12 @@ export function createNewsletterHandler({ sendConversion = sendNewsletterConvers
   let data
   try { data = normalize(req.body) } catch { return res.status(400).json({ error: 'Dados inválidos.' }) }
   if (data.company) return res.status(200).json({ message: 'Inscrição recebida.' })
-  if (!data.name || data.name.length > 80 || data.email.length > 254 || !EMAIL_PATTERN.test(data.email) || data.consent !== true || !NEWSLETTER_SIGNUP_SOURCES.has(data.source)) {
+  if ((!data.name && data.source !== 'inspire-popup') || data.name.length > 80 || data.email.length > 254 || !EMAIL_PATTERN.test(data.email) || data.consent !== true || !NEWSLETTER_SIGNUP_SOURCES.has(data.source)) {
     return res.status(400).json({ error: 'Revise os campos e confirme o consentimento.' })
   }
   try {
     await sendConversion({ name: data.name, email: data.email, source: data.source })
-    await sendNotification({ name: data.name, email: data.email })
+    await sendNotification({ name: data.name, email: data.email, ...(data.source === 'inspire-popup' ? { source: data.source } : {}) })
     return res.status(200).json({ message: 'Inscrição confirmada. Bem-vindo ao Inspire.' })
   } catch (error) {
     if (error instanceof RDStationConfigurationError || error instanceof NewsletterEmailConfigurationError || error?.name === 'RDStationConfigurationError' || error?.name === 'NewsletterEmailConfigurationError') return res.status(503).json({ error: 'Serviço de newsletter ainda não configurado.' })

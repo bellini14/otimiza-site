@@ -18,6 +18,19 @@ beforeEach(() => {
 })
 
 describe('newsletter API', () => {
+  it('accepts an email-only popup signup and identifies both destinations', async () => {
+    const res = response()
+    await handler({ method: 'POST', body: { email: ' Reader@Example.com ', consent: true, source: 'inspire-popup' } }, res)
+    expect(res.statusCode).toBe(200)
+    expect(conversionMock).toHaveBeenCalledWith({ name: '', email: 'reader@example.com', source: 'inspire-popup' })
+    expect(notificationMock).toHaveBeenCalledWith({ name: '', email: 'reader@example.com', source: 'inspire-popup' })
+  })
+  it('still requires consent for popup signups', async () => {
+    const res = response()
+    await handler({ method: 'POST', body: { email: 'reader@example.com', source: 'inspire-popup' } }, res)
+    expect(res.statusCode).toBe(400)
+    expect(conversionMock).not.toHaveBeenCalled()
+  })
   it('allows only POST', async () => { const res = response(); await handler({ method: 'GET' }, res); expect(res.statusCode).toBe(405); expect(res.headers.Allow).toBe('POST') })
   it.each([
     { ...valid, email: 'bad' },
