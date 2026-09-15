@@ -11,6 +11,7 @@
   max-width: calc(100vw - 120px);
   max-height: calc(100dvh - 56px);
   overflow: auto;
+  overscroll-behavior: contain;
   border: 1px solid rgb(208 213 224 / 70%);
   border-radius: 20px;
   background: rgb(238 241 243 / 65%);

@@ -104,7 +104,7 @@ export default function InspirePopup() {
   if (!visible) return null
 
   return (
-    <aside className="inspire-popup" aria-labelledby={titleId}>
+    <aside className="inspire-popup" aria-labelledby={titleId} data-lenis-prevent>
       <button className="inspire-popup__close" type="button" aria-label="Fechar convite do Inspire" onClick={dismiss}>
         <X size={18} aria-hidden="true" />
       </button>
