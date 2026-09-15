@@ -3,6 +3,7 @@ import Layout from './components/Layout'
 import InspireLayout from './components/InspireLayout'
 import SmoothScroll from './components/SmoothScroll'
 import WhatsAppSupportWidget from './components/WhatsAppSupportWidget'
+import InspirePopup from './components/InspirePopup'
 import Home from './pages/Home'
 import AcademiaOtimiza from './pages/AcademiaOtimiza'
 import Cases from './pages/Cases'
@@ -101,6 +102,7 @@ function AppShell() {
         <AppRoutes />
       </PageTransition>
       <WhatsAppSupportWidget />
+      <InspirePopup />
     </>
   )
 }
