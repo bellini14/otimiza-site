@@ -71,7 +71,7 @@ describe('InspirePopup', () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({ ok: true, json: async () => ({ message: 'Inscrição confirmada.' }) })
     mount(); engage()
     fireEvent.change(screen.getByRole('textbox', { name: 'E-mail' }), { target: { value: 'reader@example.com' } })
-    await act(async () => { fireEvent.submit(screen.getByRole('button', { name: 'Assinar o Inspire' }).closest('form')) })
+    await act(async () => { fireEvent.submit(screen.getByRole('button', { name: 'QUERO PARTICIPAR' }).closest('form')) })
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ email: 'reader@example.com', consent: true, source: 'inspire-popup', company: '' })
     expect(screen.getByRole('status')).toHaveTextContent('Inscrição confirmada.')
     expect(Number(localStorage.getItem('otimiza:inspire-popup:dismissed-until'))).toBeGreaterThan(Date.now())
@@ -90,7 +90,7 @@ describe('InspirePopup', () => {
     await act(async () => { fireEvent.submit(screen.getByRole('form')) })
     expect(screen.getByRole('alert')).toHaveTextContent('Tente novamente.')
     expect(screen.getByRole('textbox', { name: 'E-mail' })).toHaveValue('reader@example.com')
-    expect(screen.getByRole('button', { name: 'Assinar o Inspire' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'QUERO PARTICIPAR' })).toBeEnabled()
     expect(localStorage.getItem('otimiza:inspire-popup:dismissed-until')).toBeNull()
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({}) })
     await act(async () => { fireEvent.submit(screen.getByRole('form')) })
@@ -108,5 +108,3 @@ describe('InspirePopup', () => {
     await act(async () => { resolve({ ok: true, json: async () => ({}) }) })
   })
 })
-
-
