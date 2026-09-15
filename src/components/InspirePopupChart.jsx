@@ -1,9 +1,9 @@
 const bars = [
-  { x: 32, y: 280, height: 80, color: '#687482' },
-  { x: 80, y: 234, height: 126, color: '#83909f' },
-  { x: 128, y: 182, height: 178, color: '#aeb8c5' },
-  { x: 176, y: 120, height: 240, color: '#ba3154' },
-  { x: 224, y: 50, height: 310, color: '#e62451' },
+  { x: 32, y: 280, height: 80, color: '#5a6572' },
+  { x: 80, y: 234, height: 126, color: '#8e98a5' },
+  { x: 128, y: 182, height: 178, color: '#b4bdc9' },
+  { x: 176, y: 120, height: 240, color: '#d0d5e0' },
+  { x: 224, y: 50, height: 310, color: '#eef1f3' },
 ]
 
 const gridLines = [80, 150, 220, 290, 360]
@@ -24,11 +24,11 @@ function Chart({ compact = false }) {
           {chartGrid.map((y) => <line key={y} x1="0" y1={y} x2="288" y2={y} />)}
         </g>
         {chartBars.map((bar, index) => (
-          <rect key={bar.x} className="inspire-popup__bar" x={bar.x} y={bar.y} width="32" height={bar.height} fill={bar.color} style={{ animationDelay: `${160 + index * 100}ms` }} />
+          <rect key={bar.x} className="inspire-popup__bar" x={bar.x} y={bar.y} width="32" height={bar.height} fill={bar.color} style={{ animationDelay: `${350 + index * 140}ms` }} />
         ))}
         <polyline className="inspire-popup__trend" points={chartBars.map((bar) => `${bar.x + 16},${bar.y}`).join(' ')} pathLength="1" />
         {chartBars.map((bar, index) => (
-          <circle key={bar.x} className="inspire-popup__point" cx={bar.x + 16} cy={bar.y} r={index === 4 ? 4 : 3} style={{ animationDelay: `${760 + index * 150}ms` }} />
+          <circle key={bar.x} className="inspire-popup__point" cx={bar.x + 16} cy={bar.y} r={index === 4 ? 4 : 3} style={{ animationDelay: `${1080 + index * 200}ms` }} />
         ))}
       </svg>
   )
