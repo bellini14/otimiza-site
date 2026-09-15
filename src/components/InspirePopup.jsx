@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ArrowUpRight, X } from 'lucide-react'
 import inspireLogo from '../assets/logo-inspire.svg'
+import InspirePopupChart from './InspirePopupChart'
 import './InspirePopup.css'
 
 const DISMISSED_UNTIL = 'otimiza:inspire-popup:dismissed-until'
@@ -107,22 +108,31 @@ export default function InspirePopup() {
       <button className="inspire-popup__close" type="button" aria-label="Fechar convite do Inspire" onClick={dismiss}>
         <X size={18} aria-hidden="true" />
       </button>
-      <img className="inspire-popup__logo" src={inspireLogo} alt="Inspire" />
-      <h2 id={titleId}>Novas ideias.<br /> No seu e-mail.</h2>
-      <p>Receba o Inspire e acompanhe ideias sobre gestão, estratégia e o futuro dos negócios.</p>
-      {status.type === 'success' ? <p className="inspire-popup__status" role="status">{status.message}</p> : (
-        <form onSubmit={subscribe} aria-label="Inscrição no Inspire">
-          <label className="inspire-popup__field">E-mail
-            <input type="email" name="email" placeholder="Seu e-mail" autoComplete="email" maxLength={254} required disabled={status.type === 'loading'} />
-          </label>
-          <label className="contact-honeypot" aria-hidden="true">Empresa<input name="company" tabIndex={-1} autoComplete="off" /></label>
-          <p className="inspire-popup__privacy">Ao assinar, aceito receber a newsletter Inspire. Veja a <Link to="/politica-de-privacidade">Política de Privacidade</Link>.</p>
-          <button className="inspire-popup__link" type="submit" disabled={status.type === 'loading'}>
-            {status.type === 'loading' ? 'Assinando…' : 'Assinar o Inspire'} <ArrowUpRight size={19} aria-hidden="true" />
-          </button>
-          {status.type === 'error' && <p className="inspire-popup__status" role="alert">{status.message}</p>}
-        </form>
-      )}
+      <InspirePopupChart />
+      <div className="inspire-popup__content">
+        <div className="inspire-popup__brandline">
+          <img className="inspire-popup__logo" src={inspireLogo} alt="Inspire" />
+          <span className="inspire-popup__eyebrow">CONSULTORIA ESTRATÉGICA</span>
+        </div>
+        <h2 id={titleId}>Entre no universo<span>Otimiza Consultoria</span></h2>
+        <p className="inspire-popup__description">Receba nossas análises exclusivas*, os novos projetos e os últimos estudos desenvolvidos pela Otimiza Consultoria. Cada conteúdo é um convite para explorar nossa abordagem estratégica e nossa busca constante por performance.</p>
+        {status.type === 'success' ? <p className="inspire-popup__status" role="status">{status.message}</p> : (
+          <form onSubmit={subscribe} aria-label="Inscrição no Inspire">
+            <div className="inspire-popup__form-row">
+              <label className="inspire-popup__field"><span className="sr-only">E-mail</span>
+                <input type="email" name="email" placeholder="Seu e-mail corporativo" autoComplete="email" maxLength={254} required disabled={status.type === 'loading'} />
+              </label>
+              <button className="inspire-popup__link" type="submit" disabled={status.type === 'loading'}>
+                {status.type === 'loading' ? 'Assinando…' : 'QUERO PARTICIPAR'} <ArrowUpRight size={17} aria-hidden="true" />
+              </button>
+            </div>
+            <label className="contact-honeypot" aria-hidden="true">Empresa<input name="company" tabIndex={-1} autoComplete="off" /></label>
+            {status.type === 'error' && <p className="inspire-popup__status" role="alert">{status.message}</p>}
+          </form>
+        )}
+        <p className="inspire-popup__fine">*Você pode cancelar sua inscrição a qualquer momento.</p>
+        <Link className="inspire-popup__privacy" to="/politica-de-privacidade">Política de Privacidade</Link>
+      </div>
     </aside>
   )
 }
