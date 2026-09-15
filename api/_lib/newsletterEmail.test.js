@@ -17,6 +17,15 @@ const configuredEnv = {
 }
 
 describe('SMTP2GO newsletter adapter', () => {
+  it('identifies email-only popup signups in subject and both message formats', async () => {
+    const sendMail = vi.fn().mockResolvedValue({})
+    await sendNewsletterEmail({ email: 'reader@example.com', source: 'inspire-popup' }, { createTransport: () => ({ sendMail }), env: configuredEnv })
+    const message = sendMail.mock.calls[0][0]
+    expect(message.subject).toContain('inspire-popup')
+    expect(message.text).toContain('Origem: inspire-popup')
+    expect(message.html).toContain('Origem: inspire-popup')
+    expect(message.html).not.toContain('undefined')
+  })
   it('sends the subscriber details to the newsletter recipient', async () => {
     const sendMail = vi.fn().mockResolvedValue({ messageId: 'smtp-message-id' })
     const createTransport = vi.fn().mockReturnValue({ sendMail })

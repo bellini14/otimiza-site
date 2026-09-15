@@ -5,7 +5,7 @@ import InspirePopup from './InspirePopup'
 
 const mount = (path = '/') => render(<MemoryRouter initialEntries={[path]}><InspirePopup /></MemoryRouter>)
 const engage = () => {
-  act(() => vi.advanceTimersByTime(20000))
+  act(() => vi.advanceTimersByTime(8000))
   fireEvent.scroll(window)
 }
 beforeEach(() => {
@@ -19,6 +19,15 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers() })
 
 describe('InspirePopup', () => {
+  it('opens at eight seconds after reaching fifteen percent of the page', () => {
+    Object.defineProperty(window, 'scrollY', { value: 180 })
+    mount()
+    fireEvent.scroll(window)
+    act(() => vi.advanceTimersByTime(7999))
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
+    act(() => vi.advanceTimersByTime(1))
+    expect(screen.getByRole('complementary')).toBeInTheDocument()
+  })
   it('waits for both elapsed time and meaningful scrolling', () => {
     Object.defineProperty(window, 'scrollY', { value: 0 })
     mount()
@@ -26,13 +35,13 @@ describe('InspirePopup', () => {
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
     Object.defineProperty(window, 'scrollY', { value: 500 })
     fireEvent.scroll(window)
-    expect(screen.getByRole('link', { name: /Explorar o Inspire/ })).toHaveAttribute('href', '/inspire')
+    expect(screen.getByRole('textbox', { name: 'E-mail' })).toHaveAttribute('type', 'email')
   })
   it('does not open from scrolling alone', () => {
     mount()
     fireEvent.scroll(window)
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
-    act(() => vi.advanceTimersByTime(20000))
+    act(() => vi.advanceTimersByTime(8000))
     expect(screen.getByRole('complementary')).toBeInTheDocument()
   })
   it.each(['/inspire', '/inspire/artigo', '/2026/09/15/artigo', '/contato', '/politica-de-privacidade', '/silvana-bettiol', '/inexistente'])('does not interrupt %s', (path) => {
@@ -58,10 +67,13 @@ describe('InspirePopup', () => {
     mount(); engage(); cleanup(); mount(); engage()
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
   })
-  it('closes and suppresses after following the CTA', () => {
+  it('submits only email with the popup source and suppresses after success', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({ ok: true, json: async () => ({ message: 'Inscrição confirmada.' }) })
     mount(); engage()
-    fireEvent.click(screen.getByRole('link', { name: /Explorar o Inspire/ }))
-    expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
+    fireEvent.change(screen.getByRole('textbox', { name: 'E-mail' }), { target: { value: 'reader@example.com' } })
+    await act(async () => { fireEvent.submit(screen.getByRole('button', { name: 'Assinar o Inspire' }).closest('form')) })
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ email: 'reader@example.com', consent: true, source: 'inspire-popup', company: '' })
+    expect(screen.getByRole('status')).toHaveTextContent('Inscrição confirmada.')
     expect(Number(localStorage.getItem('otimiza:inspire-popup:dismissed-until'))).toBeGreaterThan(Date.now())
   })
   it('remains usable when browser storage is unavailable', () => {
@@ -71,4 +83,30 @@ describe('InspirePopup', () => {
     fireEvent.click(screen.getByRole('button', { name: /Fechar convite/ }))
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
   })
+  it('keeps the email and allows retry after a provider error', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({ ok: false, json: async () => ({ error: 'Tente novamente.' }) })
+    mount(); engage()
+    fireEvent.change(screen.getByRole('textbox', { name: 'E-mail' }), { target: { value: 'reader@example.com' } })
+    await act(async () => { fireEvent.submit(screen.getByRole('form')) })
+    expect(screen.getByRole('alert')).toHaveTextContent('Tente novamente.')
+    expect(screen.getByRole('textbox', { name: 'E-mail' })).toHaveValue('reader@example.com')
+    expect(screen.getByRole('button', { name: 'Assinar o Inspire' })).toBeEnabled()
+    expect(localStorage.getItem('otimiza:inspire-popup:dismissed-until')).toBeNull()
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({}) })
+    await act(async () => { fireEvent.submit(screen.getByRole('form')) })
+    expect(screen.getByRole('status')).toHaveTextContent('Inscrição confirmada')
+  })
+  it('blocks duplicate submissions while waiting', async () => {
+    let resolve
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockReturnValue(new Promise((done) => { resolve = done }))
+    mount(); engage()
+    fireEvent.change(screen.getByRole('textbox', { name: 'E-mail' }), { target: { value: 'reader@example.com' } })
+    fireEvent.submit(screen.getByRole('form'))
+    fireEvent.submit(screen.getByRole('form'))
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole('button', { name: 'Assinando…' })).toBeDisabled()
+    await act(async () => { resolve({ ok: true, json: async () => ({}) }) })
+  })
 })
+
+

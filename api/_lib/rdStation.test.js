@@ -9,14 +9,23 @@ import {
 const apiKey = 'test-api-key'
 
 describe('RD Station conversion adapter', () => {
-  it('accepts only the five configured newsletter sources', () => {
+  it('accepts only the configured newsletter sources', () => {
     expect([...NEWSLETTER_SOURCES]).toEqual([
       'otimiza-inspire-newsletter-page',
       'otimiza-inspire-sidebar',
       'otimiza-contact-page-newsletter',
       'otimiza-inspire-article-contact-newsletter',
       'otimiza-inspire-newsroom-contact-newsletter',
+      'inspire-popup',
     ])
+  })
+
+  it('tags popup conversions with inspire-popup without inventing a name', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({ ok: true })
+    await sendNewsletterConversion({ email: 'reader@example.com', source: 'inspire-popup' }, { env: { RD_STATION_API_KEY: apiKey }, fetchImpl })
+    const payload = JSON.parse(fetchImpl.mock.calls[0][1].body).payload
+    expect(payload).toMatchObject({ conversion_identifier: 'inspire-popup', tags: ['inspire-popup'] })
+    expect(payload).not.toHaveProperty('name')
   })
 
   it('sends a minimal consent conversion without leaking unrelated data', async () => {
