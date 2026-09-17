@@ -3,6 +3,7 @@ import { createNewsletterHandler } from './newsletter.js'
 
 const conversionMock = vi.fn()
 const notificationMock = vi.fn()
+const welcomeMock = vi.fn()
 let handler
 
 function response() {
@@ -14,7 +15,8 @@ const valid = { name: ' Maria ', email: ' Reader@Example.com ', consent: true, s
 beforeEach(() => {
   conversionMock.mockReset()
   notificationMock.mockReset()
-  handler = createNewsletterHandler({ sendConversion: conversionMock, sendNotification: notificationMock })
+  welcomeMock.mockReset()
+  handler = createNewsletterHandler({ sendConversion: conversionMock, sendNotification: notificationMock, sendWelcome: welcomeMock })
 })
 
 describe('newsletter API', () => {
@@ -78,4 +80,21 @@ describe('newsletter API', () => {
     expect(res.statusCode).toBe(status)
     expect(res.body).toEqual({ error })
   })
+})
+
+it('sends welcome after registration with normalized subscriber data', async () => {
+  const res = response()
+  await handler({ method: 'POST', body: valid }, res)
+  expect(welcomeMock).toHaveBeenCalledWith({ name: 'Maria', email: 'reader@example.com' })
+})
+it('does not welcome rejected registrations', async () => {
+  conversionMock.mockRejectedValue({ name: 'RDStationProviderError' })
+  await handler({ method: 'POST', body: valid }, response())
+  expect(welcomeMock).not.toHaveBeenCalled()
+})
+it('keeps successful registration when welcome delivery fails', async () => {
+  welcomeMock.mockRejectedValue(new Error('SMTP unavailable'))
+  const res = response()
+  await handler({ method: 'POST', body: valid }, res)
+  expect(res.statusCode).toBe(200)
 })

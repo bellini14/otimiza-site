@@ -1,3 +1,4 @@
+import { sendWelcomeEmail } from './_lib/welcomeEmail.js'
 import {
   RDStationConfigurationError,
   RDStationProviderError,
@@ -27,7 +28,7 @@ function normalize(body) {
   }
 }
 
-export function createNewsletterHandler({ sendConversion = sendNewsletterConversion, sendNotification = sendNewsletterEmail } = {}) {
+export function createNewsletterHandler({ sendConversion = sendNewsletterConversion, sendNotification = sendNewsletterEmail, sendWelcome = sendWelcomeEmail } = {}) {
   return async function handler(req, res) {
   if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return res.status(405).json({ error: 'Método não permitido.' }) }
   let data
@@ -39,6 +40,11 @@ export function createNewsletterHandler({ sendConversion = sendNewsletterConvers
   try {
     await sendConversion({ name: data.name, email: data.email, source: data.source })
     await sendNotification({ name: data.name, email: data.email, ...(data.source === 'inspire-popup' ? { source: data.source } : {}) })
+    try {
+      await sendWelcome({ name: data.name, email: data.email })
+    } catch {
+      console.error('Welcome email delivery failed after successful registration.')
+    }
     return res.status(200).json({ message: 'Inscrição confirmada. Bem-vindo ao Inspire.' })
   } catch (error) {
     if (error instanceof RDStationConfigurationError || error instanceof NewsletterEmailConfigurationError || error?.name === 'RDStationConfigurationError' || error?.name === 'NewsletterEmailConfigurationError') return res.status(503).json({ error: 'Serviço de newsletter ainda não configurado.' })

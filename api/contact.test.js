@@ -1,3 +1,5 @@
+import { sendWelcomeEmail } from './_lib/welcomeEmail.js'
+vi.mock('./_lib/welcomeEmail.js', () => ({ sendWelcomeEmail: vi.fn() }))
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import handler from './contact.js'
 import {
@@ -45,6 +47,7 @@ const validBody = {
 }
 
 beforeEach(() => {
+  sendWelcomeEmail.mockReset()
   sendContactEmail.mockReset()
   sendNewsletterConversion.mockReset()
 })
@@ -100,6 +103,7 @@ describe('contact API route', () => {
     expect(res.statusCode).toBe(200)
     expect(res.jsonBody.message).toMatch(/recebida/i)
     expect(sendNewsletterConversion).not.toHaveBeenCalled()
+    expect(sendWelcomeEmail).not.toHaveBeenCalled()
   })
 
   it('registers an opted-in contact after SMTP succeeds', async () => {
@@ -107,6 +111,7 @@ describe('contact API route', () => {
     sendNewsletterConversion.mockResolvedValue()
     const res = createResponse()
     await handler({ method: 'POST', body: { ...validBody, newsletterConsent: true, newsletterSource: 'otimiza-contact-page-newsletter' } }, res)
+    expect(sendWelcomeEmail).toHaveBeenCalledWith({ email: 'joao@example.com', name: validBody.firstName + ' ' + validBody.lastName })
     expect(sendNewsletterConversion).toHaveBeenCalledWith({ email: 'joao@example.com', name: expect.stringContaining('Silva'), source: 'otimiza-contact-page-newsletter' })
     expect(res.statusCode).toBe(200)
   })

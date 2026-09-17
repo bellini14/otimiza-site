@@ -1,3 +1,4 @@
+import { sendWelcomeEmail } from './_lib/welcomeEmail.js'
 import {
   ContactEmailConfigurationError,
   ContactEmailProviderError,
@@ -71,8 +72,9 @@ export default async function handler(req, res) {
           name: `${contact.firstName} ${contact.lastName}`.trim(),
           source: contact.newsletterSource,
         })
+        await sendWelcomeEmail({ email: contact.email, name: `${contact.firstName} ${contact.lastName}`.trim() })
       } catch (error) {
-        console.error('Optional RD Station conversion failed.', {
+        console.error('Optional newsletter registration or welcome delivery failed.', {
           source: contact.newsletterSource,
           status: error?.status,
           category: error?.name || 'unexpected',
