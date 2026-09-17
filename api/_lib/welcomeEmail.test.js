@@ -10,7 +10,7 @@ describe('welcome email', () => {
     expect(message.html).toContain('#e1e6ef')
     expect(message.html).toContain('#ffe978')
     expect(message.html).toContain('border-radius:14px')
-    expect(message.html).toContain('inspire-logo.png')
+    expect(message.html).toContain('inspire-email-logo.png')
     expect(message.html).toContain('Olá, &lt;Rafael&gt;!')
     expect(message.html).toContain('/2026/09/10/gestao')
     expect(message.html).toContain('Gestão &amp; pessoas')
