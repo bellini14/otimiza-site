@@ -1,4 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
+import { readFile } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
+import path from 'node:path'
+import sharp from 'sharp'
 import { NewsletterEmailConfigurationError, sendNewsletterEmail } from './newsletterEmail.js'
 
 const subscriber = {
@@ -26,6 +30,21 @@ describe('SMTP2GO newsletter adapter', () => {
     expect(message.html).toContain('Origem: inspire-popup')
     expect(message.html).not.toContain('undefined')
   })
+  it('ships a decodable PNG at the logo URL used by the email', async () => {
+    const sendMail = vi.fn().mockResolvedValue({ messageId: 'smtp-message-id' })
+    await sendNewsletterEmail(subscriber, {
+      createTransport: () => ({ sendMail }), env: configuredEnv,
+    })
+    const [, src] = sendMail.mock.calls[0][0].html.match(/<img[^>]+src="([^"]+)"/)
+    const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
+    const image = await readFile(path.join(root, 'public', new URL(src).pathname))
+    const metadata = await sharp(image).metadata()
+    expect(metadata.format).toBe('png')
+    expect(metadata.width).toBeGreaterThanOrEqual(368)
+    expect(metadata.height).toBeGreaterThan(0)
+    await expect(sharp(image).raw().toBuffer()).resolves.toBeInstanceOf(Buffer)
+  })
+
   it('sends the subscriber details to the newsletter recipient', async () => {
     const sendMail = vi.fn().mockResolvedValue({ messageId: 'smtp-message-id' })
     const createTransport = vi.fn().mockReturnValue({ sendMail })
