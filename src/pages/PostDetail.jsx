@@ -336,6 +336,22 @@ function PostDetail() {
               [&_li]:my-2 [&_li]:text-[1.25rem] [&_li]:leading-[1.85] [&_li]:text-[#5A6572] md:[&_li]:text-[1.375rem]
               [&_blockquote]:my-10 [&_blockquote]:border-l-4 [&_blockquote]:border-[#d8dde3] [&_blockquote]:bg-[#f9f9f9] [&_blockquote]:px-8 [&_blockquote]:py-3 [&_blockquote]:text-xl [&_blockquote]:italic [&_blockquote]:text-[#5A6572] md:[&_blockquote]:text-2xl"
             >
+              {slug === 'leitura-obrigatoria-de-fim-de-ano' && (
+                <figure className="mb-10 rounded-2xl border border-[#d8dde3] bg-[#f9f9f9] p-5 sm:p-6">
+                  <figcaption id="silvana-interview-label" className="mb-4 text-base font-semibold text-[#5A6572]">
+                    Entrevista com Silvana Tiburi Bettiol
+                  </figcaption>
+                  <audio
+                    controls
+                    preload="none"
+                    aria-labelledby="silvana-interview-label"
+                    className="block w-full"
+                    src="/wp-content/uploads/2025/12/Entrevista-Silvana_01.mp3"
+                  >
+                    <a href="/wp-content/uploads/2025/12/Entrevista-Silvana_01.mp3">Baixar a entrevista</a>
+                  </audio>
+                </figure>
+              )}
               {post.mainImage && !hasInlineImage && (
                 <figure className="my-10 overflow-hidden rounded-2xl">
                   <img
