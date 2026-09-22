@@ -1,3 +1,4 @@
+import { parseFormBody, protectForm, sendFormProtectionError } from './_lib/formProtection.js'
 import {
   ContactEmailConfigurationError,
   ContactEmailProviderError,
@@ -23,6 +24,7 @@ function normalizeBody(body) {
     email: typeof source?.email === 'string' ? source.email.trim().toLowerCase() : '',
     message: typeof source?.message === 'string' ? source.message.trim() : '',
     company: typeof source?.company === 'string' ? source.company.trim() : '',
+    turnstileToken: source?.turnstileToken,
     newsletterConsent: source?.newsletterConsent === true,
     newsletterSource: typeof source?.newsletterSource === 'string' ? source.newsletterSource.trim() : '',
   }
@@ -49,8 +51,9 @@ export default async function handler(req, res) {
 
   let contact
   try {
-    contact = normalizeBody(req.body)
-  } catch {
+    contact = normalizeBody(parseFormBody(req))
+  } catch (error) {
+    if (sendFormProtectionError(res, error)) return res
     return res.status(400).json({ error: 'Dados inválidos.' })
   }
 
@@ -62,7 +65,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Revise os campos e tente novamente.' })
   }
 
+  let protection
   try {
+    protection = await protectForm(req, contact, 'contact')
+    if (protection.duplicate) return res.status(200).json({ message: 'Mensagem recebida. Em breve entraremos em contato.' })
     await sendContactEmail(contact)
     if (contact.newsletterConsent && NEWSLETTER_SOURCES.has(contact.newsletterSource)) {
       try {
@@ -79,8 +85,11 @@ export default async function handler(req, res) {
         })
       }
     }
+    await protection.complete()
     return res.status(200).json({ message: 'Mensagem recebida. Em breve entraremos em contato.' })
   } catch (error) {
+    await protection?.release?.()
+    if (sendFormProtectionError(res, error)) return res
     if (error instanceof ContactEmailConfigurationError) {
       return res.status(503).json({ error: 'Serviço de e-mail ainda não configurado.' })
     }

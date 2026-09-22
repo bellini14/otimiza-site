@@ -1,3 +1,4 @@
+import { sendMailWithDeadline } from './sendMailWithDeadline.js'
 export class ContactEmailConfigurationError extends Error {
   constructor(message = 'Contact email service is not configured.') {
     super(message)
@@ -64,8 +65,11 @@ export async function sendContactEmail(contact, { createTransport, env = globalT
       port,
       secure: port === 465 || port === 8465 || port === 443,
       auth: { user, pass },
+      connectionTimeout: 5000,
+      greetingTimeout: 5000,
+      socketTimeout: 15000,
     })
-    await transport.sendMail({
+    await sendMailWithDeadline(transport, {
       from: sender,
       to: recipient,
       replyTo: contact.email,

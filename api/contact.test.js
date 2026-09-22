@@ -1,3 +1,4 @@
+vi.mock('./_lib/formProtection.js', async (original) => ({ ...await original(), protectForm: vi.fn().mockResolvedValue({ duplicate: false, complete: vi.fn(), release: vi.fn() }) }))
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import handler from './contact.js'
 import {

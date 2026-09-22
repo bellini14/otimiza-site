@@ -1,3 +1,5 @@
+vi.mock('../hooks/useFormSecurity', () => ({ useFormSecurity: () => ({ token: 'test-token', setToken: vi.fn(), reset: vi.fn(), challengeRef: { current: null } }) }))
+vi.mock('../components/TurnstileChallenge', () => ({ default: () => null }))
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import Contato from './Contato'

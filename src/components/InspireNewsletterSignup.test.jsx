@@ -1,3 +1,5 @@
+vi.mock('../hooks/useFormSecurity', () => ({ useFormSecurity: () => ({ token: 'test-token', setToken: vi.fn(), reset: vi.fn(), challengeRef: { current: null } }) }))
+vi.mock('./TurnstileChallenge', () => ({ default: () => null }))
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'

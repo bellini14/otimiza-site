@@ -1,23 +1,31 @@
+import { useFormSecurity } from '../hooks/useFormSecurity'
+import TurnstileChallenge from './TurnstileChallenge'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import PostArticleContactPanel from './PostArticleContactPanel'
 
 function InspireNewsletterSignup() {
   const [status, setStatus] = useState({ type: 'idle', message: '' })
+  const security = useFormSecurity()
   const isSubmitting = status.type === 'loading'
 
   async function handleSubmit(event) {
     event.preventDefault()
+    if (!security.token) {
+      setStatus({ type: 'error', message: 'Aguarde ou conclua a verificação de segurança antes de enviar.' })
+      return
+    }
     const form = event.currentTarget
     const data = new FormData(form)
     setStatus({ type: 'loading', message: 'Assinando…' })
     try {
-      const response = await fetch('/api/newsletter', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: data.get('name'), email: data.get('email'), consent: data.get('consent') === 'on', source: 'otimiza-inspire-sidebar', company: data.get('company') }) })
+      const response = await fetch('/api/newsletter', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ turnstileToken: security.token, name: data.get('name'), email: data.get('email'), consent: data.get('consent') === 'on', source: 'otimiza-inspire-sidebar', company: data.get('company') }) })
       const result = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(result.error || 'Não foi possível assinar agora.')
       form.reset()
       setStatus({ type: 'success', message: result.message || 'Inscrição confirmada.' })
     } catch (error) { setStatus({ type: 'error', message: error.message }) }
+    finally { security.reset() }
   }
   return (
     <section className="inspire-sidebar__newsletter" aria-labelledby="inspire-sidebar-newsletter-title">
@@ -31,6 +39,7 @@ function InspireNewsletterSignup() {
       </p>
 
       <form className="inspire-sidebar__newsletter-form" onSubmit={handleSubmit}>
+              <TurnstileChallenge action="newsletter" onToken={security.setToken} ref={security.challengeRef} />
         <label className="inspire-sidebar__newsletter-field">
           <span className="sr-only">Nome</span>
           <input
@@ -63,7 +72,7 @@ function InspireNewsletterSignup() {
 
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || !security.token}
           className="inspire-sidebar__newsletter-submit"
           data-inspire-tooltip="Assinar newsletter"
         >
