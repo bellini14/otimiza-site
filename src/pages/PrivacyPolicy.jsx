@@ -12,7 +12,7 @@ function PrivacyPolicy() {
         <h2>Consentimento e revogação</h2>
         <p>Você pode revogar o consentimento a qualquer momento pelos links de cancelamento dos e-mails ou solicitando gratuitamente pelo endereço abaixo.</p>
         <h2>Proteção contra spam</h2>
-        <p>Usamos o Cloudflare Turnstile para verificar envios e reduzir abuso automatizado. Essa verificação processa sinais técnicos do navegador e da conexão. Também usamos identificadores protegidos derivados do IP e do e-mail para limitar envios repetidos. Saiba mais na <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noreferrer">Política de Privacidade da Cloudflare</a>.</p>
+        <p>Usamos o Cloudflare Turnstile para verificar envios e reduzir abuso automatizado. Essa verificação processa sinais técnicos do navegador e da conexão. Também usamos identificadores protegidos derivados do IP e do e-mail para limitar envios repetidos. Saiba mais na <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noreferrer">Política de Privacidade da Cloudflare</a> e no <a href="https://www.cloudflare.com/en-gb/turnstile-privacy-policy/" target="_blank" rel="noreferrer">Adendo de Privacidade do Turnstile</a>.</p>
         <h2>Conservação e segurança</h2>
         <p>Os dados são mantidos enquanto necessários para as finalidades informadas, para atender obrigações aplicáveis ou até uma solicitação válida de eliminação. Adotamos medidas razoáveis de segurança compatíveis com o tratamento.</p>
         <h2>Direitos do titular</h2>
