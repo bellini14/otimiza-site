@@ -1,3 +1,5 @@
+vi.mock('../hooks/useFormSecurity', () => ({ useFormSecurity: () => ({ token: 'test-token', setToken: vi.fn(), reset: vi.fn(), challengeRef: { current: null } }) }))
+vi.mock('./TurnstileChallenge', () => ({ default: () => null }))
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -72,7 +74,7 @@ describe('InspirePopup', () => {
     mount(); engage()
     fireEvent.change(screen.getByRole('textbox', { name: 'E-mail' }), { target: { value: 'reader@example.com' } })
     await act(async () => { fireEvent.submit(screen.getByRole('button', { name: 'QUERO PARTICIPAR' }).closest('form')) })
-    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ email: 'reader@example.com', consent: true, source: 'inspire-popup', company: '' })
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ turnstileToken: 'test-token', email: 'reader@example.com', consent: true, source: 'inspire-popup', company: '' })
     expect(screen.getByRole('status')).toHaveTextContent('Inscrição confirmada.')
     expect(Number(localStorage.getItem('otimiza:inspire-popup:dismissed-until'))).toBeGreaterThan(Date.now())
   })

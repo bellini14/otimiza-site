@@ -1,3 +1,5 @@
+import { useFormSecurity } from '../hooks/useFormSecurity'
+import TurnstileChallenge from './TurnstileChallenge'
 import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { MessageCircle, X } from 'lucide-react'
@@ -8,6 +10,7 @@ const focusableSelector = [
   'input:not([disabled]):not([tabindex="-1"])',
   'textarea:not([disabled])',
   'select:not([disabled])',
+  'iframe',
   '[tabindex]:not([tabindex="-1"])',
 ].join(',')
 
@@ -34,6 +37,7 @@ function PostArticleContactPanel({
   const [isOpen, setIsOpen] = useState(false)
   const [formValues, setFormValues] = useState(initialFormValues)
   const [status, setStatus] = useState({ type: 'idle', message: '' })
+  const security = useFormSecurity()
   const isSubmitting = status.type === 'loading'
   const isEditorial = variant === 'editorial'
 
@@ -104,6 +108,10 @@ function PostArticleContactPanel({
 
   async function handleSubmit(event) {
     event.preventDefault()
+    if (!security.token) {
+      setStatus({ type: 'error', message: 'Aguarde ou conclua a verificação de segurança antes de enviar.' })
+      return
+    }
     const readerMessage = formValues.message.trim()
     const [firstName, ...lastNameParts] = formValues.name.trim().split(/\s+/)
     const lastName = lastNameParts.join(' ') || '-'
@@ -124,6 +132,8 @@ function PostArticleContactPanel({
         ? 'otimiza-inspire-newsroom-contact-newsletter'
         : 'otimiza-inspire-article-contact-newsletter',
     }
+
+    payload.turnstileToken = security.token
 
     setStatus({ type: 'loading', message: 'Enviando sua mensagem...' })
 
@@ -153,6 +163,8 @@ function PostArticleContactPanel({
         type: 'error',
         message: `${errorMessage} Sua mensagem continua no formulário para você tentar novamente.`,
       })
+    } finally {
+      security.reset()
     }
   }
 
@@ -248,6 +260,7 @@ function PostArticleContactPanel({
             </p>
 
             <form className="post-detail__contact-form" onSubmit={handleSubmit}>
+              <TurnstileChallenge action="contact" onToken={security.setToken} ref={security.challengeRef} />
               <label>
                 <span className="sr-only">Nome</span>
                 <input
@@ -315,7 +328,7 @@ function PostArticleContactPanel({
               <div className="post-detail__contact-footer">
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !security.token}
                   data-inspire-tooltip="Enviar mensagem"
                 >
                   {isSubmitting ? 'Enviando...' : 'Enviar mensagem'}

@@ -1,3 +1,5 @@
+import { useFormSecurity } from '../hooks/useFormSecurity'
+import TurnstileChallenge from '../components/TurnstileChallenge'
 import { useRef, useState } from 'react'
 import { Mail, Phone } from 'lucide-react'
 import ContactMap from '../components/ContactMap'
@@ -49,15 +51,22 @@ const contactSocialLinks = [
 function Contato() {
   const formRef = useRef(null)
   const [status, setStatus] = useState({ type: 'idle', message: '' })
+  const security = useFormSecurity()
   const isSubmitting = status.type === 'loading'
 
   async function handleSubmit(event) {
     event.preventDefault()
+    if (!security.token) {
+      setStatus({ type: 'error', message: 'Aguarde ou conclua a verificação de segurança antes de enviar.' })
+      return
+    }
     const form = event.currentTarget
     const formData = new FormData(form)
     const payload = Object.fromEntries(formData.entries())
     payload.newsletterConsent = formData.get('newsletterConsent') === 'on'
     payload.newsletterSource = 'otimiza-contact-page-newsletter'
+
+    payload.turnstileToken = security.token
 
     setStatus({ type: 'loading', message: '' })
 
@@ -80,6 +89,8 @@ function Contato() {
         type: 'error',
         message: error instanceof Error ? error.message : 'Não foi possível enviar agora. Tente novamente mais tarde.',
       })
+    } finally {
+      security.reset()
     }
   }
 
@@ -126,6 +137,7 @@ function Contato() {
         <div className="contact-shell contact-form-panel" data-testid="contact-form-panel">
             <h2>Mande uma mensagem</h2>
             <form ref={formRef} onSubmit={handleSubmit}>
+              <TurnstileChallenge action="contact" onToken={security.setToken} ref={security.challengeRef} />
               <div className="contact-form__names">
                 <label>
                   <span className="sr-only">Nome</span>
@@ -158,7 +170,7 @@ function Contato() {
               </label>
 
               <div className="contact-form__footer">
-                <button type="submit" disabled={isSubmitting}>
+                <button type="submit" disabled={isSubmitting || !security.token}>
                   {isSubmitting ? 'Enviando…' : 'Enviar'}
                 </button>
                 {status.message ? (

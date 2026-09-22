@@ -81,3 +81,23 @@ npm run verify:compression -- https://SEU-DOMINIO-PUBLICO
 
 O comando termina com erro se HTML, CSS ou JavaScript forem entregues sem
 `Content-Encoding: br` ou `Content-Encoding: gzip`.
+
+## Proteção dos formulários com Turnstile
+
+Antes de publicar esta versão, crie um widget **Managed** em Cloudflare > Turnstile e autorize `otm.com.br` e `www.otm.com.br`. Não é necessário mover o DNS para Cloudflare.
+
+Na Vercel, configure em **Production**:
+- `VITE_TURNSTILE_SITE_KEY`: Site Key pública, incorporada pelo Vite no build.
+- `TURNSTILE_SECRET_KEY`: Secret Key sensível, exclusivamente no servidor.
+- `TURNSTILE_ALLOWED_HOSTNAMES`: `otm.com.br,www.otm.com.br` (padrão do código).
+- `POSTGRES_URL` ou `DATABASE_URL`: conexão PostgreSQL já utilizada pelo site, com permissão para criar as tabelas `form_abuse_limits` e `form_abuse_submissions` e seus índices. Nenhuma tabela do memorial é alterada.
+
+Os limites compartilhados são 10 tentativas com token por IP a cada 10 minutos e 3 envios verificados por e-mail por hora, somando contato e newsletter. IPv6 usa prefixo /64. Repetições de contato idêntico são suprimidas por 10 minutos e inscrições do mesmo e-mail por 24 horas, inclusive entre origens diferentes. IPs, e-mails e conteúdo são representados nessas tabelas por HMAC; não são armazenados em texto. Registros expirados são eliminados em lotes durante o uso; sem tráfego, podem permanecer até a próxima limpeza. A rotação da Secret Key reinicia efetivamente essas identificações.
+
+A confirmação do Turnstile ocorre antes de SMTP/RD Station e exige hostname e action exatos (`contact` ou `newsletter`). Token inválido gera 400; quota excedida, 429 com Retry-After; duplicidade em processamento, 409; indisponibilidade da verificação ou banco, 503. Sem chaves, os formulários ficam indisponíveis; não há bypass automático. Turnstile não comprova posse do e-mail e não substitui double opt-in.
+
+A notificação interna da newsletter é best-effort após sucesso no RD Station: falha de SMTP é registrada e não faz o visitante repetir uma inscrição já concluída. Timeouts ambíguos dos provedores não oferecem garantia de entrega exatamente uma vez. Reservas pendentes expiram em 2 minutos. RD Station tem prazo de 15 segundos e SMTP, de 20 segundos, com encerramento da conexão.
+
+Para testar, use as [chaves oficiais de teste](https://developers.cloudflare.com/turnstile/troubleshooting/testing/) apenas em ambiente local/preview isolado, com banco descartável e SMTP/RD simulados. As chaves de teste de aprovação usam hostname `dummy-key-pass` e action `test`; a validação estrita desta aplicação deve ser testada com mocks para os casos positivos ou com widget real específico de preview, sem desabilitar a comparação de action em produção. Não vincule preview de teste ao banco nem às integrações de produção.
+
+Validar antes da ativação: widget nos cinco formulários, renovação após expiração/erro, envio legítimo controlado, rejeição sem token, limites e ausência de efeitos externos em rejeições. Alterações nas variáveis públicas requerem novo build. Não envie Secret Key pelo chat nem faça commit de arquivos de segredos.

@@ -1,3 +1,5 @@
+import { useFormSecurity } from '../hooks/useFormSecurity'
+import TurnstileChallenge from './TurnstileChallenge'
 import { useEffect, useId, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ArrowUpRight, X } from 'lucide-react'
@@ -24,6 +26,7 @@ export default function InspirePopup() {
   const shown = useRef(false)
   const submitting = useRef(false)
   const [status, setStatus] = useState({ type: 'idle', message: '' })
+  const security = useFormSecurity()
   const eligible = ELIGIBLE_ROUTES.has(pathname) || pathname.startsWith('/cases/')
   const preview = import.meta.env.DEV && new URLSearchParams(search).get('inspirePopup') === 'preview'
   const visible = eligible && visiblePath === pathname
@@ -76,6 +79,10 @@ export default function InspirePopup() {
 
   async function subscribe(event) {
     event.preventDefault()
+    if (!security.token) {
+      setStatus({ type: 'error', message: 'Aguarde ou conclua a verificação de segurança antes de enviar.' })
+      return
+    }
     if (submitting.current) return
     const form = event.currentTarget
     if (!form.reportValidity()) return
@@ -86,7 +93,7 @@ export default function InspirePopup() {
       const response = await fetch('/api/newsletter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: data.get('email'), consent: true, source: 'inspire-popup', company: data.get('company') }),
+        body: JSON.stringify({ turnstileToken: security.token, email: data.get('email'), consent: true, source: 'inspire-popup', company: data.get('company') }),
       })
       const result = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(result.error || 'Não foi possível assinar agora. Tente novamente.')
@@ -97,6 +104,7 @@ export default function InspirePopup() {
     } catch (error) {
       setStatus({ type: 'error', message: error.message || 'Não foi possível assinar agora. Tente novamente.' })
     } finally {
+      security.reset()
       submitting.current = false
     }
   }
@@ -118,11 +126,12 @@ export default function InspirePopup() {
         <p className="inspire-popup__description">Receba nossas análises exclusivas*, os novos projetos e os últimos estudos desenvolvidos pela Otimiza Consultoria. Cada conteúdo é um convite para explorar nossa abordagem estratégica e nossa busca constante por performance.</p>
         {status.type === 'success' ? <p className="inspire-popup__status" role="status">{status.message}</p> : (
           <form onSubmit={subscribe} aria-label="Inscrição no Inspire">
+              <TurnstileChallenge action="newsletter" onToken={security.setToken} ref={security.challengeRef} />
             <div className="inspire-popup__form-row">
               <label className="inspire-popup__field"><span className="sr-only">E-mail</span>
                 <input type="email" name="email" placeholder="Seu e-mail corporativo" autoComplete="email" maxLength={254} required disabled={status.type === 'loading'} />
               </label>
-              <button className="inspire-popup__link" type="submit" disabled={status.type === 'loading'}>
+              <button className="inspire-popup__link" type="submit" disabled={status.type === 'loading' || !security.token}>
                 {status.type === 'loading' ? 'Assinando…' : 'QUERO PARTICIPAR'} <ArrowUpRight size={17} aria-hidden="true" />
               </button>
             </div>

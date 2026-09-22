@@ -42,6 +42,7 @@ export async function sendNewsletterConversion(
     `https://api.rd.services/platform/conversions?api_key=${encodeURIComponent(apiKey)}`,
     {
       method: 'POST',
+      signal: AbortSignal.timeout(15000),
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ event_type: 'CONVERSION', event_family: 'CDP', payload }),
     },

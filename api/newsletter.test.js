@@ -1,3 +1,4 @@
+vi.mock('./_lib/formProtection.js', async (original) => ({ ...await original(), protectForm: vi.fn().mockResolvedValue({ duplicate: false, complete: vi.fn(), release: vi.fn() }) }))
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createNewsletterHandler } from './newsletter.js'
 
@@ -67,15 +68,12 @@ describe('newsletter API', () => {
     expect(res.statusCode).toBe(502)
     expect(notificationMock).not.toHaveBeenCalled()
   })
-  it.each([
-    ['NewsletterEmailConfigurationError', 503, 'Serviço de newsletter ainda não configurado.'],
-    ['NewsletterEmailProviderError', 502, 'Não foi possível assinar agora. Tente novamente mais tarde.'],
-  ])('maps %s safely', async (name, status, error) => {
+  it('does not repeat successful registration when notification fails', async () => {
     conversionMock.mockResolvedValue()
-    notificationMock.mockImplementation(async () => { throw { name } })
+    notificationMock.mockRejectedValue(new Error('SMTP unavailable'))
     const res = response()
     await handler({ method: 'POST', body: valid }, res)
-    expect(res.statusCode).toBe(status)
-    expect(res.body).toEqual({ error })
+    expect(res.statusCode).toBe(200)
+    expect(conversionMock).toHaveBeenCalledTimes(1)
   })
 })

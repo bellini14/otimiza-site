@@ -26,6 +26,9 @@ describe('SMTP2GO contact adapter', () => {
 
     expect(createTransport).toHaveBeenCalledWith({
       host: 'mail.smtp2go.com',
+      connectionTimeout: 5000,
+      greetingTimeout: 5000,
+      socketTimeout: 15000,
       port: 2525,
       secure: false,
       auth: { user: 'mailerotm', pass: 'smtp-password' },
