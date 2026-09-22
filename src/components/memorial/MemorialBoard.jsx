@@ -139,7 +139,7 @@ function MemorialBoard({
           </div>
         ) : count === 0 ? (
           <p className="memorial-empty">
-            O mural está vazio ainda — seja a primeira lembrança guardada aqui.
+            Ainda não há lembranças publicadas neste mural.
           </p>
         ) : notes.map((note) => {
           const presentation = getNotePresentation(note.id)
