@@ -1,4 +1,4 @@
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -44,7 +44,7 @@ function readRouteHtml(directory, route) {
 }
 
 describe('static SEO route generation', () => {
-  it('publishes dated Inspire post previews with their featured image after static routes', async () => {
+  it('bundles the original React shell without static post files that override live metadata', async () => {
     const directory = createStaticFixture()
     const post = {
       title: 'Post de exemplo',
@@ -64,11 +64,8 @@ describe('static SEO route generation', () => {
         fetchCases: async () => [],
       })
 
-      const html = readFileSync(join(directory, '2026', '07', '28', 'exemplo', 'index.html'), 'utf8')
-      expect(html).toContain('<meta property="og:image" content="https://cdn.sanity.io/images/example/main.jpg?w=1200&amp;h=630&amp;fit=crop&amp;fm=jpg&amp;q=82" />')
-      const fallbackHtml = readFileSync(join(directory, '2026', '07', '28', 'sem-imagem', 'index.html'), 'utf8')
-      expect(fallbackHtml).not.toContain('<meta property="og:image"')
-      expect(fallbackHtml).toContain('<meta name="twitter:card" content="summary" />')
+      expect(readFileSync(join(directory, 'post-shell.html'), 'utf8')).toBe(baseHtml)
+      expect(existsSync(join(directory, '2026', '07', '28', 'exemplo', 'index.html'))).toBe(false)
     } finally {
       rmSync(directory, { recursive: true, force: true })
     }
