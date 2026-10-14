@@ -16,5 +16,9 @@
 ## Falhas preexistentes
 A suíte geral inicial teve 7 arquivos falhando, 602 testes passando, 5 falhando e 3 ignorados. Instalação do Studio corrige as falhas por dependências ausentes. Testes repetidos na base cf88af9 reproduzem falhas de Home (3), auditoria de alt (1) e erro de importação de overlayGeometry. NossaAbordagem passa na base isolada; timeout inicial ocorreu durante instalações concorrentes. Essas áreas não foram modificadas.
 
+A execução final da suíte completa teve 607 testes passando, 5 falhando e 3 ignorados (4 arquivos com falhas). A falha adicional de PostDetail — metatag ainda ausente no instante da asserção — foi reproduzida executando o mesmo teste na base cf88af9. Nenhuma dessas áreas foi alterada pela correção.
+
+O check GitHub Verify production safety passou. O primeiro preview automático GitHub retornou `Resource provisioning failed` antes do build; ambos os previews CLI concluíram o build. Repetir o deployment GitHub antes da integração.
+
 ## Publicação
 Integrar via PR com Verify production safety, sem force push, após nova consulta da produção e ancestry. Publicar Studio para ativar campos obrigatórios. Verificar deployment correspondente à main integrada e metadados dos três posts recentes.
