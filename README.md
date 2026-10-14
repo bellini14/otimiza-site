@@ -41,6 +41,14 @@ npx vercel dev
 
 Sem as variáveis, a página continua disponível e o endpoint retorna uma mensagem segura informando que o serviço de e-mail ainda não foi configurado.
 
+## SEO das publicações Inspire
+
+As URLs datadas e `/inspire/:slug` recebem HTML de `api/post-page.js`, com metadados consultados no Sanity em cada requisição. Não é necessário fazer deploy depois de publicar ou trocar a imagem de um post. O HTML usa `no-store`; serviços de compartilhamento ainda podem manter sua própria prévia em cache.
+
+O build salva o shell original do Vite em `dist/post-shell.html`, incluído no bundle da função pela configuração `includeFiles`. Não gerar páginas estáticas datadas: elas teriam precedência sobre a função. As demais páginas continuam estáticas.
+
+O Studio exige imagem destacada e data de publicação. Para conteúdo legado sem imagem, o servidor usa o cartão Inspire. Slugs inexistentes retornam 404 e falhas do CMS retornam 503 sem cache.
+
 ## Desenvolvimento
 
 ```powershell

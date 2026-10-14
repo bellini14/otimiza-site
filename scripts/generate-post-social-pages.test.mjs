@@ -66,7 +66,7 @@ describe('post social page generation', () => {
     const html = renderPostSocialPage({
       post: { ...post, contentImageUrl: null },
       siteOrigin,
-      fallbackImageUrl,
+      fallbackImageUrl: undefined,
     })
 
     expect(html).not.toContain('<meta property="og:image"')

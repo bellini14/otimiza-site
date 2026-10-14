@@ -11,7 +11,8 @@ export const INSPIRE_POSTS_QUERY = `*[_type == "post"] | order(publishedAt desc)
   "contentImageUrl": content[_type == "image"][0].asset->url
 }`
 
-const POST_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/i
+// WordPress imports include underscores and an encoded object replacement character.
+const POST_SLUG = /^(?:[a-z0-9_-]|%ef%bf%bc)+$/i
 const DATE_PREFIX = /^(\d{4})-(\d{2})-(\d{2})(?:T|$)/
 
 function isPrivateOrUnspecifiedIpv4(hostname) {
@@ -138,11 +139,15 @@ function getPostPath(post) {
 }
 
 function replaceDocumentMetadata(baseHtml, metadata) {
+  baseHtml = baseHtml
+    .replace(/<meta\b[^>]*(?:property|name)=["'](?:og:|twitter:)[^"']*["'][^>]*>/gi, '')
+    .replace(/<link\b[^>]*rel=["']canonical["'][^>]*>/gi, '')
+    .replace(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi, '')
   const titleTag = `<title>${escapeHtml(metadata.title)}</title>`
   const descriptionTag = `<meta name="description" content="${escapeHtml(metadata.description)}" />`
   const imageTags = metadata.imageUrl ? [
     `<meta property="og:image" content="${escapeHtml(metadata.imageUrl)}" />`,
-    '<meta property="og:image:type" content="image/jpeg" />',
+    `<meta property="og:image:type" content="${metadata.imageUrl.includes('fm=jpg') || !new URL(metadata.imageUrl).pathname.endsWith('.png') ? 'image/jpeg' : 'image/png'}" />`,
     '<meta property="og:image:width" content="1200" />',
     '<meta property="og:image:height" content="630" />',
   ] : []
@@ -194,7 +199,7 @@ export function renderPostSocialPage({ post, siteOrigin, fallbackImageUrl, baseH
     title,
     description: post.description || DESCRIPTION,
     url: new URL(postPath, `${siteOrigin}/`).toString(),
-    imageUrl: getShareImageUrl(post.mainImageUrl || post.contentImageUrl),
+    imageUrl: getShareImageUrl(post.mainImageUrl || post.contentImageUrl || fallbackImageUrl),
   }
   const documentHtml = baseHtml || '<!doctype html><html lang="pt-BR"><head></head><body><div id="root"></div></body></html>'
 

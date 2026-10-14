@@ -3,6 +3,9 @@
   "framework": "vite",
   "buildCommand": "node scripts/verify-production-source.mjs && npm run build",
   "outputDirectory": "dist",
+  "functions": {
+    "api/post-page.js": { "includeFiles": "dist/post-shell.html" }
+  },
   "headers": [
     {
       "source": "/(.*)",
@@ -65,7 +68,11 @@
     },
     {
       "source": "/inspire/:slug",
-      "destination": "/index.html"
+      "destination": "/api/post-page?slug=:slug"
+    },
+    {
+      "source": "/:year(\\d{4})/:month(\\d{2})/:day(\\d{2})/:slug",
+      "destination": "/api/post-page?slug=:slug&date=:year/:month/:day"
     },
     {
       "source": "/((?!api/).*)",

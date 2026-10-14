@@ -36,6 +36,7 @@ export const postType = defineType({
     }),
     defineField({
       name: 'mainImage',
+      validation: (Rule) => Rule.required(),
       title: 'Imagem Destacada (SEO/Redes Sociais)',
       description: 'Usada como capa do link quando o artigo for compartilhado nas redes sociais.',
       type: 'image',
@@ -45,6 +46,7 @@ export const postType = defineType({
     }),
     defineField({
       name: 'publishedAt',
+      validation: (Rule) => Rule.required(),
       title: 'Data de PublicaÃ§Ã£o',
       type: 'datetime',
     }),

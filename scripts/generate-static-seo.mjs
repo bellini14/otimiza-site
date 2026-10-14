@@ -6,7 +6,6 @@ import { memorialMetadata } from '../src/seo/memorialMetadata.js'
 import { buildStructuredData } from '../src/seo/structuredData.js'
 import { caseStudies, resolveCaseStudySlug } from '../src/data/caseStudies.js'
 import { generateCaseSocialPages } from './generate-case-social-pages.mjs'
-import { generatePostSocialPages } from './generate-post-social-pages.mjs'
 
 const routeHeadings = {
   '/': 'Transformamos visão em método, cultura em capacidade e estratégia em operação.',
@@ -248,10 +247,11 @@ export function getStaticRouteWordCount(route) {
 export async function generateStaticSeoPages(
   distDirectory,
   environment = process.env,
-  { fetchPosts, fetchCases } = {},
+  { fetchCases } = {},
 ) {
   const indexPath = path.join(distDirectory, 'index.html')
   const baseHtml = fs.readFileSync(indexPath, 'utf8')
+  fs.writeFileSync(path.join(distDirectory, 'post-shell.html'), baseHtml)
   const siteOrigin = resolveSiteOrigin(environment)
   const socialImageFile = fs.readdirSync(path.join(distDirectory, 'assets'))
     .sort()
@@ -315,17 +315,6 @@ export async function generateStaticSeoPages(
   })
   fs.writeFileSync(path.join(distDirectory, 'silvana-bettiol.html'), memorialHtml)
 
-  await generatePostSocialPages({
-    environment,
-    fallbackImageUrl: imageUrl,
-    baseHtml,
-    fetchPosts,
-    writeFile: async (outputPath, html) => {
-      const absoluteOutputPath = path.join(distDirectory, outputPath)
-      fs.mkdirSync(path.dirname(absoluteOutputPath), { recursive: true })
-      fs.writeFileSync(absoluteOutputPath, html)
-    },
-  })
   await generateCaseSocialPages({
     siteOrigin,
     baseHtml,

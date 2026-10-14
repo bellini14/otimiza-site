@@ -23,5 +23,5 @@ jobs:
           cache: npm
 
       - run: npm ci
-      - run: npm test -- --run scripts/verify-production-source.test.mjs
+      - run: npm test -- --run scripts/verify-production-source.test.mjs api/post-page.test.js vercel.test.mjs vercel.test.js scripts/generate-post-social-pages.test.mjs scripts/generate-static-seo.test.js
       - run: npm run build
