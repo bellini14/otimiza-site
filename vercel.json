@@ -6,6 +6,13 @@
   "functions": {
     "api/post-page.js": { "includeFiles": "dist/post-shell.html" }
   },
+  "redirects": [
+    {
+      "source": "/:year(\\d{4})/:month(\\d{2})/:day(\\d{2})/:slug/index.html",
+      "destination": "/:year/:month/:day/:slug",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -59,6 +66,10 @@
       "destination": "/inspire/newsletter.html"
     },
     {
+      "source": "/inspire/newsletter/",
+      "destination": "/inspire/newsletter.html"
+    },
+    {
       "source": "/silvana-bettiol",
       "destination": "/silvana-bettiol.html"
     },
@@ -71,7 +82,15 @@
       "destination": "/api/post-page?slug=:slug"
     },
     {
+      "source": "/inspire/:slug/",
+      "destination": "/api/post-page?slug=:slug"
+    },
+    {
       "source": "/:year(\\d{4})/:month(\\d{2})/:day(\\d{2})/:slug",
+      "destination": "/api/post-page?slug=:slug&date=:year/:month/:day"
+    },
+    {
+      "source": "/:year(\\d{4})/:month(\\d{2})/:day(\\d{2})/:slug/",
       "destination": "/api/post-page?slug=:slug&date=:year/:month/:day"
     },
     {
