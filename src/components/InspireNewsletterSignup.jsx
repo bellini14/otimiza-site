@@ -1,11 +1,47 @@
 import { useFormSecurity } from '../hooks/useFormSecurity'
 import TurnstileChallenge from './TurnstileChallenge'
-import { useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
+import { ChevronRight, X } from 'lucide-react'
 import PostArticleContactPanel from './PostArticleContactPanel'
+
+const EXPEDIENTE_CREDITS = [
+  { role: <>Fundadora <em>(in memoriam)</em></>, key: 'fundadora', name: 'Silvana Tiburi Bettiol' },
+  { role: 'Publisher', name: 'Augusto Bellini' },
+  { role: 'Diretor Comercial', name: 'Rafael Tiburi Bettiol' },
+  { role: 'Diretor de Operações', name: 'Alceu Viegas Pires Machado' },
+  { role: 'Produção de Conteúdo', name: 'Augusto Bellini' },
+  { role: 'Revisão', name: 'Viviane Lanfredi' },
+  { role: 'Produção Digital', name: 'João Antônio Rizzon Bellini' },
+]
 
 function InspireNewsletterSignup() {
   const [status, setStatus] = useState({ type: 'idle', message: '' })
+  const [isExpedienteOpen, setIsExpedienteOpen] = useState(false)
+  const expedienteTitleId = useId()
+  const expedienteTriggerRef = useRef(null)
+  const expedienteCloseRef = useRef(null)
+
+  const closeExpediente = () => {
+    setIsExpedienteOpen(false)
+    expedienteTriggerRef.current?.focus()
+  }
+
+  useEffect(() => {
+    if (!isExpedienteOpen) return undefined
+
+    const handleKeyDown = (event) => {
+      if (event.key !== 'Escape') return
+      if (document.querySelector('.post-detail__contact-screen')) return
+      closeExpediente()
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    expedienteCloseRef.current?.focus()
+
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isExpedienteOpen])
   const security = useFormSecurity()
   const isSubmitting = status.type === 'loading'
 
@@ -56,7 +92,7 @@ function InspireNewsletterSignup() {
           <span className="sr-only">Email</span>
           <input
             className="inspire-sidebar__newsletter-input"
-            type="email"
+            type="email" spellCheck={false}
             name="email"
             placeholder="Email"
             autoComplete="email"
@@ -85,34 +121,73 @@ function InspireNewsletterSignup() {
         className="inspire-sidebar__expediente"
         aria-label="Expediente"
       >
-        <p className="inspire-sidebar__expediente-text">
+        <button
+          ref={expedienteTriggerRef}
+          type="button"
+          className="inspire-sidebar__expediente-toggle"
+          aria-haspopup="dialog"
+          aria-expanded={isExpedienteOpen}
+          onClick={() => setIsExpedienteOpen(true)}
+        >
           EXPEDIENTE
-          <br />
-          <br />
-          Inspire é uma publicação da Otimiza Consultoria em Administração, dedicada à difusão de
-          ideias, tendências e reflexões sobre estratégia, gestão, inovação e desenvolvimento
-          organizacional para os segmentos empresarial e acadêmico.
-          <br />
-          <br />
-          Fundadora <em>(in memoriam)</em>: Silvana Tiburi Bettiol
-          <br />
-          Publisher: Augusto Bellini
-          <br />
-          Diretor Comercial: Rafael Tiburi Bettiol
-          <br />
-          Diretor de Operações: Alceu Viegas Pires Machado
-          <br />
-          Produção de Conteúdo: Augusto Bellini
-          <br />
-          Revisão: Viviane Lanfredi
-          <br />
-          Produção Digital: João Antônio Rizzon Bellini
-        </p>
-        <PostArticleContactPanel
-          variant="editorial"
-          triggerClassName="inspire-sidebar__editorial-contact"
-          triggerLabel="Escreva para a redação"
-        />
+          <ChevronRight className="inspire-sidebar__expediente-chevron" aria-hidden="true" />
+        </button>
+        {isExpedienteOpen && createPortal(
+          <div
+            className="inspire-share-screen"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) closeExpediente()
+            }}
+          >
+            <section
+              className="inspire-share-dialog inspire-expediente-dialog"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={expedienteTitleId}
+            >
+              <header className="inspire-share-dialog__header">
+                <div>
+                  <p className="inspire-expediente-dialog__eyebrow">Inspire</p>
+                  <h2 id={expedienteTitleId} className="inspire-share-dialog__title">
+                    Expediente
+                  </h2>
+                </div>
+                <button
+                  ref={expedienteCloseRef}
+                  type="button"
+                  className="inspire-share-dialog__close"
+                  aria-label="Fechar expediente"
+                  onClick={closeExpediente}
+                >
+                  <X size={18} strokeWidth={1.8} />
+                </button>
+              </header>
+              <div className="inspire-sidebar__expediente-text inspire-expediente-dialog__body">
+                <p className="inspire-expediente-dialog__intro">
+                  Inspire é uma publicação da Otimiza Consultoria em Administração, dedicada à difusão de
+                  ideias, tendências e reflexões sobre estratégia, gestão, inovação e desenvolvimento
+                  organizacional para os segmentos empresarial e acadêmico.
+                </p>
+                <ul className="inspire-expediente-dialog__credits">
+                  {EXPEDIENTE_CREDITS.map(({ role, key, name }) => (
+                    <li key={key || role} className="inspire-expediente-dialog__credit">
+                      <span className="inspire-expediente-dialog__role">{role}:</span>{' '}
+                      <span className="inspire-expediente-dialog__name">{name}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <footer className="inspire-expediente-dialog__footer">
+                <PostArticleContactPanel
+                  variant="editorial"
+                  triggerClassName="inspire-sidebar__editorial-contact inspire-share-dialog__option inspire-expediente-dialog__contact"
+                  triggerLabel="Escreva para a redação"
+                />
+              </footer>
+            </section>
+          </div>,
+          document.body,
+        )}
         <Link className="inspire-sidebar__privacy-link" to="/politica-de-privacidade">Política de Privacidade</Link>
       </section>
     </section>

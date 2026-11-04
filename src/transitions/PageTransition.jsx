@@ -12,8 +12,13 @@ import { TransitionLocationContext } from './transitionLocationContext'
 import { scrollToLocationTarget, shouldAnimatePageTransition } from './transitionViewport'
 
 /* ─── Timing ─── */
-const EASE_COVER = [0.3, 0, 0.2, 1]
-const EASE_REVEAL = [0.28, 0, 0.18, 1]
+// Cover: soft start and a long, gentle settle so it never "stops short" over the page.
+// Reveal: eases out of the resting cover instead of jumping, then glides off-screen.
+// The icon uses slightly softer curves so it trails the curtain as a light parallax.
+const EASE_COVER = [0.65, 0, 0.25, 1]
+const EASE_REVEAL = [0.6, 0, 0.2, 1]
+const EASE_ICON_COVER = [0.5, 0, 0.15, 1]
+const EASE_ICON_REVEAL = [0.55, 0, 0.25, 1]
 
 function PageTransition({ children }) {
   const location = useLocation()
@@ -55,7 +60,7 @@ function PageTransition({ children }) {
       }),
       iconControls.start({
         y: '0%',
-        transition: { duration: PAGE_TRANSITION_TIMING.cover, ease: EASE_COVER },
+        transition: { duration: PAGE_TRANSITION_TIMING.cover, ease: EASE_ICON_COVER },
       }),
     ])
 
@@ -78,7 +83,7 @@ function PageTransition({ children }) {
       }),
       iconControls.start({
         y: '75%',
-        transition: { duration: PAGE_TRANSITION_TIMING.reveal, ease: EASE_REVEAL },
+        transition: { duration: PAGE_TRANSITION_TIMING.reveal, ease: EASE_ICON_REVEAL },
       }),
     ])
 

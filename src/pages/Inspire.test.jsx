@@ -209,7 +209,13 @@ describe('Inspire', () => {
     expect(within(sidebar).getByText(/todo dia 10 enviamos o Inspire Editorial/i)).toBeInTheDocument()
     expect(within(sidebar).getByText(/todo dia 25, uma nova edição do Inspire/i)).toBeInTheDocument()
     const newsletterForm = sidebar.querySelector('.inspire-sidebar__newsletter-form')
-    const expediente = within(sidebar).getByRole('region', { name: 'Expediente' })
+    const expedienteRegion = within(sidebar).getByRole('region', { name: 'Expediente' })
+    const expedienteTrigger = within(expedienteRegion).getByRole('button', { name: 'EXPEDIENTE' })
+    expect(expedienteTrigger).toHaveAttribute('aria-haspopup', 'dialog')
+    expect(expedienteTrigger).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(expedienteTrigger)
+    const expediente = screen.getByRole('dialog', { name: 'Expediente' })
+    expect(expedienteTrigger).toHaveAttribute('aria-expanded', 'true')
     expect(expediente).toHaveTextContent(
       'Inspire é uma publicação da Otimiza Consultoria em Administração',
     )
@@ -227,19 +233,22 @@ describe('Inspire', () => {
     expect(expedienteText).toHaveTextContent('Revisão: Viviane Lanfredi')
     expect(expedienteText).toHaveTextContent('Produção Digital: João Antônio Rizzon Bellini')
     expect(expediente.querySelector('dl, dt, dd, strong, b')).not.toBeInTheDocument()
-    const editorialContactLink = within(sidebar).getByRole('button', {
+    const editorialContactLink = within(expediente).getByRole('button', {
       name: 'Escreva para a redação',
     })
+    expect(within(sidebar).queryByRole('button', { name: 'Escreva para a redação' })).not.toBeInTheDocument()
     expect(editorialContactLink).toHaveClass('inspire-sidebar__editorial-contact')
     expect(editorialContactLink).toHaveAttribute('aria-haspopup', 'dialog')
     expect(editorialContactLink).toHaveAttribute('aria-expanded', 'false')
     expect(
-      newsletterForm.compareDocumentPosition(expediente) & Node.DOCUMENT_POSITION_FOLLOWING,
+      newsletterForm.compareDocumentPosition(expedienteRegion) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy()
     expect(
       expedienteText.compareDocumentPosition(editorialContactLink)
       & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy()
+    fireEvent.click(within(expediente).getByRole('button', { name: 'Fechar expediente' }))
+    expect(screen.queryByRole('dialog', { name: 'Expediente' })).not.toBeInTheDocument()
     expect(within(sidebar).queryByText('Seleções da redação')).not.toBeInTheDocument()
     expect(within(sidebar).queryByText('Tópicos recomendados')).not.toBeInTheDocument()
     expect(within(sidebar).queryByText('Quem seguir')).not.toBeInTheDocument()

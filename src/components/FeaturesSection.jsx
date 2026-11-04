@@ -193,7 +193,7 @@ export default function FeaturesSection() {
                     <span aria-hidden="true" className="pillar-active-exit-fill" />
                   ) : null}
                   <div className="relative z-10 flex items-center gap-4 md:gap-5 w-full">
-                    <div className={`shrink-0 w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                    <div className={`shrink-0 w-11 h-11 rounded-xl flex items-center justify-center transition duration-300 ${
                       isActive 
                         ? 'bg-red-50 dark:bg-neutral-700 text-brand-red dark:text-brand-red' 
                         : 'bg-neutral-100 dark:bg-neutral-800/70 text-neutral-400 dark:text-neutral-500'
@@ -210,7 +210,7 @@ export default function FeaturesSection() {
                       </h3>
                     </div>
                     {/* Active indicator arrow */}
-                    <svg className={`w-5 h-5 shrink-0 transition-all duration-300 ${isActive ? 'opacity-100 text-brand-red translate-x-0' : 'opacity-0 text-neutral-300 -translate-x-2'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <svg className={`w-5 h-5 shrink-0 transition duration-300 ${isActive ? 'opacity-100 text-brand-red translate-x-0' : 'opacity-0 text-neutral-300 -translate-x-2'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
@@ -221,7 +221,7 @@ export default function FeaturesSection() {
           
           {/* ── Right Detail Panel ── */}
           <div 
-            className={`lg:col-span-8 flex transition-all ${isVisible ? 'animate-enter [animation-duration:1000ms]' : 'opacity-0'}`} 
+            className={`lg:col-span-8 flex transition-opacity ${isVisible ? 'animate-enter [animation-duration:1000ms]' : 'opacity-0'}`} 
             style={{ animationDelay: isVisible ? '450ms' : '0ms' }}
           >
             <div key={isDesktopFeaturesLayout ? activeFeature.id : 'mobile'} className="feature-detail-panel-transition rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/90 p-6 md:p-7 lg:p-8 flex-1 flex flex-col relative z-0 overflow-hidden lg:min-h-[540px] lg:max-h-[540px]">

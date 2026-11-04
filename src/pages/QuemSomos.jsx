@@ -251,7 +251,7 @@ function ClientLogoPill({ logo, isDecorative = false }) {
 
   return (
     <div
-      className="group/logo flex h-12 w-[9rem] shrink-0 items-center justify-center rounded-full border border-[#5a6572]/58 bg-white/34 px-4 shadow-[inset_0_0_0_1px_rgba(90,101,114,0.28)] backdrop-blur-sm sm:h-20 sm:w-[16rem] sm:px-10"
+      className="group/logo flex h-12 w-[9rem] shrink-0 items-center justify-center rounded-full border border-[#5a6572]/58 bg-white/34 px-4 shadow-[inset_0_0_0_1px_rgba(90,101,114,0.28)] sm:h-20 sm:w-[16rem] sm:px-10"
       aria-hidden={isDecorative ? 'true' : undefined}
     >
       {logo.website ? (

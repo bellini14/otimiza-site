@@ -71,7 +71,7 @@ function InspireNewsletter() {
           <label className="inspire-newsletter__field">
             <span>Email</span>
             <input
-              type="email"
+              type="email" spellCheck={false}
               name="email"
               autoComplete="email"
               placeholder="voce@empresa.com"

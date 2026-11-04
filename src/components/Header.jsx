@@ -140,7 +140,7 @@ function LanguageSelector() {
     <div ref={selectorRef} className="header-desktop-only header-language-selector relative">
       <button
         type="button"
-        className="header-language-trigger inline-flex h-10 w-[7.5rem] items-center justify-center gap-2.5 whitespace-nowrap rounded-[1rem] bg-[#efeff4]/90 px-3.5 text-[14px] font-[400] text-[#5a6572] ring-1 ring-[#434b54]/5 drop-shadow-sm backdrop-blur-md transition-all hover:bg-[#e2e2e8] dark:bg-white/10 dark:text-white/90 dark:ring-white/10 dark:hover:bg-white/20 dark:hover:text-white"
+        className="header-language-trigger inline-flex h-10 w-[7.5rem] items-center justify-center gap-2.5 whitespace-nowrap rounded-[1rem] bg-[#efeff4]/90 px-3.5 text-[14px] font-[400] text-[#5a6572] ring-1 ring-[#434b54]/5 drop-shadow-sm backdrop-blur-md transition hover:bg-[#e2e2e8] dark:bg-white/10 dark:text-white/90 dark:ring-white/10 dark:hover:bg-white/20 dark:hover:text-white"
         aria-label="Selecionar idioma"
         aria-haspopup="menu"
         aria-controls="language-options"
@@ -354,7 +354,7 @@ function Header() {
                   >
                     <button
                       type="button"
-                      className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[16px] transition-all duration-200 ${
+                      className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[16px] transition duration-200 ${
                         isGroupActive(group.items)
                           ? 'font-[400] text-[#5a6572] dark:text-white'
                           : 'font-[400] text-[#5a6572] dark:text-white/90 hover:text-[#5a6572] dark:hover:text-white'
@@ -385,7 +385,7 @@ function Header() {
 
                     <div
                       id={`dropdown-${group.id}`}
-                      className={`absolute left-0 top-full mt-2.5 w-[16rem] origin-top-left rounded-[1.35rem] border border-[#434b54]/10 dark:border-white/5 bg-white/95 dark:bg-[#131b24]/90 p-2.5 shadow-[0_24px_60px_rgba(67,75,84,0.12)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.6)] backdrop-blur-2xl transition-all duration-300 ${
+                      className={`absolute left-0 top-full mt-2.5 w-[16rem] origin-top-left rounded-[1.35rem] border border-[#434b54]/10 dark:border-white/5 bg-white/95 dark:bg-[#131b24]/90 p-2.5 shadow-[0_24px_60px_rgba(67,75,84,0.12)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.6)] backdrop-blur-2xl transition-[opacity,transform,visibility] duration-300 ${
                         openDropdown === group.label
                           ? 'visible translate-y-0 opacity-100 scale-100'
                           : 'invisible -translate-y-2 opacity-0 scale-95'
@@ -397,7 +397,7 @@ function Header() {
                             key={item.path}
                             to={item.path}
                             onClick={closeAll}
-                            className={`block rounded-[1rem] px-4 py-3 text-[16px] transition-all duration-200 ${
+                            className={`block rounded-[1rem] px-4 py-3 text-[16px] transition duration-200 ${
                               isActive(item.path)
                                 ? 'bg-[#434b54] font-[400] text-white dark:bg-white/10 dark:text-white'
                                 : 'font-[400] text-[#5a6572] dark:text-white/70 hover:bg-[#434b54]/5 hover:text-[#5a6572] dark:hover:bg-white/10 dark:hover:text-white'
@@ -424,7 +424,7 @@ function Header() {
                     <Link
                       key={item.path}
                       to={item.path}
-                      className={`group flex items-center rounded-full px-3.5 py-2 text-[16px] no-underline transition-all duration-200 ${
+                      className={`group flex items-center rounded-full px-3.5 py-2 text-[16px] no-underline transition duration-200 ${
                         isActive(item.path)
                           ? 'font-[400] text-[#5a6572] dark:text-white'
                           : 'font-[400] text-[#5a6572] dark:text-white/90 hover:text-[#5a6572] dark:hover:text-white'
@@ -443,7 +443,7 @@ function Header() {
               <Link
                 to="/contato"
                 aria-label="Fale com a Otimiza"
-                className="header-desktop-only header-contact-link h-10 items-center justify-center whitespace-nowrap rounded-[1rem] bg-[#efeff4]/90 backdrop-blur-md dark:bg-white/10 px-4 text-[14.5px] font-[400] text-[#5a6572] dark:text-white/90 transition-all hover:bg-[#e2e2e8] dark:hover:bg-white/20 dark:hover:text-white ring-1 ring-[#434b54]/5 dark:ring-white/10 drop-shadow-sm"
+                className="header-desktop-only header-contact-link h-10 items-center justify-center whitespace-nowrap rounded-[1rem] bg-[#efeff4]/90 backdrop-blur-md dark:bg-white/10 px-4 text-[14.5px] font-[400] text-[#5a6572] dark:text-white/90 transition hover:bg-[#e2e2e8] dark:hover:bg-white/20 dark:hover:text-white ring-1 ring-[#434b54]/5 dark:ring-white/10 drop-shadow-sm"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -465,7 +465,7 @@ function Header() {
               <button
                 type="button"
                 onClick={toggleMenu}
-                className={`header-mobile-only z-50 h-12 min-w-[5.25rem] items-center justify-center rounded-full px-5 text-[19px] font-[500] tracking-[0.08em] transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 ${
+                className={`header-mobile-only z-50 h-12 min-w-[5.25rem] items-center justify-center rounded-full px-5 text-[19px] font-[500] tracking-[0.08em] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 ${
                   menuOpen
                     ? 'text-white hover:text-white focus-visible:outline-white/50'
                     : 'text-[#5a6572] hover:text-[#5a6572] focus-visible:outline-[#5a6572]/35'

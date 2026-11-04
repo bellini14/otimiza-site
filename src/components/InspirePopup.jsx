@@ -129,7 +129,7 @@ export default function InspirePopup() {
               <TurnstileChallenge action="newsletter" onToken={security.setToken} ref={security.challengeRef} />
             <div className="inspire-popup__form-row">
               <label className="inspire-popup__field"><span className="sr-only">E-mail</span>
-                <input type="email" name="email" placeholder="Seu e-mail corporativo" autoComplete="email" maxLength={254} required disabled={status.type === 'loading'} />
+                <input type="email" spellCheck={false} name="email" placeholder="Seu e-mail corporativo" autoComplete="email" maxLength={254} required disabled={status.type === 'loading'} />
               </label>
               <button className="inspire-popup__link" type="submit" disabled={status.type === 'loading' || !security.token}>
                 {status.type === 'loading' ? 'Assinando…' : 'QUERO PARTICIPAR'} <ArrowUpRight size={17} aria-hidden="true" />

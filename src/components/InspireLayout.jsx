@@ -266,6 +266,7 @@ function InspireLayout() {
 
   return (
     <div className="inspire-shell overflow-x-hidden">
+      <a className="skip-link" href="#conteudo">Pular para o conteúdo</a>
       <header className="inspire-shell__topbar">
         <nav
           className="inspire-shell__topbar-inner mx-auto w-full max-w-full px-6 sm:px-8 lg:px-12"
@@ -421,7 +422,7 @@ function InspireLayout() {
         </nav>
       </header>
 
-      <main className="inspire-shell__main px-4 sm:px-6 lg:px-8">
+      <main id="conteudo" tabIndex={-1} className="inspire-shell__main px-4 sm:px-6 lg:px-8">
         <Outlet />
       </main>
       <InspireCursorTooltip />

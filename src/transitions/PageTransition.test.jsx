@@ -41,7 +41,7 @@ describe('page transition timing', () => {
   it('softens the new route only after it is mounted', () => {
     const css = readFileSync('src/index.css', 'utf8')
 
-    expect(css).toMatch(/\.page-transition-route\s*\{[^}]*animation:\s*page-transition-route-enter 240ms/s)
+    expect(css).toMatch(/\.page-transition-route\s*\{[^}]*animation:\s*page-transition-route-enter 420ms/s)
   })
 
   it('removes route enter animation below the desktop breakpoint', () => {
