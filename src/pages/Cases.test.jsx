@@ -276,8 +276,7 @@ describe('Cases', () => {
     expect(testimonialAnimation).not.toContain('filter:')
   })
 
-  it('shows every client category as a paginated two-column grid on mobile', async () => {
-    window.innerWidth = 390
+  it('groups clients into collapsible sectors with a preview of the first logos', async () => {
     const bankLogos = Array.from({ length: 10 }, (_, index) => ({
       _id: `banco-${index + 1}`,
       name: `Banco ${index + 1}`,
@@ -303,32 +302,42 @@ describe('Cases', () => {
       </MemoryRouter>,
     )
 
-    const mobileGroups = await screen.findByTestId('mobile-client-groups')
-    const sectors = within(mobileGroups).getAllByTestId('client-sector')
+    const wall = await screen.findByTestId('client-logo-wall')
+    const sectors = within(wall).getAllByTestId('client-sector')
 
-    expect(within(mobileGroups).queryByRole('button', { name: 'Todos' })).not.toBeInTheDocument()
+    expect(within(wall).queryByRole('button', { name: /^Todos/ })).not.toBeInTheDocument()
     expect(sectors).toHaveLength(2)
-    expect(within(sectors[0]).getByRole('heading', { name: 'Bancos' })).toHaveClass('text-slate-600')
-    expect(within(sectors[0]).getByRole('heading', { name: 'Bancos' })).not.toHaveClass('text-slate-950')
-    expect(within(sectors[1]).getByRole('heading', { name: 'Comércio e Distribuidoras' })).toHaveClass('text-slate-600')
 
-    const bankGrid = within(sectors[0]).getByTestId('mobile-client-logo-grid')
-    const distributorGrid = within(sectors[1]).getByTestId('mobile-client-logo-grid')
+    const bankToggle = within(sectors[0]).getByRole('button', { name: /Bancos/ })
+    const distributorToggle = within(sectors[1]).getByRole('button', { name: /Comércio e Distribuidoras/ })
+    expect(bankToggle).toHaveAttribute('aria-expanded', 'false')
+    expect(bankToggle).toHaveTextContent('10 clientes')
+    expect(distributorToggle).toHaveTextContent('9 clientes')
 
-    expect(bankGrid).toHaveClass('grid-cols-2')
-    expect(distributorGrid).toHaveClass('grid-cols-2')
-    expect(within(bankGrid).getAllByRole('img')).toHaveLength(8)
-    expect(within(distributorGrid).getAllByRole('img')).toHaveLength(8)
+    // Closed sectors show the first five logos, in order, plus how many remain
+    const bankPreview = bankToggle.querySelectorAll('img')
+    expect(bankPreview).toHaveLength(5)
+    expect(bankPreview[0]).toHaveAttribute('src', 'banco-1.svg')
+    expect(bankToggle).toHaveTextContent('+5')
+    expect(distributorToggle).toHaveTextContent('+4')
 
-    fireEvent.click(within(sectors[0]).getByRole('button', { name: 'Ver mais clientes de Bancos' }))
+    const bankPanel = document.getElementById(bankToggle.getAttribute('aria-controls'))
+    expect(bankPanel).toHaveAttribute('inert')
+    expect(bankPanel).toHaveClass('grid-rows-[0fr]')
 
-    expect(within(bankGrid).getAllByRole('img')).toHaveLength(10)
-    expect(within(distributorGrid).getAllByRole('img')).toHaveLength(8)
-    expect(within(sectors[0]).queryByRole('button', { name: 'Ver mais clientes de Bancos' })).not.toBeInTheDocument()
+    fireEvent.click(bankToggle)
 
-    fireEvent.click(within(sectors[1]).getByRole('button', { name: 'Ver mais clientes de Comércio e Distribuidoras' }))
+    expect(bankToggle).toHaveAttribute('aria-expanded', 'true')
+    expect(bankPanel).not.toHaveAttribute('inert')
+    expect(bankPanel).toHaveClass('grid-rows-[1fr]')
+    expect(within(bankPanel).getAllByTestId('client-logo-reveal')).toHaveLength(10)
+    expect(within(bankPanel).getAllByTestId('client-logo-reveal')[0]).toHaveClass('opacity-100')
+    expect(distributorToggle).toHaveAttribute('aria-expanded', 'false')
 
-    expect(within(distributorGrid).getAllByRole('img')).toHaveLength(9)
+    fireEvent.click(bankToggle)
+
+    expect(bankToggle).toHaveAttribute('aria-expanded', 'false')
+    expect(bankPanel).toHaveAttribute('inert')
   })
 
   it('renders selected case logos first and all client logos grouped by sector after', async () => {
@@ -460,116 +469,32 @@ describe('Cases', () => {
     expect(clientsSection).toHaveClass('mx-auto', 'max-w-[1320px]')
     expect(within(clientsSection).queryByRole('textbox')).not.toBeInTheDocument()
     expect(within(clientsSection).queryByRole('searchbox')).not.toBeInTheDocument()
-    expect(within(clientsSection).queryAllByTestId('client-sector')).toHaveLength(0)
-
-    const allFilter = within(clientsSection).getByRole('button', { name: 'Todos' })
-    const bankFilter = within(clientsSection).getByRole('button', { name: 'Bancos' })
-    const distributorFilter = within(clientsSection).getByRole('button', { name: /Distribuidoras/ })
-
-    expect(allFilter).toHaveAttribute('aria-pressed', 'true')
-    expect(bankFilter).toHaveAttribute('aria-pressed', 'false')
-    expect(allFilter).toHaveClass('border-black', 'bg-slate-200', 'text-slate-950')
-    expect(allFilter).not.toHaveClass('bg-slate-900', 'text-white')
-    expect(within(clientsSection).queryByText('2 clientes exibidos em todos os setores')).not.toBeInTheDocument()
+    expect(within(clientsSection).queryByRole('button', { name: /^Todos/ })).not.toBeInTheDocument()
     expect(within(clientsSection).queryByText(/clientes exibidos/i)).not.toBeInTheDocument()
-    expect(within(clientsSection).getByTestId('client-logo-carousel-shell')).not.toHaveClass('border', 'border-slate-200', 'rounded-lg')
-    expect(within(clientsSection).getByTestId('client-logo-carousel-shell')).toHaveClass('w-full', 'overflow-visible')
-    expect(within(clientsSection).getByTestId('client-logo-carousel-shell')).not.toHaveClass('w-screen', '-ml-[50vw]', '-mr-[50vw]')
-    expect(within(clientsSection).getByTestId('client-logo-carousel-viewport')).toHaveClass('overflow-hidden')
-    expect(within(clientsSection).getByTestId('client-logo-carousel')).toHaveClass('flex', 'w-max', 'gap-6', 'sm:gap-7', 'lg:gap-9')
-    expect(within(clientsSection).queryByTestId('client-logo-grid')).not.toBeInTheDocument()
-    expect(within(clientsSection).queryByRole('button', { name: 'Clientes anteriores' })).not.toBeInTheDocument()
-    expect(within(clientsSection).queryByRole('button', { name: 'Proximos clientes' })).not.toBeInTheDocument()
-    expect(within(clientsSection).queryByTestId('client-logo-arrow-previous')).not.toBeInTheDocument()
-    expect(within(clientsSection).queryByTestId('client-logo-arrow-next')).not.toBeInTheDocument()
-    expect(within(clientsSection).getAllByTestId('client-logo-carousel-fade')).toHaveLength(2)
-    expect(within(clientsSection).getAllByTestId('client-logo-carousel-fade')[0]).toHaveClass('left-0', 'w-8', 'opacity-0')
-    expect(within(clientsSection).getAllByTestId('client-logo-carousel-fade')[1]).toHaveClass('right-0', 'w-8', 'opacity-100')
-    expect(within(clientsSection).getByTestId('client-logo-drag-hint')).toHaveTextContent('Arrastar')
-    expect(within(clientsSection).getByTestId('client-logo-drag-arrow')).toHaveStyle({
-      transform: 'rotate(0deg) scale(1)',
-    })
-    expect(within(clientsSection).queryByTestId('client-logo-carousel-edge-spacer')).not.toBeInTheDocument()
-    const clientLogoCarouselShell = within(clientsSection).getByTestId('client-logo-carousel-shell')
-    const clientLogoCarousel = within(clientsSection).getByTestId('client-logo-carousel')
-    vi.useFakeTimers()
-    Object.defineProperties(clientLogoCarouselShell, {
-      clientWidth: { configurable: true, value: 320 },
-    })
-    Object.defineProperties(clientLogoCarousel, {
-      scrollWidth: { configurable: true, value: 600 },
-    })
-    fireEvent.pointerDown(clientLogoCarousel, { pointerId: 11, clientX: 240, clientY: 120 })
-    fireEvent.pointerMove(clientLogoCarousel, { pointerId: 11, clientX: 120, clientY: 120 })
-    expect(clientLogoCarousel).toHaveClass('cursor-grabbing')
-    expect(clientLogoCarousel).toHaveStyle({ transform: 'translateX(-115.19999999999999px)' })
-    expect(within(clientsSection).getByTestId('client-logo-drag-arrow')).toHaveStyle({
-      transform: 'rotate(180deg) scale(1.12)',
-    })
-    fireEvent.pointerUp(clientLogoCarousel, { pointerId: 11 })
-    expect(clientLogoCarousel).toHaveClass('cursor-grab')
-    act(() => {
-      vi.advanceTimersByTime(96)
-    })
-    const clientTranslateAfterInertia = Number(clientLogoCarousel.style.transform.match(/-?\d+(\.\d+)?/)?.[0])
-    expect(clientTranslateAfterInertia).toBeLessThan(-170)
-    expect(within(clientsSection).getAllByTestId('client-logo-carousel-fade')[0]).toHaveClass('opacity-100')
-    expect(clientLogoCarousel.style.transform).not.toContain('translateY')
+    expect(within(clientsSection).queryByTestId('client-logo-carousel')).not.toBeInTheDocument()
 
-    fireEvent.pointerDown(clientLogoCarousel, { pointerId: 12, clientX: 120, clientY: 120 })
-    fireEvent.pointerMove(clientLogoCarousel, { pointerId: 12, clientX: 220, clientY: 120 })
-    expect(within(clientsSection).getByTestId('client-logo-drag-arrow')).toHaveStyle({
-      transform: 'rotate(0deg) scale(1.12)',
-    })
-    fireEvent.pointerUp(clientLogoCarousel, { pointerId: 12 })
-    act(() => {
-      vi.advanceTimersByTime(520)
-    })
-    vi.useRealTimers()
-    const initialAnimatedLogos = within(clientsSection).getAllByTestId('client-logo-reveal')
-    expect(initialAnimatedLogos).toHaveLength(2)
-    expect(initialAnimatedLogos[0]).toHaveStyle({ animationDelay: '0ms' })
-    expect(initialAnimatedLogos[1]).toHaveStyle({ animationDelay: '70ms' })
-    expect(initialAnimatedLogos[0]).toHaveAttribute('data-animation-run', '0-all')
+    const clientSectors = within(clientsSection).getAllByTestId('client-sector')
+    expect(clientSectors).toHaveLength(2)
+    const bankToggle = within(clientSectors[0]).getByRole('button', { name: /Bancos/ })
+    const distributorToggle = within(clientSectors[1]).getByRole('button', { name: /Distribuidoras/ })
+    expect(bankToggle).toHaveTextContent('1 cliente')
+    expect(distributorToggle).toHaveTextContent('1 cliente')
 
-    expect(within(clientsSection).getByRole('img', { name: 'Marca Banco Azul' })).toHaveAttribute(
-      'src',
-      'https://cdn.sanity.io/images/prod/banco-azul.svg',
-    )
-    const highlightedCard = within(clientsSection).getByTestId('case-client-card-banco-azul')
-    expect(highlightedCard).toHaveClass('p-4')
-    expect(within(highlightedCard).getByTestId('case-client-logo-box')).toHaveClass('min-h-36', 'px-6', 'py-8')
-    expect(within(highlightedCard).getByTestId('case-client-logo-box')).toContainElement(
-      within(clientsSection).getByRole('img', { name: 'Marca Banco Azul' }),
-    )
-    expect(within(highlightedCard).queryByRole('heading', { name: 'Banco Azul' })).not.toBeInTheDocument()
+    fireEvent.click(bankToggle)
+
+    const bankPanel = document.getElementById(bankToggle.getAttribute('aria-controls'))
+    const highlightedCard = within(bankPanel).getByTestId('case-client-card-banco-azul')
+    expect(highlightedCard).toHaveAttribute('title', 'Banco Azul')
+    expect(highlightedCard.querySelector('img')).toHaveAttribute('alt', 'Marca Banco Azul')
+    expect(highlightedCard.querySelector('img')).toHaveAttribute('src', 'https://cdn.sanity.io/images/prod/banco-azul.svg')
+    expect(within(highlightedCard).queryByRole('link')).not.toBeInTheDocument()
     expect(within(highlightedCard).queryByText('Organizacao dos processos para acelerar decisoes da equipe.')).not.toBeInTheDocument()
-    expect(within(clientsSection).getByRole('img', { name: 'Distribuidora Alfa' })).toHaveAttribute(
-      'src',
-      'https://cdn.sanity.io/images/prod/distribuidora-alfa.svg',
-    )
 
-    fireEvent.click(bankFilter)
+    fireEvent.click(distributorToggle)
 
-    expect(allFilter).toHaveAttribute('aria-pressed', 'false')
-    expect(bankFilter).toHaveAttribute('aria-pressed', 'true')
-    expect(bankFilter).toHaveClass('border-black', 'bg-slate-200', 'text-slate-950')
-    expect(bankFilter).not.toHaveClass('bg-slate-900', 'text-white')
-    expect(within(clientsSection).queryByText('1 cliente exibido em Bancos')).not.toBeInTheDocument()
-    expect(within(clientsSection).getByTestId('client-logo-reveal')).toHaveAttribute('data-animation-run', '1-Bancos')
-    expect(within(clientsSection).getByTestId('client-logo-reveal')).toHaveClass('client-logo-reveal')
-    expect(within(clientsSection).queryByTestId('client-logo-spacer')).not.toBeInTheDocument()
-    expect(within(clientsSection).getByRole('img', { name: 'Marca Banco Azul' })).toBeInTheDocument()
-    expect(within(clientsSection).queryByRole('img', { name: 'Distribuidora Alfa' })).not.toBeInTheDocument()
-
-    fireEvent.click(distributorFilter)
-
-    expect(bankFilter).toHaveAttribute('aria-pressed', 'false')
-    expect(distributorFilter).toHaveAttribute('aria-pressed', 'true')
-    expect(within(clientsSection).queryByText(/1 cliente exibido em .*Distribuidoras/)).not.toBeInTheDocument()
-    expect(within(clientsSection).getByTestId('client-logo-reveal')).toHaveAttribute('data-animation-run', expect.stringContaining('2-'))
-    expect(within(clientsSection).queryByRole('img', { name: 'Marca Banco Azul' })).not.toBeInTheDocument()
-    expect(within(clientsSection).getByRole('img', { name: 'Distribuidora Alfa' })).toBeInTheDocument()
+    const distributorPanel = document.getElementById(distributorToggle.getAttribute('aria-controls'))
+    expect(distributorPanel.querySelector('img')).toHaveAttribute('src', 'https://cdn.sanity.io/images/prod/distribuidora-alfa.svg')
+    expect(within(bankPanel).queryByTestId('case-client-card-distribuidora-alfa')).not.toBeInTheDocument()
 
     const ctaSection = screen.getByTestId('cases-cta-section')
     expect(ctaSection).toHaveClass('bg-[#E5E9F1]', 'overflow-hidden', 'py-28', 'sm:py-32', 'lg:py-36')

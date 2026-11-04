@@ -9,6 +9,8 @@ import {
   useAnimationFrame
 } from 'motion/react';
 
+const MAX_SCROLL_BOOST = 1.5;
+
 function useElementWidth(ref) {
   const [width, setWidth] = useState(0);
 
@@ -66,8 +68,8 @@ export function VelocityRow({
     const { scrollY } = useScroll(scrollOptions);
     const scrollVelocity = useVelocity(scrollY);
     const smoothVelocity = useSpring(scrollVelocity, {
-      damping: damping ?? 50,
-      stiffness: stiffness ?? 400
+      damping: damping ?? 60,
+      stiffness: stiffness ?? 180
     });
     const velocityFactor = useTransform(
       smoothVelocity,
@@ -96,20 +98,12 @@ export function VelocityRow({
       return `${wrap(-copyWidthRef.current, 0, v)}px`;
     });
 
-    const directionFactor = useRef(1);
+    // Scrolling only speeds the rows up a little; they never flip direction, which made the logos jerk.
     useAnimationFrame((t, delta) => {
       if (copyWidthRef.current === 0) return; // Skip until measured
 
-      let moveBy = directionFactor.current * baseVelocity * (delta / 1000);
-
-      if (velocityFactor.get() < 0) {
-        directionFactor.current = -1;
-      } else if (velocityFactor.get() > 0) {
-        directionFactor.current = 1;
-      }
-
-      moveBy += directionFactor.current * moveBy * velocityFactor.get();
-      baseX.set(baseX.get() + moveBy);
+      const boost = Math.min(Math.abs(velocityFactor.get()), MAX_SCROLL_BOOST);
+      baseX.set(baseX.get() + baseVelocity * (delta / 1000) * (1 + boost));
     });
 
     const copies = [];
@@ -129,7 +123,7 @@ export function VelocityRow({
     return (
       <div className={`${parallaxClassName} relative overflow-hidden`} style={parallaxStyle}>
         <motion.div
-          className={`${scrollerClassName} flex`}
+          className={`${scrollerClassName} flex will-change-transform`}
           style={{ x, ...scrollerStyle }}
         >
           {copies}
@@ -144,10 +138,10 @@ export function ScrollVelocity({
   velocity = 100,
   className = '',
   containerClassName = 'space-y-6 [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]',
-  damping = 50,
-  stiffness = 400,
+  damping = 60,
+  stiffness = 180,
   numCopies = 6,
-  velocityMapping = { input: [0, 1000], output: [0, 5] },
+  velocityMapping = { input: [0, 1000], output: [0, 1.5] },
   parallaxClassName = '',
   scrollerClassName = '',
   parallaxStyle,

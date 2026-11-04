@@ -279,7 +279,7 @@ function PostArticleContactPanel({
                 <span className="sr-only">Email</span>
                 <input
                   name="email"
-                  type="email"
+                  type="email" spellCheck={false}
                   placeholder="Email"
                   autoComplete="email"
                   maxLength="254"

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 
 const linkBaseClassName =
-  'group/button mt-4 inline-flex items-center gap-2 text-sm font-medium text-slate-900 transition-all duration-300 hover:text-slate-700'
+  'group/button mt-4 inline-flex items-center gap-2 text-sm font-medium text-slate-900 transition-colors duration-300 hover:text-slate-700'
 
 const ProjectCard = React.forwardRef(function ProjectCard(
   {
@@ -34,7 +34,7 @@ const ProjectCard = React.forwardRef(function ProjectCard(
       className={cn(
         'group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900',
         'h-full',
-        !disableHover && 'transition-all duration-500 ease-in-out hover:-translate-y-2',
+        !disableHover && 'transition-transform duration-500 ease-in-out hover:-translate-y-2',
         className,
       )}
       {...props}

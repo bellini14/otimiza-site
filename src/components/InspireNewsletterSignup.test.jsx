@@ -45,7 +45,12 @@ describe('InspireNewsletterSignup', () => {
       </MemoryRouter>,
     )
 
-    const trigger = screen.getByRole('button', { name: 'Escreva para a redação' })
+    expect(screen.queryByRole('button', { name: 'Escreva para a redação' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'EXPEDIENTE' }))
+
+    const trigger = within(screen.getByRole('dialog', { name: 'Expediente' })).getByRole('button', {
+      name: 'Escreva para a redação',
+    })
     expect(trigger).toHaveClass('inspire-sidebar__editorial-contact')
     expect(trigger).toHaveAttribute('aria-haspopup', 'dialog')
     expect(trigger).toHaveAttribute('aria-expanded', 'false')

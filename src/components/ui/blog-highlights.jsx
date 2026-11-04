@@ -100,7 +100,7 @@ export function BlogHighlights() {
             <Link
               to="/inspire"
               data-testid="blog-header-cta"
-              className="group inline-flex items-center gap-2 rounded-full border border-slate-200 px-5 py-3 text-sm font-medium text-slate-900 transition-all duration-300 hover:border-slate-300 hover:bg-slate-50"
+              className="group inline-flex items-center gap-2 rounded-full border border-slate-200 px-5 py-3 text-sm font-medium text-slate-900 transition duration-300 hover:border-slate-300 hover:bg-slate-50"
             >
               Explorar Inspire
               <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />

@@ -151,7 +151,7 @@ function Contato() {
 
               <label>
                 <span className="sr-only">E-mail</span>
-                <input className="contact-form__field" name="email" type="email" placeholder="E-mail" autoComplete="email" maxLength="254" required />
+                <input className="contact-form__field" name="email" type="email" spellCheck={false} placeholder="E-mail" autoComplete="email" maxLength="254" required />
               </label>
 
               <label>

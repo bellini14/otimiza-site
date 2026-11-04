@@ -205,6 +205,93 @@ html.dark {
       background-image 180ms ease;
   }
 
+  /* Vercel Web Interface Guidelines — base defaults. Kept in the base layer so every
+     existing component rule still wins; they only fill in what nothing else sets. */
+  html {
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    text-wrap: balance;
+  }
+
+  p,
+  li,
+  dd,
+  figcaption,
+  blockquote {
+    text-wrap: pretty;
+  }
+
+  a,
+  button,
+  summary,
+  label,
+  input,
+  select,
+  textarea,
+  [role='button'] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgb(90 101 114 / 0.12);
+  }
+
+  :focus-visible {
+    outline: 2px solid #5a6572;
+    outline-offset: 2px;
+  }
+
+  html.dark :focus-visible {
+    outline-color: rgb(255 255 255 / 0.7);
+  }
+
+  main:focus {
+    outline: none;
+  }
+
+  [id] {
+    scroll-margin-top: 7rem;
+  }
+
+  select {
+    background-color: #ffffff;
+    color: #5a6572;
+  }
+
+  html.dark select {
+    background-color: #0f172a;
+    color: #e2e8f0;
+  }
+
+  .skip-link {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 10000;
+    padding: 0.65rem 1rem;
+    border-radius: 0.75rem;
+    background: #ffffff;
+    color: #5a6572;
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 1px 2px rgb(67 75 84 / 0.08), 0 8px 24px rgb(67 75 84 / 0.14);
+    transform: translateY(-200%);
+    transition: transform 180ms ease-out;
+  }
+
+  .skip-link:focus-visible {
+    transform: translateY(0);
+  }
 }
 
 /* ── Page Curtain Transition (Motto-style parallax) ── */
@@ -336,7 +423,7 @@ html.page-transition-active body *:not(.page-curtain):not(.page-curtain *) {
 
 .page-transition-route {
   min-height: 100%;
-  animation: page-transition-route-enter 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: page-transition-route-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes page-transition-route-enter {
@@ -6232,6 +6319,121 @@ html.page-transition-active body *:not(.page-curtain):not(.page-curtain *) {
     opacity: 0.78;
   }
 
+  .inspire-sidebar__expediente-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0.35rem 0;
+    border: 0;
+    background: transparent;
+    color: var(--inspire-text);
+    font-family: inherit;
+    font-size: 0.69rem;
+    font-weight: 400;
+    line-height: 1.5;
+    opacity: 0.78;
+    cursor: pointer;
+    transition: opacity 180ms ease;
+  }
+
+  .inspire-sidebar__expediente-toggle:hover {
+    opacity: 1;
+  }
+
+  .inspire-sidebar__expediente-chevron {
+    width: 0.85rem;
+    height: 0.85rem;
+  }
+
+  .inspire-expediente-dialog {
+    width: min(31rem, 100%);
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+  }
+
+  .inspire-expediente-dialog__eyebrow {
+    margin: 0 0 0.3rem;
+    color: var(--inspire-text);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.55;
+  }
+
+  .inspire-share-dialog .inspire-expediente-dialog__body {
+    padding-top: 1.1rem;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    opacity: 1;
+  }
+
+  .inspire-expediente-dialog__intro {
+    margin: 0 0 1rem;
+    text-wrap: pretty;
+    opacity: 0.8;
+  }
+
+  .inspire-expediente-dialog__credits {
+    margin: 0;
+    padding: 0.2rem 0.9rem;
+    list-style: none;
+    border-radius: 0.65rem;
+    background: var(--inspire-button-surface);
+  }
+
+  .inspire-expediente-dialog__credit {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.1rem 1rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid rgb(90 101 114 / 0.12);
+  }
+
+  .inspire-expediente-dialog__credit:last-child {
+    border-bottom: 0;
+  }
+
+  .inspire-expediente-dialog__role {
+    font-size: 0.76rem;
+    opacity: 0.62;
+  }
+
+  .inspire-expediente-dialog__name {
+    font-weight: 500;
+    text-align: right;
+  }
+
+  .inspire-expediente-dialog__footer {
+    margin-top: 1.1rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid #e7ebee;
+  }
+
+  .inspire-share-dialog .inspire-expediente-dialog__contact {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    margin: 0;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--inspire-button-surface);
+    background: var(--inspire-button-surface);
+    font-size: 0.82rem;
+    font-weight: 500;
+    text-decoration: none;
+    opacity: 1;
+    transition: border-color 150ms ease, background-color 150ms ease;
+  }
+
+  .inspire-share-dialog .inspire-expediente-dialog__contact:hover,
+  .inspire-share-dialog .inspire-expediente-dialog__contact:focus-visible {
+    border-color: var(--inspire-button-surface-hover);
+    background: var(--inspire-button-surface-hover);
+  }
+
   .inspire-sidebar__editorial-contact {
     display: inline-block;
     margin-top: 0.75rem;
@@ -7692,3 +7894,35 @@ html.dark .testimonials-section-wrapper {
 
 /* Posts sit on their own white card, distinct from the related-content rail. */
 .related-content-rail__post { background: #fff; }
+
+/* Vercel Web Interface Guidelines — global safety nets (kept last so they apply everywhere). */
+
+/* Inputs below 16px make iOS zoom the page on focus. */
+@media (max-width: 767px) {
+  :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='range']) {
+    font-size: max(16px, 1em);
+  }
+}
+
+/* Modals and popups don't scroll the page behind them. */
+.inspire-share-screen,
+.post-detail__contact-screen,
+.inspire-popup {
+  overscroll-behavior: contain;
+}
+
+/* One reduced-motion fallback for every CSS animation and transition on the site. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

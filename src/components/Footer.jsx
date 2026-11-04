@@ -118,7 +118,7 @@ function Footer() {
                   target="_blank"
                   rel="noreferrer"
                   aria-label={item.label}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#434b54]/12 text-[#5a6572] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#434b54]/28 hover:bg-white/55"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#434b54]/12 text-[#5a6572] transition duration-200 hover:-translate-y-0.5 hover:border-[#434b54]/28 hover:bg-white/55"
                 >
                   <span className="h-5 w-5">{item.icon}</span>
                 </a>
