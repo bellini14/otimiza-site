@@ -90,7 +90,7 @@ function readLogoUrl(siteUrl) {
   }
 }
 
-function readSmtpConfiguration(env) {
+export function readSmtpConfiguration(env) {
   const host = env.SMTP_HOST?.trim()
   const port = Number(env.SMTP_PORT?.trim())
   const user = env.SMTP_USER?.trim()
@@ -106,7 +106,7 @@ function readSmtpConfiguration(env) {
   return { host, port, user, pass, sender, recipient, logoUrl }
 }
 
-async function defaultCreateTransport(options) {
+export async function defaultCreateTransport(options) {
   const { default: nodemailer } = await import('nodemailer')
   return nodemailer.createTransport(options)
 }

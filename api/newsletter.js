@@ -1,4 +1,5 @@
 import { parseFormBody, protectForm, sendFormProtectionError } from './_lib/formProtection.js'
+import { sendWelcomeEmail } from './_lib/welcomeEmail.js'
 import {
   RDStationConfigurationError,
   RDStationProviderError,
@@ -29,7 +30,7 @@ function normalize(body) {
   }
 }
 
-export function createNewsletterHandler({ sendConversion = sendNewsletterConversion, sendNotification = sendNewsletterEmail } = {}) {
+export function createNewsletterHandler({ sendConversion = sendNewsletterConversion, sendNotification = sendNewsletterEmail, sendWelcome = sendWelcomeEmail } = {}) {
   return async function handler(req, res) {
   if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return res.status(405).json({ error: 'Método não permitido.' }) }
   let data
@@ -47,6 +48,11 @@ export function createNewsletterHandler({ sendConversion = sendNewsletterConvers
       await sendNotification({ name: data.name, email: data.email, ...(data.source === 'inspire-popup' ? { source: data.source } : {}) })
     } catch {
       console.error('Newsletter notification failed after successful registration.')
+    }
+    try {
+      await sendWelcome({ name: data.name, email: data.email })
+    } catch {
+      console.error('Welcome email delivery failed after successful registration.')
     }
     await protection.complete()
     return res.status(200).json({ message: 'Inscrição confirmada. Bem-vindo ao Inspire.' })
