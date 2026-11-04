@@ -81,6 +81,14 @@ export const postType = defineType({
       ],
     }),
     defineField({
+      name: 'htmlFile',
+      title: 'Arquivo HTML',
+      type: 'file',
+      options: {
+        accept: 'text/html,.html,.htm',
+      },
+    }),
+    defineField({
       name: 'relatedContent',
       title: 'Conteúdo relacionado',
       type: 'object',
