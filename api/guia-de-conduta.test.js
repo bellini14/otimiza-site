@@ -5,6 +5,8 @@ import { RDStationConfigurationError, RDStationProviderError, sendGuideLeadConve
 const leadMock = vi.fn()
 const newsletterMock = vi.fn()
 const welcomeMock = vi.fn()
+const guideMock = vi.fn()
+const notifyMock = vi.fn()
 let handler
 
 function response() {
@@ -17,8 +19,11 @@ beforeEach(() => {
   leadMock.mockReset()
   newsletterMock.mockReset()
   welcomeMock.mockReset()
+  guideMock.mockReset()
+  notifyMock.mockReset()
   handler = createGuideLeadHandler({
     sendLead: leadMock, sendNewsletter: newsletterMock, sendWelcome: welcomeMock,
+    sendGuide: guideMock, notifyTeam: notifyMock,
     protect: vi.fn().mockResolvedValue({ duplicate: false, release: vi.fn(), complete: vi.fn() }),
   })
 })
@@ -38,6 +43,35 @@ describe('guia de conduta lead API', () => {
     expect(leadMock).toHaveBeenCalledWith({ name: 'Ana Souza', email: 'ana@empresa.com.br', companyName: 'Empresa X', newsletterConsent: false })
     expect(newsletterMock).not.toHaveBeenCalled()
     expect(welcomeMock).not.toHaveBeenCalled()
+  })
+
+  it('emails the guide to the lead and notifies the team', async () => {
+    const res = response()
+    await handler({ method: 'POST', body: valid }, res)
+    const contact = { name: 'Ana Souza', email: 'ana@empresa.com.br', companyName: 'Empresa X', newsletterConsent: false }
+    expect(guideMock).toHaveBeenCalledWith(contact)
+    expect(notifyMock).toHaveBeenCalledWith(contact)
+    expect(res.body.emailSent).toBe(true)
+  })
+
+  it('still succeeds, without claiming an email, when delivery fails', async () => {
+    guideMock.mockRejectedValue(new Error('smtp down'))
+    notifyMock.mockRejectedValue(new Error('smtp down'))
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const res = response()
+    await handler({ method: 'POST', body: valid }, res)
+    expect(res.statusCode).toBe(200)
+    expect(res.body.emailSent).toBe(false)
+    spy.mockRestore()
+  })
+
+  it('does not email anyone when RD rejects the lead', async () => {
+    leadMock.mockRejectedValueOnce(new Error('boom'))
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    await handler({ method: 'POST', body: valid }, response())
+    expect(guideMock).not.toHaveBeenCalled()
+    expect(notifyMock).not.toHaveBeenCalled()
+    spy.mockRestore()
   })
 
   it('registers the newsletter only with an explicit boolean consent', async () => {
