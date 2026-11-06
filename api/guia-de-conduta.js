@@ -1,5 +1,4 @@
 import { parseFormBody, protectForm, sendFormProtectionError } from './_lib/formProtection.js'
-import { sendWelcomeEmail } from './_lib/welcomeEmail.js'
 import { sendGuideEmail, sendGuideLeadNotification } from './_lib/guideEmail.js'
 import {
   RDStationConfigurationError,
@@ -35,7 +34,6 @@ function isValid(lead) {
 export function createGuideLeadHandler({
   sendLead = sendGuideLeadConversion,
   sendNewsletter = sendNewsletterConversion,
-  sendWelcome = sendWelcomeEmail,
   sendGuide = sendGuideEmail,
   notifyTeam = sendGuideLeadNotification,
   protect = protectForm,
@@ -100,12 +98,14 @@ export function createGuideLeadHandler({
       console.error('Guide lead team notification failed.', { category: error?.name || 'unexpected' })
     }
 
+    // Com aceite, a pessoa vira assinante do Inspire no RD. O e-mail de
+    // boas-vindas do Inspire não é enviado aqui: o e-mail do guia já avisa
+    // sobre a inscrição, para que o leitor receba uma única mensagem.
     if (lead.newsletterConsent) {
       try {
         await sendNewsletter({ name: lead.name, email: lead.email, source: NEWSLETTER_SOURCE })
-        await sendWelcome({ name: lead.name, email: lead.email })
       } catch (error) {
-        console.error('Optional newsletter registration or welcome delivery failed.', {
+        console.error('Optional newsletter registration failed.', {
           source: NEWSLETTER_SOURCE,
           status: error?.status,
           category: error?.name || 'unexpected',
