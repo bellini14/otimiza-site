@@ -35,6 +35,10 @@ export const staticPageMetadata = {
     title: 'Política de Privacidade | Otimiza',
     description: 'Entenda como a Otimiza trata dados pessoais, consentimento para comunicações, direitos dos titulares e solicitações de privacidade.',
   },
+  '/guia-de-conduta': {
+    title: 'Guia de Conduta | Otimiza',
+    description: 'Entenda a dinâmica que move a Otimiza Consultoria e faça o download do nosso Guia de Conduta, construído coletivamente pelos consultores.',
+  },
   '/inspire': {
     title: 'Inspire: conteúdos sobre gestão e processos | Otimiza',
     description: 'Leia análises, aprendizados e conteúdos do Inspire sobre gestão, estratégia, processos, tecnologia e desenvolvimento organizacional.',

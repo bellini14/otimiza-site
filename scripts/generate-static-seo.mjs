@@ -17,6 +17,7 @@ const routeHeadings = {
   '/academia-otimiza': 'Academia Otimiza',
   '/contato': 'Contato',
   '/politica-de-privacidade': 'Política de Privacidade',
+  '/guia-de-conduta': 'Que problema bom! Por onde a gente começa?',
   '/inspire': 'Inspire: conteúdos sobre gestão e processos',
   '/inspire/newsletter': 'Assine a newsletter',
 }
@@ -82,6 +83,11 @@ const routeSections = {
     { heading: 'Mentoria' },
   ],
   '/contato': [{ heading: 'Mande uma mensagem' }],
+  '/guia-de-conduta': [
+    { heading: 'A história' },
+    { heading: 'Cinco eixos. Um mesmo jeito de trabalhar.', children: ['Aprender', 'Pessoas', 'Discernir', 'Agir', 'Tecnologia'] },
+    { heading: 'Leve o guia para a sua mesa.' },
+  ],
   '/politica-de-privacidade': [
     { heading: 'Dados e finalidades' },
     { heading: 'Newsletter e RD Station' },
@@ -138,6 +144,10 @@ const routeLinks = {
   '/contato': [
     { href: '/o-que-fazemos', label: 'Conheça nossas soluções' },
     { href: '/cases', label: 'Veja cases da Otimiza' },
+  ],
+  '/guia-de-conduta': [
+    { href: '/quem-somos', label: 'Conheça a Otimiza' },
+    { href: '/contato', label: 'Fale com a Otimiza' },
   ],
   '/politica-de-privacidade': [
     { href: '/contato', label: 'Fale com a Otimiza' },

@@ -17,6 +17,7 @@ describe('RD Station conversion adapter', () => {
       'otimiza-inspire-article-contact-newsletter',
       'otimiza-inspire-newsroom-contact-newsletter',
       'inspire-popup',
+      'otimiza-guia-de-conduta-newsletter',
     ])
   })
 

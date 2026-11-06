@@ -58,6 +58,10 @@
       "destination": "/politica-de-privacidade.html"
     },
     {
+      "source": "/guia-de-conduta",
+      "destination": "/guia-de-conduta.html"
+    },
+    {
       "source": "/inspire",
       "destination": "/inspire.html"
     },

@@ -5,7 +5,10 @@ export const NEWSLETTER_SOURCES = new Set([
   'otimiza-inspire-article-contact-newsletter',
   'otimiza-inspire-newsroom-contact-newsletter',
   'inspire-popup',
+  'otimiza-guia-de-conduta-newsletter',
 ])
+
+export const GUIDE_LEAD_SOURCE = 'otimiza-guia-de-conduta'
 
 export class RDStationConfigurationError extends Error {
   constructor(message = 'RD Station is not configured.') {
@@ -45,6 +48,36 @@ export async function sendNewsletterConversion(
       signal: AbortSignal.timeout(15000),
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ event_type: 'CONVERSION', event_family: 'CDP', payload }),
+    },
+  )
+
+  if (!response.ok) throw new RDStationProviderError(response.status)
+}
+
+export async function sendGuideLeadConversion(
+  { email, name, companyName, newsletterConsent = false },
+  { env = globalThis.process?.env || {}, fetchImpl = globalThis.fetch } = {},
+) {
+  const apiKey = env.RD_STATION_API_KEY?.trim()
+  if (!apiKey) throw new RDStationConfigurationError()
+
+  const payload = {
+    conversion_identifier: GUIDE_LEAD_SOURCE,
+    email,
+    tags: ['guia-de-conduta'],
+    ...(name?.trim() ? { name: name.trim() } : {}),
+    ...(companyName?.trim() ? { company_name: companyName.trim() } : {}),
+    ...(newsletterConsent === true
+      ? { legal_bases: [{ category: 'communications', type: 'consent', status: 'granted' }] }
+      : {}),
+  }
+  const response = await fetchImpl(
+    `https://api.rd.services/platform/conversions?api_key=${encodeURIComponent(apiKey)}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event_type: 'CONVERSION', event_family: 'CDP', payload }),
+      signal: AbortSignal.timeout(15000),
     },
   )
 
