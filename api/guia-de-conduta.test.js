@@ -4,7 +4,6 @@ import { RDStationConfigurationError, RDStationProviderError, sendGuideLeadConve
 
 const leadMock = vi.fn()
 const newsletterMock = vi.fn()
-const welcomeMock = vi.fn()
 const guideMock = vi.fn()
 const notifyMock = vi.fn()
 let handler
@@ -18,11 +17,10 @@ const valid = { name: ' Ana Souza ', email: ' Ana@Empresa.com.br ', companyName:
 beforeEach(() => {
   leadMock.mockReset()
   newsletterMock.mockReset()
-  welcomeMock.mockReset()
   guideMock.mockReset()
   notifyMock.mockReset()
   handler = createGuideLeadHandler({
-    sendLead: leadMock, sendNewsletter: newsletterMock, sendWelcome: welcomeMock,
+    sendLead: leadMock, sendNewsletter: newsletterMock,
     sendGuide: guideMock, notifyTeam: notifyMock,
     protect: vi.fn().mockResolvedValue({ duplicate: false, release: vi.fn(), complete: vi.fn() }),
   })
@@ -42,7 +40,6 @@ describe('guia de conduta lead API', () => {
     expect(res.statusCode).toBe(200)
     expect(leadMock).toHaveBeenCalledWith({ name: 'Ana Souza', email: 'ana@empresa.com.br', companyName: 'Empresa X', newsletterConsent: false })
     expect(newsletterMock).not.toHaveBeenCalled()
-    expect(welcomeMock).not.toHaveBeenCalled()
   })
 
   it('emails the guide to the lead and notifies the team', async () => {
@@ -80,7 +77,7 @@ describe('guia de conduta lead API', () => {
     expect(res.statusCode).toBe(200)
     expect(leadMock).toHaveBeenCalledWith(expect.objectContaining({ newsletterConsent: true }))
     expect(newsletterMock).toHaveBeenCalledWith({ name: 'Ana Souza', email: 'ana@empresa.com.br', source: 'otimiza-guia-de-conduta-newsletter' })
-    expect(welcomeMock).toHaveBeenCalled()
+    expect(guideMock).toHaveBeenCalledWith(expect.objectContaining({ newsletterConsent: true }))
 
     leadMock.mockReset()
     newsletterMock.mockReset()

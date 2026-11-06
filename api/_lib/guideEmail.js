@@ -4,7 +4,6 @@ import { sendMailWithDeadline } from './sendMailWithDeadline.js'
 const SITE = 'https://www.otm.com.br'
 export const GUIDE_PDF_URL = `${SITE}/guia-de-conduta-otimiza.pdf`
 const LOGO_URL = `${SITE}/otimiza-email-logo.png`
-const EIXOS = ['Aprender', 'Pessoas', 'Discernir', 'Agir', 'Tecnologia']
 
 const INK = '#2b333c'
 const BODY = '#5a6572'
@@ -24,17 +23,40 @@ function shell({ title, preheader, body }) {
 
 const eyebrow = (label) => `<p style="margin:0 0 18px;font-family:${FONT};font-size:11px;line-height:16px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:${BODY}"><span style="display:inline-block;width:7px;height:7px;margin-right:8px;border-radius:50%;background:${RED};vertical-align:1px"></span>${escape(label)}</p>`
 
-export function buildGuideEmail({ name = '' } = {}) {
+const SOLUCOES_URL = `${SITE}/o-que-fazemos`
+const FRENTES = [
+  ['Gestão estratégica', 'Alinhamento de objetivos, diretrizes e equipes.'],
+  ['Gestão de processos', 'Organização, eficiência e melhoria contínua.'],
+  ['Gestão de pessoas', 'Competências e alinhamento organizacional.'],
+  ['Tecnologia e IA', 'Automação, análise e apoio à decisão.'],
+]
+
+export function buildGuideEmail({ name = '', newsletterConsent = false } = {}) {
   const firstName = name.trim().split(/\s+/)[0] || ''
   const greeting = firstName ? `Olá, ${firstName}!` : 'Olá!'
-  const eixos = EIXOS.map((eixo, index) => `<tr><td width="34" valign="top" style="padding:11px 0;border-top:1px solid ${LINE};font-family:${FONT};font-size:11px;line-height:22px;font-weight:700;letter-spacing:1px;color:${RED}">0${index + 1}</td><td style="padding:11px 0;border-top:1px solid ${LINE};font-family:${FONT};font-size:18px;line-height:22px;font-weight:600;color:${INK}">${eixo}</td></tr>`).join('')
-  const body = `<tr><td class="pad" style="padding:40px 40px 36px;font-family:${FONT};color:${BODY}">${eyebrow('Guia de Conduta')}<h1 style="margin:0 0 22px;font-size:34px;line-height:40px;font-weight:600;letter-spacing:-0.5px;color:${INK}">Seu Guia de Conduta chegou.</h1><p style="margin:0 0 10px;font-size:17px;line-height:27px;font-weight:bold;color:${INK}">${escape(greeting)}</p><p style="margin:0 0 30px;font-size:16px;line-height:26px">Obrigado pelo interesse. Nosso Guia de Conduta foi desenhado a partir das memórias, da prática e da verdade de cada consultor no dia a dia da operação — uma construção coletiva que reflete o que está vivo na Otimiza.</p><table role="presentation" border="0" cellspacing="0" cellpadding="0" class="cta"><tr><td align="center" bgcolor="${RED}" style="background:${RED};border-radius:999px"><a href="${GUIDE_PDF_URL}" style="display:inline-block;padding:17px 32px;border-radius:999px;font-family:${FONT};font-size:16px;line-height:22px;font-weight:bold;text-decoration:none;color:#ffffff">Baixar o Guia de Conduta &rarr;</a></td></tr></table><p style="margin:16px 0 0;font-size:13px;line-height:20px;color:${MUTED}">PDF · 15 MB. Se o botão não funcionar, copie este endereço: <a href="${GUIDE_PDF_URL}" style="color:${BODY};text-decoration:underline;word-break:break-all">${GUIDE_PDF_URL}</a></p></td></tr><tr><td class="pad" style="padding:0 40px 38px;font-family:${FONT}"><p style="margin:0 0 12px;font-size:13px;line-height:20px;font-weight:700;color:${INK}">Os cinco eixos que você vai encontrar</p><table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-bottom:1px solid ${LINE}">${eixos}</table><p style="margin:26px 0 0;font-size:14px;line-height:22px;color:${BODY}">Ficou alguma dúvida ou quer conversar sobre o guia? É só responder este e-mail.</p></td></tr>`
-  const html = shell({ title: 'Seu Guia de Conduta chegou', preheader: 'Aqui está o link para baixar o Guia de Conduta da Otimiza Consultoria.', body })
+  const inspireLine = 'Você também passa a receber a newsletter Inspire, com conteúdos sobre gestão, processos e tecnologia.'
+  const inspireHtml = newsletterConsent
+    ? `<table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top:24px"><tr><td style="padding:14px 16px;background:${PAPER};border-radius:10px;font-family:${FONT};font-size:14px;line-height:21px;color:${BODY}"><strong style="color:${INK}">Inspire:</strong> ${inspireLine.replace('Você também', 'você também')}</td></tr></table>`
+    : ''
+  const frentes = FRENTES.map(([title, detail], index) => `<tr><td width="38" valign="top" style="padding:16px 0;border-top:1px solid ${LINE};font-family:${FONT};font-size:11px;line-height:22px;font-weight:700;letter-spacing:1px;color:${RED}">0${index + 1}</td><td style="padding:16px 0;border-top:1px solid ${LINE};font-family:${FONT}"><p style="margin:0 0 3px;font-size:17px;line-height:22px;font-weight:600;color:${INK}">${title}</p><p style="margin:0;font-size:14px;line-height:21px;color:${BODY}">${detail}</p></td></tr>`).join('')
+
+  const body = `<tr><td class="pad" style="padding:40px 40px 38px;font-family:${FONT};color:${BODY}">${eyebrow('Guia de Conduta')}<h1 style="margin:0 0 22px;font-size:34px;line-height:40px;font-weight:600;letter-spacing:-0.5px;color:${INK}">Seu Guia de Conduta chegou.</h1><p style="margin:0 0 10px;font-size:17px;line-height:27px;font-weight:bold;color:${INK}">${escape(greeting)}</p><p style="margin:0 0 30px;font-size:16px;line-height:26px">Esperamos que o Guia de Conduta da Otimiza contribua para ampliar suas reflexões sobre gestão, pessoas e organização.</p><table role="presentation" border="0" cellspacing="0" cellpadding="0" class="cta"><tr><td align="center" bgcolor="${RED}" style="background:${RED};border-radius:999px"><a href="${GUIDE_PDF_URL}" style="display:inline-block;padding:17px 32px;border-radius:999px;font-family:${FONT};font-size:16px;line-height:22px;font-weight:bold;text-decoration:none;color:#ffffff">Baixar o Guia de Conduta &rarr;</a></td></tr></table><p style="margin:16px 0 0;font-size:13px;line-height:20px;color:${MUTED}">PDF · 15 MB. Se o botão não funcionar, copie este endereço: <a href="${GUIDE_PDF_URL}" style="color:${BODY};text-decoration:underline;word-break:break-all">${GUIDE_PDF_URL}</a></p>${inspireHtml}</td></tr>`
+    + `<tr><td class="pad" style="padding:38px 40px 6px;border-top:1px solid ${LINE};font-family:${FONT};color:${BODY}"><p style="margin:0 0 24px;padding-left:20px;border-left:2px solid ${RED};font-size:22px;line-height:31px;font-weight:600;letter-spacing:-0.2px;color:${INK}">Como transformar princípios em práticas que orientam decisões, comportamentos e resultados?</p><p style="margin:0 0 26px;font-size:16px;line-height:26px">É nesse desafio que a Otimiza atua. Integramos <strong style="color:${INK}">estratégia, processos, pessoas, tecnologia e inteligência artificial</strong> para transformar prioridades em resultados consistentes.</p><table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-bottom:1px solid ${LINE}">${frentes}</table></td></tr>`
+    + `<tr><td class="pad" style="padding:30px 40px 40px;font-family:${FONT}"><table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background:${PAPER};border-radius:12px"><tr><td style="padding:28px 28px 30px;font-family:${FONT};color:${BODY}"><p style="margin:0 0 10px;font-size:20px;line-height:27px;font-weight:600;color:${INK}">Sua empresa está diante de um desafio de gestão ou transformação?</p><p style="margin:0 0 22px;font-size:15px;line-height:24px">Cada organização tem seus próprios desafios. Nosso trabalho começa por compreendê-los — será um prazer conhecer a sua realidade.</p><table role="presentation" border="0" cellspacing="0" cellpadding="0" class="cta"><tr><td align="center" bgcolor="${INK}" style="background:${INK};border-radius:999px"><a href="${SOLUCOES_URL}" style="display:inline-block;padding:15px 26px;border-radius:999px;font-family:${FONT};font-size:15px;line-height:20px;font-weight:bold;text-decoration:none;color:#ffffff">Conheça a Otimiza e nossas soluções &rarr;</a></td></tr></table></td></tr></table><p style="margin:30px 0 0;font-size:15px;line-height:22px;font-weight:bold;color:${INK}">Otimiza Consultoria</p><p style="margin:2px 0 0;font-size:14px;line-height:21px;color:${MUTED}">Estratégia, gestão e tecnologia a serviço da transformação organizacional.</p></td></tr>`
+
+  const html = shell({ title: 'Seu Guia de Conduta chegou', preheader: 'Aqui está o seu Guia de Conduta — e uma pergunta: como transformar princípios em prática?', body })
   const text = [
     'Seu Guia de Conduta chegou.', '', greeting,
-    'Obrigado pelo interesse. Nosso Guia de Conduta foi desenhado a partir das memórias, da prática e da verdade de cada consultor no dia a dia da operação.',
-    '', `Baixe o PDF: ${GUIDE_PDF_URL}`, '', `Os cinco eixos: ${EIXOS.join(' · ')}`, '',
-    'Ficou alguma dúvida? É só responder este e-mail.', '', 'Otimiza Consultoria · otm.com.br',
+    'Esperamos que o Guia de Conduta da Otimiza contribua para ampliar suas reflexões sobre gestão, pessoas e organização.',
+    '', `Baixe o PDF: ${GUIDE_PDF_URL}`, '',
+    ...(newsletterConsent ? [inspireLine, ''] : []),
+    'Como transformar princípios em práticas que orientam decisões, comportamentos e resultados?',
+    'É nesse desafio que a Otimiza atua. Integramos estratégia, processos, pessoas, tecnologia e inteligência artificial para transformar prioridades em resultados consistentes.',
+    '', ...FRENTES.map(([title, detail]) => `- ${title}: ${detail}`), '',
+    'Sua empresa está diante de um desafio de gestão ou transformação?',
+    `Conheça a Otimiza e nossas soluções: ${SOLUCOES_URL}`, '',
+    'Otimiza Consultoria',
+    'Estratégia, gestão e tecnologia a serviço da transformação organizacional.',
   ].join('\n')
   return { html, text }
 }
@@ -74,7 +96,7 @@ export function sendGuideEmail(lead, { env = globalThis.process?.env || {}, crea
     to: lead.email,
     replyTo: 'otm@otm.com.br',
     subject: 'Seu Guia de Conduta da Otimiza',
-    ...buildGuideEmail({ name: lead.name }),
+    ...buildGuideEmail({ name: lead.name, newsletterConsent: lead.newsletterConsent }),
   }), { env, createTransport })
 }
 

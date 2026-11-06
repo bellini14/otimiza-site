@@ -27,6 +27,12 @@ describe('guide email', () => {
     expect(GUIDE_PDF_URL).toBe('https://www.otm.com.br/guia-de-conduta-otimiza.pdf')
   })
 
+  it('mentions the Inspire subscription only when the lead consented', () => {
+    expect(buildGuideEmail({ name: 'Ana', newsletterConsent: true }).html).toContain('newsletter Inspire')
+    expect(buildGuideEmail({ name: 'Ana', newsletterConsent: true }).text).toContain('newsletter Inspire')
+    expect(buildGuideEmail({ name: 'Ana' }).html).not.toContain('newsletter Inspire')
+  })
+
   it('sends the guide to the lead with the team as reply-to', async () => {
     const { sent, createTransport } = capture()
     await sendGuideEmail(lead, { env, createTransport })
