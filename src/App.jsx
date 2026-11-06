@@ -18,6 +18,7 @@ import CaseDetail from './pages/CaseDetail'
 import PostDetail from './pages/PostDetail'
 import SilvanaMemorial from './pages/SilvanaMemorial'
 import PrivacyPolicy from './pages/PrivacyPolicy'
+import GuiaDeConduta from './pages/GuiaDeConduta'
 import PageTransition from './transitions/PageTransition'
 import { useTransitionLocation } from './transitions/transitionLocationContext'
 import SeoHead from './seo/SeoHead'
@@ -70,6 +71,7 @@ function AppRoutes() {
           <Route path="/academia-otimiza" element={<AcademiaOtimiza />} />
           <Route path="/contato" element={<Contato />} />
           <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
+          <Route path="/guia-de-conduta" element={<GuiaDeConduta />} />
         </Route>
         <Route element={<InspireLayout />}>
           <Route path="/inspire" element={<Inspire />} />

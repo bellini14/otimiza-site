@@ -12,6 +12,7 @@ const expectedRoutes = [
   '/academia-otimiza',
   '/contato',
   '/politica-de-privacidade',
+  '/guia-de-conduta',
   '/inspire',
   '/inspire/newsletter',
 ]
