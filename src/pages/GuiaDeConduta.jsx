@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowDown, ArrowRight } from 'lucide-react'
+import { ArrowDown, ArrowRight, Download } from 'lucide-react'
 import TurnstileChallenge from '../components/TurnstileChallenge'
 import { useFormSecurity } from '../hooks/useFormSecurity'
 import './GuiaDeConduta.css'
+
+const GUIDE_PDF_URL = '/guia-de-conduta-otimiza.pdf'
 
 const eixos = [
   { numero: '01', nome: 'Aprender', nota: 'Curiosidade como método. Cada projeto devolve algo à consultoria.' },
@@ -82,7 +84,7 @@ function GuiaDeConduta() {
       if (!response.ok) {
         throw new Error(result.error || 'Não foi possível concluir agora. Tente novamente mais tarde.')
       }
-      setStatus({ type: 'success', message: '' })
+      setStatus({ type: 'success', message: '', email: payload.email, emailSent: result.emailSent === true })
     } catch (error) {
       setStatus({
         type: 'error',
@@ -206,7 +208,16 @@ function GuiaDeConduta() {
             {status.type === 'success' ? (
               <div className="guia-download__success" role="status">
                 <p className="guia-download__success-title">Obrigado.</p>
-                <p>Seu Guia de Conduta está a caminho. Boa leitura — e bons problemas.</p>
+                <p>
+                  {status.emailSent
+                    ? <>Seu Guia de Conduta está pronto. Também enviamos o link para <strong>{status.email}</strong>.</>
+                    : 'Seu Guia de Conduta está pronto para download.'}
+                </p>
+                <a className="guia-form__submit guia-download__pdf" href={GUIDE_PDF_URL} download target="_blank" rel="noopener">
+                  <span>Baixar o PDF</span>
+                  <Download size={18} strokeWidth={2} aria-hidden="true" />
+                </a>
+                <p className="guia-download__pdf-meta">PDF · 15 MB. Boa leitura — e bons problemas.</p>
               </div>
             ) : (
               <form className="guia-form" onSubmit={handleSubmit} aria-busy={isSubmitting}>

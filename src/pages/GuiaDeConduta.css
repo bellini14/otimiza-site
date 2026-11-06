@@ -702,3 +702,8 @@ html.dark .guia-hero__scroll:hover .guia-hero__scroll-icon { background: #fff; c
   .guia-download__intro { gap: 1.25rem; }
   .guia-form { gap: 2rem; }
 }
+
+/* Estado de sucesso: download do PDF */
+.guia-download__success strong { color: #fff; font-weight: 600; word-break: break-word; }
+.guia-download__pdf { margin-top: 1.75rem; text-decoration: none; }
+.guia-download__pdf-meta { margin: 1rem 0 0; font-size: 0.85rem; color: rgb(255 255 255 / 0.7); }
