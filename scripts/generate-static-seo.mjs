@@ -49,7 +49,7 @@ const routeSections = {
       heading: 'Nossas soluções',
       children: ['Diagnóstico', 'Gestão estratégica', 'Inteligência de negócios'],
       paragraphs: [
-        'O portfólio inclui diagnóstico, gestão estratégica, inteligência de negócios, gestão de pessoas, gestão de processos de negócio, gestão integrada da manufatura, gestão estratégica de custos, programa de otimização de desempenho, tecnologia de negócios, Academia Otimiza e consultoria on-line. As soluções são apresentadas com seus processos e resultados esperados para que cada organização identifique a frente mais coerente com sua necessidade.',
+        'O portfólio inclui diagnóstico, gestão estratégica, inteligência de negócios, gestão de pessoas, gestão de processos de negócio, gestão integrada da manufatura, gestão estratégica de custos, programa de otimização de desempenho, tecnologia de negócios e Academia Otimiza. As soluções são apresentadas com seus processos e resultados esperados para que cada organização identifique a frente mais coerente com sua necessidade.',
         'A Academia Otimiza amplia essa atuação por meio de trilhas de aprendizagem, workshops e mentoria. O desenvolvimento técnico e gerencial ajuda as equipes a consolidar práticas no trabalho cotidiano. Ao reunir consultoria, tecnologia e academia, a Otimiza busca sustentar melhorias ao longo do tempo, acompanhar metas e indicadores e criar condições para que a organização mantenha os avanços alcançados em seus processos e em sua gestão.',
       ],
     },

@@ -86,13 +86,6 @@ const solutions = [
     resultado:
       'Gestores preparados, capazes de aplicar na empresa os conhecimentos adquiridos em sala de aula.',
   },
-  {
-    title: 'Consultoria on-line (ECN)',
-    intro: 'Gestão empresarial para pequenos negócios.',
-    processo:
-      'Através do atendimento on-line, ajudar na gestão total da empresa. Indicar alternativas de ações para a sobrevivência ou expansão do pequeno negócio.',
-    resultado: 'Definição de prioridades e acompanhamento da execução das ações.',
-  },
 ]
 
 const MotionDiv = motion.div
