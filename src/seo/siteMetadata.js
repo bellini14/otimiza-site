@@ -39,6 +39,10 @@ export const staticPageMetadata = {
     title: 'Guia de Conduta | Otimiza',
     description: 'Entenda a dinâmica que move a Otimiza Consultoria e faça o download do nosso Guia de Conduta, construído coletivamente pelos consultores.',
   },
+  '/nota-oficial': {
+    title: 'Nota oficial: esclarecimento e segurança | Otimiza',
+    description: 'A Otimiza alerta sobre cobranças feitas por terceiros em seu nome e informa razão social, CNPJ e canais oficiais para conferência.',
+  },
   '/inspire': {
     title: 'Inspire: conteúdos sobre gestão e processos | Otimiza',
     description: 'Leia análises, aprendizados e conteúdos do Inspire sobre gestão, estratégia, processos, tecnologia e desenvolvimento organizacional.',

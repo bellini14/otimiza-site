@@ -18,6 +18,7 @@ const routeHeadings = {
   '/contato': 'Contato',
   '/politica-de-privacidade': 'Política de Privacidade',
   '/guia-de-conduta': 'Que problema bom! Por onde a gente começa?',
+  '/nota-oficial': 'Nota oficial: esclarecimento e segurança',
   '/inspire': 'Inspire: conteúdos sobre gestão e processos',
   '/inspire/newsletter': 'Assine a newsletter',
 }
@@ -88,6 +89,20 @@ const routeSections = {
     { heading: 'Cinco eixos. Um mesmo jeito de trabalhar.', children: ['Aprender', 'Pessoas', 'Discernir', 'Agir', 'Tecnologia'] },
     { heading: 'Leve o guia para a sua mesa.' },
   ],
+  '/nota-oficial': [
+    {
+      heading: 'Nossa identificação oficial',
+      paragraphs: [
+        'A Otimiza Consultoria em Administração Ltda. esclarece que tomou conhecimento de abordagens comerciais e solicitações de pagamento realizadas por terceiros que utilizam o nome Otimiza ou denominações semelhantes. Não possuímos qualquer vínculo societário, comercial ou operacional com essas empresas ou terceiros.',
+        'Razão social: Otimiza Consultoria em Administração Ltda. CNPJ: 00.287.054/0001-80. Site: www.otm.com.br. E-mail: otm@otm.com.br. Telefone: (54) 3211-6045.',
+      ],
+    },
+    {
+      heading: 'Antes de pagar, confira',
+      paragraphs: ['Toda cobrança legítima deve identificar nossa razão social e nosso CNPJ como beneficiários. Não autorizamos pagamentos em contas de pessoas físicas ou de outras pessoas jurídicas.'],
+    },
+    { heading: 'Medidas adotadas' },
+  ],
   '/politica-de-privacidade': [
     { heading: 'Dados e finalidades' },
     { heading: 'Newsletter e RD Station' },
@@ -148,6 +163,10 @@ const routeLinks = {
   '/guia-de-conduta': [
     { href: '/quem-somos', label: 'Conheça a Otimiza' },
     { href: '/contato', label: 'Fale com a Otimiza' },
+  ],
+  '/nota-oficial': [
+    { href: '/contato', label: 'Fale com a Otimiza pelos canais oficiais' },
+    { href: '/quem-somos', label: 'Conheça a Otimiza' },
   ],
   '/politica-de-privacidade': [
     { href: '/contato', label: 'Fale com a Otimiza' },
