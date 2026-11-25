@@ -22,7 +22,6 @@ const expectedSolutionTitles = [
   'Programa de otimização de desempenho (POD)',
   'Tecnologia de negócios',
   'Academia Otimiza de inteligência empresarial',
-  'Consultoria on-line (ECN)',
 ]
 
 function renderPage() {
@@ -66,7 +65,7 @@ describe('OQueFazemos', () => {
 
     const sections = screen.getAllByTestId('solution-sticky-section')
 
-    expect(sections).toHaveLength(11)
+    expect(sections).toHaveLength(10)
     expect(
       sections.map(
         (section) => within(section).getByRole('heading', { level: 2 }).textContent,
@@ -112,20 +111,20 @@ describe('OQueFazemos', () => {
     renderPage()
 
     expect(screen.queryByText('01')).not.toBeInTheDocument()
-    expect(screen.queryByText('11')).not.toBeInTheDocument()
+    expect(screen.queryByText('10')).not.toBeInTheDocument()
 
     const visualNumbers = document.querySelectorAll(
       '.oquefazemos-service-chapter__visual[data-number]',
     )
-    expect(visualNumbers).toHaveLength(11)
+    expect(visualNumbers).toHaveLength(10)
     expect(visualNumbers[0]).toHaveAttribute('data-number', '01')
-    expect(visualNumbers[10]).toHaveAttribute('data-number', '11')
+    expect(visualNumbers[9]).toHaveAttribute('data-number', '10')
   })
 
   it('uses a readable editorial type hierarchy without changing the service content', () => {
     renderPage()
 
-    expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(11)
+    expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(10)
     expect(indexCss).toMatch(
       /\.oquefazemos-service-chapter__heading\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s,
     )
