@@ -62,6 +62,10 @@
       "destination": "/guia-de-conduta.html"
     },
     {
+      "source": "/nota-oficial",
+      "destination": "/nota-oficial.html"
+    },
+    {
       "source": "/inspire",
       "destination": "/inspire.html"
     },

@@ -130,6 +130,7 @@ function Footer() {
                 <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 sm:justify-start">
                   <span>&copy; {currentYear} Otimiza. All rights reserved.</span>
                   <Link to="/politica-de-privacidade" className="underline underline-offset-4 transition-opacity hover:opacity-65">Política de Privacidade</Link>
+                  <Link to="/nota-oficial" className="underline underline-offset-4 transition-opacity hover:opacity-65">Nota oficial</Link>
                 </p>
                 <p>Developed by Studiodesign</p>
               </div>

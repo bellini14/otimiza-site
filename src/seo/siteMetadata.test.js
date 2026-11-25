@@ -13,6 +13,7 @@ const expectedRoutes = [
   '/contato',
   '/politica-de-privacidade',
   '/guia-de-conduta',
+  '/nota-oficial',
   '/inspire',
   '/inspire/newsletter',
 ]
